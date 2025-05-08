@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banners - StarForge</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&family=Roboto:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f8fafc;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 1.5rem;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-info img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 2px solid #FCA120;
+        }
+
+        .user-info span {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: none;
+        }
+
+        /* Side Panel */
+        .side-panel {
+            width: 220px;
+            background-color: #808080;
+            color: #ffffff;
+            padding: 20px 15px;
+            position: fixed;
+            top: 50px;
+            bottom: 0;
+            overflow-y: auto;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .side-panel.hidden {
+            transform: translateX(-100%);
+        }
+
+        .side-panel.visible {
+            transform: translateX(0);
+        }
+
+        .side-panel ul {
+            list-style: none;
+        }
+
+        .side-panel li {
+            margin: 8px 0;
+        }
+
+        .side-panel a {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            text-decoration: none;
+            color: #ffffff;
+            border-radius: 5px;
+            border-bottom: 1px solid #909090;
+            transition: background-color 0.3s, padding-left 0.3s;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .side-panel a:hover {
+            background-color: #909090;
+            padding-left: 18px;
+        }
+
+        .side-panel a.active {
+            background-color: #FCA120;
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 220px;
+            margin-top: 50px;
+            padding: 20px;
+            flex-grow: 1;
+            overflow-y: auto;
+            background-color: #f8fafc;
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        /* Banners Section */
+        .banners-section {
+            background: #e5e7eb;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .banners-section h2 {
+            font-size: 1.2rem;
+            color: #1f2937;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .search-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            padding: 5px 10px;
+            width: 300px;
+        }
+
+        .search-bar input {
+            border: none;
+            outline: none;
+            padding: 5px;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        .search-icon {
+            color: #6b7280;
+        }
+
+        .sort-select {
+            padding: 5px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-tab {
+            padding: 5px 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            background: #ffffff;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .filter-tab.active {
+            background: #FCA120;
+            color: #ffffff;
+        }
+
+        .banners-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #f1f5f9;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            overflow: hidden;
+        }
+
+        .banners-table th,
+        .banners-table td {
+            padding: 12px 15px;
+            text-align: left;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #d1d5db;
+        }
+
+        .banners-table th {
+            background: #d1d5db;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .banners-table td {
+            color: #374151;
+        }
+
+        .banners-table tr:nth-child(even) {
+            background: #eceff1;
+        }
+
+        .banners-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .banners-table tr:hover {
+            background: Ascending;
+        }
+
+        .banners-table img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+        }
+
+        .text-success {
+            color: green;
+        }
+
+        .text-danger {
+            color: red;
+        }
+
+        .action-icon {
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .add-banner-btn {
+            background: #000000;
+            color: #ffffff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 20px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .side-panel {
+                width: 180px;
+            }
+            .main-content {
+                margin-left: 180px;
+            }
+            .banners-table th,
+            .banners-table td {
+                font-size: 0.85rem;
+                padding: 10px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .toggle-btn {
+                display: block;
+            }
+            .side-panel {
+                width: 220px;
+                position: fixed;
+                transform: translateX(-100%);
+            }
+            .side-panel.visible {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 10px;
+            }
+            .navbar {
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+            }
+            .banners-table {
+                font-size: 0.8rem;
+            }
+            .banners-table th,
+            .banners-table td {
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar Partial -->
+    <%- include('partials/navbar') %>
+
+    <!-- Side Panel Partial -->
+    <%- include('partials/sidepanel', { active: 'banners' }) %>
+
+    <!-- Main Content -->
+    <div class="main-content" id="main-content">
+        <!-- Banners Section -->
+        <div class="banners-section">
+            <div class="search-controls">
+                <div class="search-bar">
+                    <input type="text" placeholder="Search banner by title..." />
+                    <span class="search-icon"><i class="fas fa-search"></i></span>
+                </div>
+                <select class="sort-select">
+                    <option>more days left</option>
+                    <option>less days left</option>
+                    <option>Last added first</option>
+                </select>
+                <div class="filter-tabs">
+                    <button class="filter-tab active">ALL</button>
+                    <button class="filter-tab">ACTIVE</button>
+                    <button class="filter-tab">INACTIVE</button>
+                </div>
+            </div>
+            <table class="banners-table">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Title</th>
+                        <th>Starting Date</th>
+                        <th>Ending Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% banners = banners || [
+                        { imageUrl: 'https://via.placeholder.com/50', title: 'Summer Sale', startingDate: '01/06/2024', endingDate: '30/06/2024', status: 'Active' },
+                        { imageUrl: 'https://via.placeholder.com/50', title: 'Winter Collection', startingDate: '01/12/2024', endingDate: '31/12/2024', status: 'Scheduled' },
+                        { imageUrl: 'https://via.placeholder.com/50', title: 'Black Friday', startingDate: '25/11/2024', endingDate: '28/11/2024', status: 'Expired' }
+                    ]; %>
+                    <% banners.forEach(banner => { %>
+                        <tr>
+                            <td><img src="<%= banner.imageUrl %>" alt="Banner Image" /></td>
+                            <td><%= banner.title %></td>
+                            <td><%= banner.startingDate %></td>
+                            <td><%= banner.endingDate %></td>
+                            <td><%= banner.status %></td>
+                            <td>
+                                <i class="fas fa-check text-success action-icon"></i>
+                                <i class="fas fa-trash text-danger action-icon"></i>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+            <button class="add-banner-btn">ADD BANNER</button>
+        </div>
+    </div>
+
+    <!-- Footer Partial -->
+    <%- include('partials/footer') %>
+
+    <script>
+        // Toggle Side Panel
+        const toggleBtn = document.querySelector('.toggle-btn');
+        const sidePanel = document.querySelector('.side-panel');
+        const mainContent = document.querySelector('.main-content');
+
+        toggleBtn.addEventListener('click', () => {
+            sidePanel.classList.toggle('visible');
+            sidePanel.classList.toggle('hidden');
+            mainContent.classList.toggle('expanded');
+        });
+
+        // Simulate navigation (for demo purposes)
+        document.querySelectorAll('.side-panel a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.side-panel a').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

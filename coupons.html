@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coupons - StarForge</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f8fafc;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 1.5rem;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-info img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 2px solid #FCA120;
+        }
+
+        .user-info span {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: none;
+        }
+
+        /* Side Panel */
+        .side-panel {
+            width: 220px;
+            background-color: #808080;
+            color: #ffffff;
+            padding: 20px 15px;
+            position: fixed;
+            top: 50px;
+            bottom: 0;
+            overflow-y: auto;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .side-panel.hidden {
+            transform: translateX(-100%);
+        }
+
+        .side-panel.visible {
+            transform: translateX(0);
+        }
+
+        .side-panel ul {
+            list-style: none;
+        }
+
+        .side-panel li {
+            margin: 8px 0;
+        }
+
+        .side-panel a {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            text-decoration: none;
+            color: #ffffff;
+            border-radius: 5px;
+            border-bottom: 1px solid #909090;
+            transition: background-color 0.3s, padding-left 0.3s;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .side-panel a:hover {
+            background-color: #909090;
+            padding-left: 18px;
+        }
+
+        .side-panel a.active {
+            background-color: #FCA120;
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 220px;
+            margin-top: 50px;
+            padding: 20px;
+            flex-grow: 1;
+            overflow-y: auto;
+            background-color: #f8fafc;
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        /* Coupons Section */
+        .coupons-section {
+            background: #e5e7eb;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .coupons-section h2 {
+            font-size: 1.2rem;
+            color: #1f2937;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .coupons-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #f1f5f9;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            overflow: hidden;
+        }
+
+        .coupons-table th,
+        .coupons-table td {
+            padding: 12px 15px;
+            text-align: left;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #d1d5db;
+        }
+
+        .coupons-table th {
+            background: #d1d5db;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .coupons-table td {
+            color: #374151;
+        }
+
+        .coupons-table tr:nth-child(even) {
+            background: #eceff1;
+        }
+
+        .coupons-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .coupons-table tr:hover {
+            background: #e5e7eb;
+        }
+
+        /* Footer */
+        footer {
+            padding: 10px;
+            text-align: center;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            margin-top: auto;
+            font-size: 0.8rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .side-panel {
+                width: 180px;
+            }
+            .main-content {
+                margin-left: 180px;
+            }
+            .coupons-table th,
+            .coupons-table td {
+                font-size: 0.85rem;
+                padding: 10px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .toggle-btn {
+                display: block;
+            }
+            .side-panel {
+                width: 220px;
+                position: fixed;
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 10px;
+            }
+            .navbar {
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+            }
+            .coupons-table {
+                font-size: 0.8rem;
+            }
+            .coupons-table th,
+            .coupons-table td {
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar Partial -->
+    <div class="navbar">
+        <button class="toggle-btn" aria-label="Toggle Side Panel">☰</button>
+        <div class="logo">StarForge</div>
+        <div class="user-info">
+            <img src="https://via.placeholder.com/40" alt="User Avatar">
+            <span>Admin User</span>
+        </div>
+    </div>
+
+    <!-- Side Panel Partial -->
+    <%- include('partials/sidepanel', { active: 'coupons' }) %>
+
+    <!-- Main Content -->
+    <div class="main-content" id="main-content">
+        <!-- Coupons Section -->
+        <div class="coupons-section">
+            <h2>Coupons</h2>
+            <table class="coupons-table">
+                <thead>
+                    <tr>
+                        <th>Coupon Code</th>
+                        <th>Discount</th>
+                        <th>Expiry Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% coupons = coupons || [
+                        { code: 'SAVE10', discount: '10%', expiry: '2025-12-31', status: 'Active' },
+                        { code: 'FREESHIP', discount: 'Free Shipping', expiry: '2025-06-30', status: 'Active' },
+                        { code: 'OLD20', discount: '20%', expiry: '2025-04-30', status: 'Expired' }
+                    ]; %>
+                    <% coupons.forEach(coupon => { %>
+                        <tr>
+                            <td><%= coupon.code %></td>
+                            <td><%= coupon.discount %></td>
+                            <td><%= coupon.expiry %></td>
+                            <td><%= coupon.status %></td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Footer Partial -->
+    <%- include('partials/footer') %>
+
+    <script>
+        // Toggle Side Panel
+        const toggleBtn = document.querySelector('.toggle-btn');
+        const sidePanel = document.querySelector('.side-panel');
+        const mainContent = document.querySelector('.main-content');
+
+        toggleBtn.addEventListener('click', () => {
+            sidePanel.classList.toggle('visible');
+            sidePanel.classList.toggle('hidden');
+            mainContent.classList.toggle('expanded');
+        });
+
+        // Simulate navigation (for demo purposes)
+        document.querySelectorAll('.side-panel a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.side-panel a').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
