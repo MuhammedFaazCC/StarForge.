@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Customer - StarForge</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/css/admin/customers.css">
+</head>
+
+<body>
+    <%- include('../partials/admin/navbar') %>
+
+        <div class="main-content">
+            <div class="form-container">
+                <div class="form-card">
+                    <h2>Add New Customer</h2>
+                    <% if (message) { %>
+                        <div class="alert <%= message.type %>">
+                            <%= message.text %>
+                        </div>
+                        <% } %>
+                            <form id="addCustomerForm" action="/admin/customers" method="POST">
+                                <div class="form-group">
+                                    <label for="fullName">Full Name</label>
+                                    <input type="text" id="fullName" name="fullName" required minlength="2"
+                                        maxlength="50" placeholder="Enter full name">
+                                </div>
+                                <div class="form-group">
+                                    <label for="email">Email</label>
+                                    <input type="email" id="email" name="email" required
+                                        placeholder="Enter email address">
+                                </div>
+                                <div class="form-group">
+                                    <label for="mobile">Mobile Number</label>
+                                    <input type="text" id="mobile" name="mobile" required pattern="\+?[0-9]{10,15}"
+                                        placeholder="Enter mobile number (e.g., +1234567890)">
+                                </div>
+                                <div class="form-group password-group">
+                                    <label for="password">Password</label>
+                                    <div class="password-wrapper">
+                                        <input type="password" id="password" name="password" required minlength="8" placeholder="Enter password (min 8 characters)">
+                                        <button type="button" class="toggle-password" aria-label="Show password" data-shown="false">
+                                            <span class="toggle-text">Show</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Save Customer</button>
+                                    <a href="/admin/customers" class="btn btn-secondary">Cancel</a>
+                                </div>
+                            </form>
+                </div>
+            </div>
+        </div>
+
+        <%- include('../partials/admin/footer') %>
+
+            <script src="/js/admin/addCustomer.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - StarForge</title>
+    <link rel="stylesheet" href="/css/user/signUp.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="background">
+        <div class="login-container">
+            <h2>Sign Up</h2>
+            <% if (typeof error !=='undefined' ) { %>
+                <p class="error-message">
+                    <%= error %>
+                </p>
+                <% } %>
+                    <form action="/signup" method="POST">
+                        <div class="input-group">
+                            <label for="fullName">Full Name</label>
+                            <div class="input-wrapper">
+                                <input type="text" id="fullName" name="fullName" placeholder="John Kurishingal" required
+                                    aria-describedby="fullName-icon" />
+                                <span class="icon" id="fullName-icon"><i class="fas fa-user"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="email">Email Address</label>
+                            <div class="input-wrapper">
+                                <input type="email" id="email" name="email" placeholder="johnkurishingal@gmail.com"
+                                    required aria-describedby="email-icon" />
+                                <span class="icon" id="email-icon"><i class="fas fa-envelope"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="mobile">Mobile Number</label>
+                            <div class="input-wrapper">
+                                <input type="tel" id="mobile" name="mobile" pattern="[0-9]{10}" placeholder="1234567890"
+                                    required aria-describedby="mobile-icon" />
+                                <span class="icon" id="mobile-icon"><i class="fas fa-phone"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="password">Password</label>
+                            <div class="input-wrapper">
+                                <input type="password" id="password" name="password" required
+                                    aria-describedby="password-toggle" />
+                                <span class="toggle-password" onclick="togglePassword('password')" id="password-toggle"
+                                    role="button" aria-label="Toggle password visibility"><i
+                                        class="fas fa-eye"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="confirm-password">Confirm Password</label>
+                            <div class="input-wrapper">
+                                <input type="password" id="confirm-password" name="confirmPassword" required
+                                    aria-describedby="confirm-password-toggle" />
+                                <span class="toggle-password" onclick="togglePassword('confirm-password')"
+                                    id="confirm-password-toggle" role="button"
+                                    aria-label="Toggle confirm password visibility"><i class="fas fa-eye"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="referralCode">Referral Code (Optional)</label>
+                            <div class="input-wrapper">
+                                <input type="text" id="referralCode" name="referralCode"
+                                    aria-describedby="referralCode-icon" />
+                                <span class="icon" id="referralCode-icon"><i class="fas fa-gift"></i></span>
+                            </div>
+                        </div>
+
+                        <button type="submit">Sign Up</button>
+
+                        <div class="divider">Already have an account? <a href="/login">Log In</a></div>
+                        <div class="divider">Or Sign Up with</div>
+
+                        <a href="/auth/google" class="google-button" role="button">
+                            <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" />
+                            Google
+                        </a>
+                    </form>
+        </div>
+    </div>
+
+    <script src="/js/user/signUp.js"></script>
+</body>
+
+</html>

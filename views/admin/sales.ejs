@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales - StarForge</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/css/admin/sales.css">
+</head>
+
+<body>
+    <%- include('../partials/admin/navbar') %>
+
+        <%- include('../partials/admin/sidepanel', { active:'sales' }) %>
+
+            <div class="main-content" id="main-content">
+                <div class="sales-section">
+                    <h2>Sales</h2>
+                    <table class="sales-table">
+                        <thead>
+                            <tr>
+                                <th>Sale ID</th>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Payment Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% sales=sales || [ { id: 'SALE001' , date: '2025-05-01' , customer: 'John Doe' ,
+                                amount: '₹2,500' , status: 'Paid' }, { id: 'SALE002' , date: '2025-05-02' ,
+                                customer: 'Jane Smith' , amount: '₹1,800' , status: 'Pending' }, { id: 'SALE003' ,
+                                date: '2025-05-03' , customer: 'Sam Wilson' , amount: '₹3,200' , status: 'Paid' } ]; %>
+                                <% sales.forEach(sale=> { %>
+                                    <tr>
+                                        <td>
+                                            <%= sale.id %>
+                                        </td>
+                                        <td>
+                                            <%= sale.date %>
+                                        </td>
+                                        <td>
+                                            <%= sale.customer %>
+                                        </td>
+                                        <td>
+                                            <%= sale.amount %>
+                                        </td>
+                                        <td>
+                                            <%= sale.status %>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <%- include('../partials/admin/footer') %>
+
+                <script src="/js/admin/sales.js"></script>
+</body>
+
+</html>

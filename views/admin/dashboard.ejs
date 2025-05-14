@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard-StarForge</title>
+    <link rel="stylesheet" href="/css/admin/dashboard.css">
+
+</head>
+
+<body>
+
+    <%- include('../partials/admin/navbar') %>
+    <%- include('../partials/admin/sidepanel', { active:'dashboard' }) %>
+
+            <div class="main-content" id="main-content">
+
+                <div class="metrics-section">
+                    <div class="metrics">
+                        <div class="metric-card">
+                            <h3>Total Customers</h3>
+                            <p>563</p>
+                        </div>
+                        <div class="metric-card">
+                            <h3>Total Orders</h3>
+                            <p>1356</p>
+                        </div>
+                        <div class="metric-card">
+                            <h3>Total Sales</h3>
+                            <p>9256</p>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="chart-section">
+                    <div class="chart-container">
+                        <h2>Sales Overview</h2>
+                        <div class="chart">
+                            <svg viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet">
+                                <rect x="50" y="100" width="40" height="80" fill="#FCA120" />
+                                <rect x="120" y="50" width="40" height="120" fill="#FCA120" />
+                                <rect x="190" y="80" width="40" height="100" fill="#FCA120" />
+                                <rect x="260" y="30" width="40" height="140" fill="#FCA120" />
+                                <text x="50" y="210" font-size="10">Jan</text>
+                                <text x="120" y="210" font-size="10">Feb</text>
+                                <text x="190" y="210" font-size="10">Mar</text>
+                                <text x="260" y="210" font-size="10">Apr</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <%- include('../partials/admin/footer') %>
+
+                <script src="/js/admin/dashboard.js"></script>
+</body>
+
+</html>

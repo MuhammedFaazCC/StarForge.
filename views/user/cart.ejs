@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StarForge - Cart</title>
+    <link rel="stylesheet" href="/css/user/cart.css">
+</head>
+<body>
+    <header>
+        <h1>StarForge.</h1>
+    </header>
+
+    <main>
+        <section class="cart-header">
+            <h2>CART</h2>
+            <button class="empty-cart">Empty My Cart</button>
+        </section>
+
+        <section class="cart-items">
+            <% cartItems.forEach(item => { %>
+                <div class="cart-item">
+                    <img src="<%= item.image %>" alt="<%= item.name %>">
+                    <div class="item-details">
+                        <h3><%= item.name %></h3>
+                        <p>Price: <%= item.price %></p>
+                        <p class="discount">Save <%= item.discount %></p>
+                    </div>
+                    <div class="quantity-controls">
+                        <button class="decrease">-</button>
+                        <span class="quantity"><%= item.quantity %></span>
+                        <button class="increase">+</button>
+                    </div>
+                    <button class="remove">REMOVE</button>
+                </div>
+            <% }) %>
+        </section>
+
+        <section class="subtotal">
+            <h3>SUBTOTAL</h3>
+            <div class="subtotal-amount">
+                <span class="original">USD <%= subtotal %></span>
+                <span class="discounted">USD <%= discountedSubtotal %></span>
+            </div>
+            <p class="subtotal-note">shipping, taxes, and discount codes calculated at checkout</p>
+            <div class="cart-actions">
+                <button class="proceed">PROCEED TO CHECKOUT</button>
+                <button class="continue">CONTINUE SHOPPING</button>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-text">
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod.</p>
+            </div>
+            <div class="footer-contact">
+                <h4>GET IN TOUCH</h4>
+                <p><span class="icon">📍</span> 8819 Ohio St. South Gate, CA 90280</p>
+                <p><span class="icon">✉️</span> wheelopstore@hello.com</p>
+                <p><span class="icon">📞</span> +1 366-866-3295</p>
+            </div>
+            <div class="footer-social">
+                <button class="social-icon">Dr</button>
+                <button class="social-icon">Be</button>
+                <button class="social-icon">Ig</button>
+                <button class="social-icon">Tw</button>
+            </div>
+        </div>
+        <p class="footer-copyright">Copyright © Wheelopstore.</p>
+    </footer>
+
+    <script src="/js/user/cart.js"></script>
+</body>
+</html>

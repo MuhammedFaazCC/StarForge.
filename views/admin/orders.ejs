@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders - StarForge</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/css/admin/orders.css">
+</head>
+
+<body>
+    <%- include('../partials/admin/navbar') %>
+
+        <%- include('../partials/admin/sidepanel', { active:'orders' }) %>
+
+            <div class="main-content" id="main-content">
+                <div class="orders-section">
+                    <h2>Orders</h2>
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                                <% orders.forEach(order=> { %>
+                                    <tr>
+                                        <td>
+                                            <%= order.id %>
+                                        </td>
+                                        <td>
+                                            <%= order.customer %>
+                                        </td>
+                                        <td>
+                                            <%= order.date %>
+                                        </td>
+                                        <td>
+                                            <%= order.total %>
+                                        </td>
+                                        <td>
+                                            <%= order.status %>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <%- include('../partials/admin/footer') %>
+
+                <script src="/js/admin/orders.js"></script>
+</body>
+
+</html>
