@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categories - StarForge</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/admin/categories.css">
+</head>
+<body>
+    <%- include('../partials/admin/navbar') %>
+    <%- include('../partials/admin/sidepanel', { active: 'categories' }) %>
+
+    <div class="main-content">
+        <div class="categories-section">
+            <div class="categories-header">
+                <h2>Categories</h2>
+                <button class="add-category-btn" onclick="window.location.href='/admin/categories/add'">Add Category</button>
+            </div>
+
+            <div class="products-controls">
+                <form action="/admin/categories" method="get" class="search-form">
+                    <input type="text" id="searchInput" name="search" placeholder="Search by categories..." value="<%= search || '' %>" oninput="filterTable()" />
+                    <% if (search) { %>
+                        <a href="/admin/categories" class="clear-search">Clear</a>
+                    <% } %>
+                </form>
+            </div>
+
+            <div class="sort-bar">
+                <label for="sortSelect">Sort:</label>
+                <select id="sortSelect" onchange="location = this.value">
+                    <option value="/admin/categories?sort=desc<%= search ? '&search=' + encodeURIComponent(search) : '' %>" <%= sortOption === 'desc' ? 'selected' : '' %>>
+                        Last added first
+                    </option>
+                    <option value="/admin/categories?sort=sales_desc<%= search ? '&search=' + encodeURIComponent(search) : '' %>" <%= sortOption === 'sales_desc' ? 'selected' : '' %>>
+                        Sales High - Low
+                    </option>
+                    <option value="/admin/categories?sort=sales_asc<%= search ? '&search=' + encodeURIComponent(search) : '' %>" <%= sortOption === 'sales_asc' ? 'selected' : '' %>>
+                        Sales Low - High
+                    </option>
+                </select>
+            </div>
+
+            <table class="categories-table" id="categoriesTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Sales</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (categories.length === 0) { %>
+                        <tr><td colspan="5">No categories found.</td></tr>
+                    <% } else { %>
+                        <% categories.forEach(category => { %>
+                            <tr>
+                                <td><%= category.name %></td>
+                                <td><%= category.description %></td>
+                                <td><%= category.sales || 0 %></td>
+                                <td>
+                                    <button class="status-toggle <%= category.isActive ? 'active' : 'inactive' %>" 
+                                            data-id="<%= category._id %>">
+                                        <%= category.isActive ? 'UNLIST' : 'LIST' %>
+                                    </button>
+                                </td>
+                                <td>
+                                    <a href="/admin/categories/edit/<%= category._id %>" class="edit-btn">Edit</a>
+                                    <button class="delete-btn" data-id="<%= category._id %>">Delete</button>
+                                    <% if (category.offer) { %>
+                                        <button class="offer-remove" data-id="<%= category._id %>">Remove Offer</button>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } %>
+                </tbody>
+            </table>
+
+            <div class="pagination">
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <a href="/admin/categories?page=<%= i %>&sort=<%= sortOption %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" 
+                       class="<%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <%- include('../partials/admin/footer') %>
+    <script src="/js/admin/categories.js"></script>
+</body>
+</html>

@@ -9,7 +9,7 @@
 </head>
 <body>
     <%- include('../partials/admin/navbar') %>
-    <%- include('../partials/admin/sidepanel', { active:'customers' }) %>
+    <%- include('../partials/admin/sidepanel', { active: 'customers' }) %>
 
     <div class="main-content">
         <div class="customers-section">
@@ -17,8 +17,6 @@
                 <h2>Customers</h2>
                 <div class="controls">
                     <input type="text" id="searchInput" placeholder="Search customers..." class="search-input">
-                    <button id="clearResults" class="btn btn-danger">Clear Results</button>
-                    <a href="/admin/customers/add" class="btn btn-primary">Add Customer</a>
                 </div>
             </div>
 
@@ -39,10 +37,10 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="customersTableBody">
                     <% if (customers.length > 0) { %>
                         <% customers.forEach(customer => { %>
-                            <tr>
+                            <tr data-id="<%= customer._id %>">
                                 <td><%= customer.fullName %></td>
                                 <td><%= customer.email %></td>
                                 <td><%= new Date(customer.createdAt).toLocaleDateString() %></td>
@@ -62,18 +60,14 @@
                             </tr>
                         <% }); %>
                     <% } else { %>
-                        <tr>
-                            <td colspan="6" class="no-results">No customers found</td>
+                        <tr class="no-results">
+                            <td colspan="6">No customers found</td>
                         </tr>
                     <% } %>
                 </tbody>
             </table>
 
-            <div class="pagination">
-                <button class="btn btn-page" id="prevPage" <%= currentPage === 1 ? 'disabled' : '' %>>Previous</button>
-                <span>Page <%= currentPage %> of <%= totalPages %></span>
-                <button class="btn btn-page" id="nextPage" <%= currentPage === totalPages ? 'disabled' : '' %>>Next</button>
-            </div>
+            <div class="pagination" id="pagination">
         </div>
     </div>
 

@@ -3,11 +3,24 @@ const nodemailer = require("nodemailer");
 const User = require("../../models/userSchema");
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  tls: {
+    ciphers: "SSLv3",
+  },
+});
+
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("SMTP Transporter Error:", error.message);
+  } else {
+    console.log("SMTP Transporter is ready");
+  }
 });
 
 const pageNotFound = async (req, res) => {
@@ -20,6 +33,8 @@ const pageNotFound = async (req, res) => {
 
 const loadHomepage = async (req, res) => {
   try {
+    const user = req.session.user;
+
     const products = [
       { name: "StarForge Classic", price: 5000, image: "/images/wheel1.jpg" },
       { name: "StarForge Omega", price: 6500, image: "/images/wheel2.jpg" },
@@ -29,9 +44,9 @@ const loadHomepage = async (req, res) => {
       { name: "StarForge Phantom", price: 7800, image: "/images/wheel6.jpg" },
     ];
 
-    let user = null;
-    if (req.session.user) {
-      user = await User.find(req.session.user);
+    if (user && user.isBlocked) {
+      req.session.error = "User was blocked by admin";
+      return res.redirect("/login");
     }
 
     return res.render("landingPage", {
@@ -46,7 +61,12 @@ const loadHomepage = async (req, res) => {
 
 const loginPage = async (req, res) => {
   try {
-    return res.render("userLogin", { error: null });
+    if (req.session.user) {
+      return res.redirect("/");
+    }
+    const error = req.session.error || null;
+    req.session.error = null; 
+    return res.render("userLogin", { error });
   } catch (error) {
     console.log("Page not found");
     res.status(500).send("Server error");
@@ -58,119 +78,135 @@ const login = async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
+    if (user && user.isBlocked) {
+      req.session.error = "User was blocked by admin";
+      return res.redirect("/login");
+    }
     if (!user) {
-      return res.render("userLogin", { error: "Email not found" });
+      req.session.error = "Email not found";
+      return res.redirect("/login");
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.render("userLogin", { error: "Invalid password" });
+      req.session.error = "Invalid password";
+      return res.redirect("/login");
     }
 
     req.session.user = user;
     res.redirect("/");
   } catch (error) {
-    res.render("userLogin", { error: "An error occurred" });
+    req.session.error = "An error occurred";
+    res.redirect("/login");
   }
 };
 
 const signUpPage = async (req, res) => {
   try {
-    return res.render("signUp", { error: null });
+    const error = req.session.error || null;
+    req.session.error = null;
+    return res.render("signUp", { error });
   } catch (error) {
     console.log("Page not found");
     res.status(500).send("Server error");
   }
 };
 
-const signUp = async (req, res) => {
-  const { fullName, email, mobile, password, confirmPassword, referralCode } =
-    req.body;
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+const sendOTP = async (email, otp) => {
   try {
-    if (
-      !fullName ||
-      fullName.trim().length < 2 ||
-      fullName.trim().length > 50
-    ) {
-      return res.render("signUp", {
-        error: "Full name must be between 2 and 50 characters",
-      });
+    const mailOptions = {
+      from: `"StarForge" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "StarForge OTP Verification",
+      html: `
+        <h2>Your OTP Code</h2>
+        <p>Your one-time password (OTP) is <strong>${otp}</strong>.</p>
+        <p>Please enter this code on the verification page to proceed.</p>
+        <p>This OTP is valid for 5 minutes.</p>
+        <p>If you did not request this, please ignore this email.</p>
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully. Message ID:", info.messageId);
+    return info;
+  } catch (error) {
+    console.error("Error sending OTP email:", error.message);
+    throw new Error("Failed to send OTP email");
+  }
+};
+
+const signUp = async (req, res) => {
+  const { fullName, email, mobile, password, confirmPassword, referralCode } = req.body;
+  try {
+    if (!fullName || fullName.trim().length < 2 || fullName.trim().length > 50) {
+      req.session.error = "Full name must be between 2 and 50 characters";
+      return res.redirect("/signup");
     }
 
     const emailRegex = /^\S+@\S+\.\S+$/;
     if (!email || !emailRegex.test(email)) {
-      return res.render("signUp", {
-        error: "Please provide a valid email address",
-      });
+      req.session.error = "Please provide a valid email address";
+      return res.redirect("/signup");
     }
 
     const mobileRegex = /^[0-9]{10}$/;
     if (!mobile || !mobileRegex.test(mobile)) {
-      return res.render("signUp", {
-        error: "Mobile number must be exactly 10 digits",
-      });
+      req.session.error = "Mobile number must be exactly 10 digits";
+      return res.redirect("/signup");
     }
 
     if (!password || password.length < 6) {
-      return res.render("signUp", {
-        error: "Password must be at least 6 characters",
-      });
+      req.session.error = "Password must be at least 6 characters";
+      return res.redirect("/signup");
     }
 
     if (password !== confirmPassword) {
-      return res.render("signUp", { error: "Passwords do not match" });
+      req.session.error = "Passwords do not match";
+      return res.redirect("/signup");
     }
 
     const existingUser = await User.findOne({ $or: [{ email }, { mobile }] });
     if (existingUser) {
-      return res.render("signUp", {
-        error: "Email or mobile number already exists",
-      });
+      req.session.error = "Email or mobile number already exists";
+      return res.redirect("/signup");
     }
 
     if (referralCode) {
       const referringUser = await User.findOne({ referralCode });
       if (!referringUser) {
-        return res.render("signUp", { error: "Invalid referral code" });
+        req.session.error = "Invalid referral code";
+        return res.redirect("/signup");
       }
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const otp = generateOTP();
+    req.session.otp = {
+      code: otp,
+      expires: Date.now() + 5 * 60 * 1000, // 5 minutes
+      userData: { fullName, email, mobile, password, referralCode },
+      action: "signup",
+    };
 
-    const newReferralCode = Math.random()
-      .toString(36)
-      .slice(2, 10)
-      .toUpperCase();
+    await sendOTP(email, otp);
 
-    const newUser = await User.create({
-      fullName,
-      email,
-      mobile,
-      password: hashedPassword,
-      referralCode: newReferralCode,
-      role: "customer",
-      isActive: true,
-    });
-    console.log(newUser);
-
-    if (referralCode) {
-      const referringUser = await User.findOne({ referralCode });
-      referringUser.referralPoints = (referringUser.referralPoints || 0) + 50;
-      await referringUser.save();
-    }
-
-    req.session.userId = newUser._id;
-
-    res.redirect("/");
+    res.redirect("/otp-verification");
   } catch (error) {
-    console.error("Error: ", error);
-    res.render("signUp", { error: error.message || "An error occurred" });
+    console.error("Error in signUp:", error.message);
+    req.session.error = "Failed to send OTP. Please try again.";
+    res.redirect("/signup");
   }
 };
 
 const forgotPasswordPage = async (req, res) => {
   try {
-    return res.render("forgotPassword", { error: null, success: null });
+    const error = req.session.error || null;
+    req.session.error = null;
+    return res.render("forgotPassword", { error, success: null });
   } catch (error) {
     console.log("Page not found");
     res.status(500).send("Server error");
@@ -183,52 +219,158 @@ const forgotPassword = async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res.render("forgotPassword", {
-        error: "Email not found",
-        success: null,
-      });
+      req.session.error = "Email not found";
+      return res.redirect("/forgotPassword");
     }
 
-    req.session.resetUserId = user._id;
-
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "StarForge Password Reset Request",
-      html: `
-                <h2>Password Reset Request</h2>
-                <p>We received a request to reset your StarForge account password.</p>
-                <p>Please return to the StarForge website and visit the Reset Password page to set a new password.</p>
-                <p>If you did not request a password reset, please ignore this email.</p>
-            `,
+    const otp = generateOTP();
+    req.session.otp = {
+      code: otp,
+      expires: Date.now() + 5 * 60 * 1000, // 5 minutes
+      userId: user._id,
+      action: "forgotPassword",
     };
 
-    await transporter.sendMail(mailOptions);
+    await sendOTP(email, otp);
 
-    res.render("forgotPassword", {
-      error: null,
-      success: "Please check your email for further instructions",
-    });
+    res.redirect("/otp-verification");
   } catch (error) {
-    res.render("forgotPassword", { error: "An error occurred", success: null });
+    console.error("Error in forgotPassword:", error.message);
+    req.session.error = "Failed to send OTP. Please try again.";
+    res.redirect("/forgotPassword");
   }
 };
 
-const resetPasswordGet = async (req, res) => {
+const otpVerificationPage = async (req, res) => {
   try {
-    if (!req.session.resetUserId) {
-      return res.redirect("/forgotPassword");
+    if (!req.session.otp) {
+      req.session.error = "No OTP session found";
+      return res.redirect(req.session.otp?.action === "signup" ? "/signup" : "/forgotPassword");
     }
-    res.render("resetPassword", { error: null });
+    const error = req.session.error || null;
+    req.session.error = null;
+    res.render("otpVerification", { error, success: null });
   } catch (error) {
     console.log("Page not found");
     res.status(500).send("Server error");
   }
 };
 
+const verifyOTP = async (req, res) => {
+  const { otp } = req.body;
+
+  try {
+    if (!req.session.otp || !otp) {
+      req.session.error = "No OTP session found or OTP not provided";
+      return res.redirect("/otp-verification");
+    }
+
+    const { code, expires, action } = req.session.otp;
+
+    if (Date.now() > expires) {
+      delete req.session.otp;
+      req.session.error = "OTP has expired";
+      return res.redirect("/otp-verification");
+    }
+
+    if (otp !== code) {
+      req.session.error = "Invalid OTP";
+      return res.redirect("/otp-verification");
+    }
+
+    if (action === "signup") {
+      const { fullName, email, mobile, password, referralCode } = req.session.otp.userData;
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newReferralCode = Math.random().toString(36).slice(2, 10).toUpperCase();
+
+      const newUser = await User.create({
+        fullName,
+        email,
+        mobile,
+        password: hashedPassword,
+        referralCode: newReferralCode,
+        role: "customer",
+        isActive: true,
+      });
+
+      if (referralCode) {
+        const referringUser = await User.findOne({ referralCode });
+        referringUser.referralPoints = (referringUser.referralPoints || 0) + 50;
+        await referringUser.save();
+      }
+
+      req.session.user = newUser;
+      delete req.session.otp;
+      res.redirect("/");
+    } else if (action === "forgotPassword") {
+      req.session.resetUserId = req.session.otp.userId;
+      delete req.session.otp;
+      res.redirect("/resetPassword");
+    }
+  } catch (error) {
+    console.error("Error in verifyOTP:", error.message);
+    req.session.error = error.message || "An error occurred";
+    res.redirect("/otp-verification");
+  }
+};
+
+const resetPasswordGet = async (req, res) => {
+  try {
+    if (!req.session.resetUserId) {
+      req.session.error = "Reset session expired";
+      return res.redirect("/forgotPassword");
+    }
+    const error = req.session.error || null;
+    req.session.error = null;
+    res.render("resetPassword", { error });
+  } catch (error) {
+    console.log("Page not found");
+    res.status(500).send("Server error");
+  }
+};
+
+const resetPasswordPost = async (req, res) => {
+  const { password, confirmPassword } = req.body;
+
+  try {
+    if (!req.session.resetUserId) {
+      req.session.error = "Reset session expired";
+      return res.redirect("/forgotPassword");
+    }
+
+    if (password !== confirmPassword) {
+      req.session.error = "Passwords do not match";
+      return res.redirect("/resetPassword");
+    }
+
+    if (password.length < 6) {
+      req.session.error = "Password must be at least 6 characters";
+      return res.redirect("/resetPassword");
+    }
+
+    const user = await User.findById(req.session.resetUserId);
+    if (!user) {
+      req.session.error = "User not found";
+      return res.redirect("/resetPassword");
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    delete req.session.resetUserId;
+
+    res.redirect("/login");
+  } catch (error) {
+    req.session.error = "An error occurred";
+    res.redirect("/resetPassword");
+  }
+};
+
 const wishlistPage = async (req, res) => {
   try {
-    let user =req.session.user
+    let user = req.session.user;
     let wishlistItems = [
       {
         id: 1,
@@ -244,7 +386,7 @@ const wishlistPage = async (req, res) => {
       },
     ];
     res.render("wishlist", {
-        user,
+      user,
       currentPage: "wishlist",
       wishlistItems: wishlistItems,
       wishlistCount: wishlistItems.length,
@@ -254,38 +396,7 @@ const wishlistPage = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
-// --------------------
 
-/*// POST: Add item to cart (simulated)
-router.post("/add-to-cart/:id", (req, res) => {
-  const itemId = parseInt(req.params.id);
-  // In a real app, you'd add the item to the cart (e.g., in a database or session)
-  // For now, we'll just redirect back to the wishlist
-  res.redirect("/");
-});
-
-// POST: Remove item from wishlist
-router.post("/remove/:id", (req, res) => {
-  const itemId = parseInt(req.params.id);
-  wishlistItems = wishlistItems.filter((item) => item.id !== itemId);
-  res.redirect("/");
-});
-
-// POST: Move all items to cart
-router.post("/move-all-to-cart", (req, res) => {
-  // In a real app, you'd move all items to the cart and clear the wishlist
-  wishlistItems = [];
-  res.redirect("/");
-});
-
-// POST: Empty the wishlist
-router.post("/empty", (req, res) => {
-  wishlistItems = [];
-  res.redirect("/");
-});
-
-module.exports = router;*/
-// --------------------
 const cartPage = async (req, res) => {
   try {
     const cartItems = [
@@ -310,41 +421,6 @@ const cartPage = async (req, res) => {
   } catch {
     console.log("Page not found");
     res.status(500).send("Server error");
-  }
-};
-
-const resetPasswordPost = async (req, res) => {
-  const { password, confirmPassword } = req.body;
-
-  try {
-    if (!req.session.resetUserId) {
-      return res.redirect("/forgotPassword");
-    }
-
-    if (password !== confirmPassword) {
-      return res.render("resetPassword", { error: "Passwords do not match" });
-    }
-
-    if (password.length < 6) {
-      return res.render("resetPassword", {
-        error: "Password must be at least 6 characters",
-      });
-    }
-
-    const user = await User.findById(req.session.resetUserId);
-    if (!user) {
-      return res.render("resetPassword", { error: "User not found" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    user.password = hashedPassword;
-    await user.save();
-
-    delete req.session.resetUserId;
-
-    res.redirect("/login");
-  } catch (error) {
-    res.render("resetPassword", { error: "An error occurred" });
   }
 };
 
@@ -376,10 +452,11 @@ const googleCallback = async (req, res) => {
         referralCode: Math.random().toString(36).slice(2, 10).toUpperCase(),
       });
     }
-    req.session.userId = user._id;
+    req.session.user = user;
     res.redirect("/");
   } catch (error) {
-    res.render("userLogin", { error: "An error occurred" });
+    req.session.error = "An error occurred";
+    res.redirect("/login");
   }
 };
 
@@ -390,12 +467,14 @@ module.exports = {
   login,
   signUpPage,
   signUp,
-  wishlistPage,
-  cartPage,
   forgotPasswordPage,
   forgotPassword,
+  otpVerificationPage,
+  verifyOTP,
   resetPasswordGet,
   resetPasswordPost,
+  wishlistPage,
+  cartPage,
   logout,
   googleCallback,
 };

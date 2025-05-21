@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Add Product - StarForge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="/css/admin/addProduct.css">
+</head>
+<body>
+  <%- include('../partials/admin/navbar') %>
+
+  <div class="container">
+    <h2>Add New Product</h2>
+    <% if (message) { %>
+      <div class="alert alert-<%= message.type %>">
+        <%= message.text %>
+        <button class="alert-close" onclick="this.parentElement.style.display='none'">×</button>
+      </div>
+    <% } %>
+    <form action="/admin/products/add" method="POST" enctype="multipart/form-data" id="addProductForm">
+      <div class="form-section">
+        <h3>Product Details</h3>
+        <div class="form-group">
+          <label for="name">Product Name <span class="required">*</span></label>
+          <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+          <label for="brand">Brand <span class="required">*</span></label>
+          <input type="text" id="brand" name="brand" required>
+        </div>
+        <div class="form-group">
+          <label for="price">Price ($) <span class="required">*</span></label>
+          <input type="number" id="price" name="price" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label for="offer">Offer (%)</label>
+          <input type="number" id="offer" name="offer" step="0.01">
+        </div>
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" name="description"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="category">Category <span class="required">*</span></label>
+          <select id="category" name="category" required>
+            <% categories.forEach(category => { %>
+              <option value="<%= category._id %>"><%= category.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="stock">Stock <span class="required">*</span></label>
+          <input type="number" id="stock" name="stock" required>
+        </div>
+      </div>
+      <div class="form-section">
+        <h3>Specifications</h3>
+        <div class="form-group">
+          <label for="sizes">Sizes (comma-separated)</label>
+          <input type="text" id="sizes" name="sizes">
+        </div>
+        <div class="form-group">
+          <label for="rimMaterial">Rim Material</label>
+          <input type="text" id="rimMaterial" name="rimMaterial">
+        </div>
+        <div class="form-group">
+          <label for="finish">Finish</label>
+          <input type="text" id="finish" name="finish">
+        </div>
+        <div class="form-group">
+          <label for="boltPattern">Bolt Pattern</label>
+          <input type="text" id="boltPattern" name="boltPattern">
+        </div>
+        <div class="form-group">
+          <label for="hubBore">Hub Bore</label>
+          <input type="text" id="hubBore" name="hubBore">
+        </div>
+        <div class="form-group">
+          <label for="offset">Offset</label>
+          <input type="text" id="offset" name="offset">
+        </div>
+        <div class="form-group">
+          <label for="color">Color</label>
+          <input type="text" id="color" name="color">
+        </div>
+        <div class="form-group">
+          <label for="loadRating">Load Rating</label>
+          <input type="text" id="loadRating" name="loadRating">
+        </div>
+        <div class="form-group">
+          <label for="additionalInfo">Additional Info (comma-separated)</label>
+          <input type="text" id="additionalInfo" name="additionalInfo">
+        </div>
+      </div>
+      <div class="form-section">
+        <h3>Images</h3>
+        <div class="form-group">
+          <label for="mainImage">Main Image</label>
+          <input type="file" id="mainImage" name="mainImage" accept="image/jpeg,image/png">
+          <div id="mainImagePreview" class="image-preview"></div>
+        </div>
+        <div class="form-group">
+          <label for="additionalImages">Additional Images (up to 5)</label>
+          <input type="file" id="additionalImages" name="additionalImages" accept="image/jpeg,image/png" multiple>
+          <div id="additionalImagesPreview" class="image-preview"></div>
+        </div>
+      </div>
+      <button type="submit">Add Product</button>
+    </form>
+  </div>
+
+  <%- include('../partials/admin/footer') %>
+  <script src="/js/admin/addProduct.js"></script>
+</body>
+</html>

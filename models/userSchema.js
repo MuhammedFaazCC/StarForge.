@@ -1,3 +1,5 @@
+
+
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
@@ -18,11 +20,10 @@ const userSchema = new mongoose.Schema({
     },
     mobile: {
         type: String,
-        required: [true, 'Mobile number is required'],
         unique: true,
-        trim: true,
-        match: [/^[0-9]{10}$/, 'Mobile number must be 10 digits']
+        sparse: true,
     },
+
     password: {
         type: String,
         required: [function() { return !this.googleId; }, 'Password is required unless signing up with Google'],
@@ -51,8 +52,17 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    isBlocked: {
+        type: Boolean,
+        default: false
+    }
 }, {
     timestamps: true
 });
+
+
+userSchema.methods.isUserBlocked = function() {
+    return this.isBlocked;
+};
 
 module.exports = mongoose.model('User', userSchema);

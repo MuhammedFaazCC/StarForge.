@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>View Product</title>
+  <link rel="stylesheet" href="/css/admin/viewProduct.css">
+</head>
+<body>
+  <%- include('../partials/admin/navbar') %>
+
+<section class="product-view-section">
+  <div class="product-header">
+    <div class="main-image-container">
+      <div class="main-image">
+        <% if (product.mainImage) { %>
+          <img src="/uploads/<%= product.mainImage %>" alt="Main Image" />
+        <% } else { %>
+          <p>No main image</p>
+        <% } %>
+      </div>
+
+      <% if (product.additionalImages && product.additionalImages.length > 0) { %>
+        <div class="image-section">
+          <% product.additionalImages.forEach(img => { %>
+            <div class="image-box">
+              <img src="/uploads/<%= img %>" alt="Additional Image" />
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="product-info">
+      <h1><%= product.name %></h1>
+      <div class="info-block"><strong>Brand:</strong> <%= product.brand %></div>
+      <div class="info-block"><strong>Price:</strong> ₹<%= product.price.toFixed(2) %></div>
+      <div class="info-block"><strong>Offer:</strong> <%= product.offer || 0 %>%</div>
+      <div class="info-block"><strong>Stock:</strong> <%= product.stock %></div>
+      <div class="info-block"><strong>Category:</strong> <%= product.category?.name || product.category %></div>
+      <div class="info-block"><strong>Sizes:</strong> <%= product.sizes?.join(", ") %></div>
+      <div class="info-block"><strong>Rim Material:</strong> <%= product.rimMaterial %></div>
+      <div class="info-block"><strong>Finish:</strong> <%= product.finish %></div>
+    </div>
+  </div>
+
+  <div class="product-description">
+    <h3>Description</h3>
+    <p><%= product.description %></p>
+  </div>
+
+  <fieldset>
+    <legend>Specifications</legend>
+    <div class="info-block"><strong>Bolt Pattern:</strong> <%= product.specifications?.boltPattern %></div>
+    <div class="info-block"><strong>Hub Bore:</strong> <%= product.specifications?.hubBore %></div>
+    <div class="info-block"><strong>Offset:</strong> <%= product.specifications?.offset %></div>
+    <div class="info-block"><strong>Color:</strong> <%= product.specifications?.color %></div>
+    <div class="info-block"><strong>Load Rating:</strong> <%= product.specifications?.loadRating %></div>
+    <div class="info-block"><strong>Additional Info:</strong> <%= product.specifications?.additionalInfo?.join(", ") %></div>
+  </fieldset>
+</section>
+<%- include('../partials/admin/footer') %>
+
+</body>
+</html>

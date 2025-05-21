@@ -126,15 +126,9 @@ body {
     flex-grow: 1;
     overflow-y: auto;
     background-color: #f8fafc;
-    transition: margin-left 0.3s ease;
 }
 
-.main-content.expanded {
-    margin-left: 0;
-}
-
-/* Coupons Section */
-.coupons-section {
+.customers-section {
     background: #e5e7eb;
     padding: 20px;
     border-radius: 8px;
@@ -142,14 +136,68 @@ body {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
-.coupons-section h2 {
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.section-header h2 {
     font-size: 1.2rem;
     color: #1f2937;
-    margin-bottom: 20px;
+    margin: 0;
     font-weight: 600;
 }
 
-.coupons-table {
+/* Search Form */
+.products-controls {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.search-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#searchInput {
+    padding: 8px 12px;
+    width: 200px;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+    font-size: 0.9rem;
+}
+
+.clear-search {
+    color: #ef4444;
+    font-size: 0.9rem;
+    text-decoration: none;
+    display: none;
+}
+
+.clear-search:hover {
+    color: #dc2626;
+}
+
+/* Alert */
+.alert {
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+}
+
+.alert.error {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #b91c1c;
+}
+
+/* Table */
+.customers-table {
     width: 100%;
     border-collapse: collapse;
     background: #f1f5f9;
@@ -158,38 +206,120 @@ body {
     overflow: hidden;
 }
 
-.coupons-table th,
-.coupons-table td {
+.customers-table th,
+.customers-table td {
     padding: 12px 15px;
     text-align: left;
     font-size: 0.9rem;
     border-bottom: 1px solid #d1d5db;
 }
 
-.coupons-table th {
+.customers-table th {
     background: #d1d5db;
     font-weight: 600;
     color: #1f2937;
 }
 
-.coupons-table td {
+.customers-table th.sortable {
+    cursor: pointer;
+}
+
+.customers-table td {
     color: #374151;
 }
 
-.coupons-table tr:nth-child(even) {
+.customers-table tr:nth-child(even) {
     background: #eceff1;
 }
 
-.coupons-table tr:last-child td {
+.customers-table tr:last-child td {
     border-bottom: none;
 }
 
-.coupons-table tr:hover {
+.customers-table tr:hover {
     background: #e5e7eb;
 }
 
+.customers-table .no-results td {
+    text-align: center;
+    color: #6b7280;
+}
+
+/* Status */
+.status {
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    display: inline-block;
+}
+
+.status.active {
+    background-color: #10b981;
+    color: white;
+}
+
+.status.blocked {
+    background-color: #6b7280;
+    color: white;
+}
+
+/* Action Buttons */
+.btn-action {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.btn-block {
+    background-color: #ef4444;
+    color: white;
+}
+
+.btn-unblock {
+    background-color: #3b82f6;
+    color: white;
+}
+
+/* Pagination */
+.pagination {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.pagination .btn-arrow {
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    background-color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.pagination .btn-arrow:disabled {
+    background-color: #f1f5f9;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
+.pagination .btn-arrow:hover:not(:disabled) {
+    background-color: #e5e7eb;
+    color: #1a1a1a;
+}
+
+.pagination span {
+    font-size: 0.9rem;
+    color: #374151;
+}
+
 /* Footer */
-footer {
+footer p {
+    width: 100%;
     padding: 10px;
     text-align: center;
     background-color: #1a1a1a;
@@ -200,41 +330,62 @@ footer {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .side-panel {
-        width: 180px;
-    }
     .main-content {
         margin-left: 180px;
     }
-    .coupons-table th,
-    .coupons-table td {
+
+    .customers-table th,
+    .customers-table td {
         font-size: 0.85rem;
         padding: 10px 12px;
+    }
+
+    #searchInput {
+        width: 150px;
     }
 }
 
 @media (max-width: 480px) {
-    .toggle-btn {
-        display: block;
-    }
-    .side-panel {
-        width: 220px;
-        position: fixed;
-    }
     .main-content {
         margin-left: 0;
         padding: 10px;
     }
-    .navbar {
-        flex-direction: row;
-        align-items: center;
-        gap: 8px;
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
     }
-    .coupons-table {
+
+    .products-controls {
+        width: 100%;
+    }
+
+    .search-form {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    #searchInput {
+        width: 100%;
+        text-align: center;
+    }
+
+    .clear-search {
+        margin-top: 5px;
+    }
+
+    .customers-table {
         font-size: 0.8rem;
     }
-    .coupons-table th,
-    .coupons-table td {
+
+    .customers-table th,
+    .customers-table td {
         padding: 8px 10px;
+    }
+
+    .pagination {
+        flex-wrap: wrap;
     }
 }

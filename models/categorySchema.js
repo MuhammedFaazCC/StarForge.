@@ -19,6 +19,28 @@ const categorySchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    offer: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 0,
+    },
+    image: {
+      type: String,
+      default: "",
+    },
+    sales: {
+      type: Number,
+      default: 0,
+    },
+    stock: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

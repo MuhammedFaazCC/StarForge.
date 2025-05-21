@@ -1,40 +1,74 @@
 const mongoose = require('mongoose');
 
-const orderSchema = new mongoose.Schema({
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: [true, 'User is required']
-    },
-    products: [{
-        product: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Product',
-            required: true
-        },
-        quantity: {
-            type: Number,
-            required: true,
-            min: [1, 'Quantity must be at least 1']
-        }
-    }],
-    totalAmount: {
-        type: Number,
-        required: [true, 'Total amount is required'],
-        min: [0, 'Total amount cannot be negative']
-    },
-    status: {
-        type: String,
-        enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
-        default: 'pending'
-    },
-    shippingAddress: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Address',
-        required: [true, 'Shipping address is required']
-    }
+const productSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  brand: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  price: {
+    type: Number,
+    required: true,
+    min: 0,
+  },
+  offer: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  description: {
+    type: String,
+    trim: true,
+  },
+  category: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+    required: true,
+  },
+  sizes: {
+    type: [String],
+    default: [],
+  },
+  rimMaterial: {
+    type: String,
+    trim: true,
+  },
+  finish: {
+    type: String,
+    trim: true,
+  },
+  stock: {
+    type: Number,
+    required: true,
+    min: 0,
+  },
+  specifications: {
+    boltPattern: { type: String, trim: true, default: '' },
+    hubBore: { type: String, trim: true, default: '' },
+    offset: { type: String, trim: true, default: '' },
+    color: { type: String, trim: true, default: '' },
+    loadRating: { type: String, trim: true, default: '' },
+    additionalInfo: { type: [String], default: [] },
+  },
+  mainImage: {
+    type: String,
+    default: '',
+  },
+  additionalImages: {
+    type: [String],
+    default: [],
+  },
+  isListed: {
+    type: Boolean,
+    default: true,
+  },
 }, {
-    timestamps: true
+  timestamps: true,
 });
 
-module.exports = mongoose.model('Order', orderSchema);
+module.exports = mongoose.model('Product', productSchema);

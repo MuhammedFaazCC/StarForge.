@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Add Category - Admin Panel</title>
+  <link rel="stylesheet" href="/css/admin/addCategory.css" />
+</head>
+<body>
+  <%- include('../partials/admin/navbar') %>
+
+  <div class="main-content">
+    <div class="form-container">
+      <h2>Add New Category</h2>
+      <form action="/admin/categories/add" method="POST" enctype="multipart/form-data" id="addCategoryForm">
+        
+        <div class="form-group">
+          <label for="name">Category Name</label>
+          <input type="text" id="name" name="name" required />
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" name="description" rows="4"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="image">Category Image</label>
+          <input type="file" id="image" name="image" accept="image/*" />
+          <div id="imagePreview" class="image-preview"></div>
+        </div>
+
+        <div class="form-group status-toggle">
+          <label for="isActive">Active Status</label>
+          <input type="checkbox" id="isActive" name="isActive" checked />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit">Add Category</button>
+          <a href="/admin/categories" class="cancel-btn">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <%- include('../partials/admin/footer') %>
+  <script src="/js/admin/addCategory.js"></script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Verification - StarForge</title>
+    <link rel="stylesheet" href="/css/user/otpVerification.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="background">
+        <div class="login-container">
+            <h2>OTP Verification</h2>
+            <% if (error) { %>
+                <div class="error-message"><%= error %></div>
+            <% } %>
+            <% if (success) { %>
+                <div class="success-message"><%= success %></div>
+            <% } %>
+            <form action="/otp-verification" method="POST">
+                <div class="input-group">
+                    <label for="otp">Enter OTP</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="otp" name="otp" placeholder="6-digit OTP" required maxlength="6">
+                        <i class="fas fa-lock icon"></i>
+                    </div>
+                </div>
+                <button type="submit">Verify OTP</button>
+                <div class="divider">
+                    <a href="/<%= session.otp?.action === 'signup' ? 'signup' : 'forgotPassword' %>">Back to <%= session.otp?.action === 'signup' ? 'Sign Up' : 'Forgot Password' %></a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="/js/user/otpVerification.js"></script>
+</body>
+</html>
