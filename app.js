@@ -19,21 +19,55 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.set("view engine", "ejs");
-app.set("views", [ path.join(__dirname, "views/admin"), path.join(__dirname, "views/user"), ]);
+app.set("views", [
+  path.join(__dirname, "views/admin"),
+  path.join(__dirname, "views/user"),
+]);
 
+// Improved session configuration
 app.use(session({
     secret: process.env.SESSION_SECRET || 'starforge-secret',
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    cookie: {
+        maxAge: 24 * 60 * 60 * 1000,
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true
+    }
 }));
 
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Global middleware to check admin login status before all routes
+app.use((req, res, next) => {
+    // For admin login page specifically
+    if (req.path === '/admin' || req.path === '/admin/') {
+        if (req.session.admin && req.session.admin._id) {
+            console.log("Admin redirect middleware: redirecting to dashboard");
+            return res.redirect('/admin/dashboard');
+        }
+    }
+    next();
+});
+
+app.use((req, res, next) => {
+    res.locals.user = req.session.user || null;
+    res.locals.admin = req.session.admin || null;
+    res.locals.error = req.session.error || null;
+    res.locals.success = req.session.success || null;
+    res.locals.message = req.session.message || null;
+    next();
+});
+
 app.use("/", userRouter);
- app.use("/admin", adminRouter);
+app.use("/admin", adminRouter);
 app.use((req, res) => { 
   res.status(404).render("pageNotFound");
+});
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  next();
 });
  
 const PORT = process.env.PORT || 8080;

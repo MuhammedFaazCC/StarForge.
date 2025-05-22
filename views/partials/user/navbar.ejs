@@ -26,6 +26,9 @@
             </ul>
         </nav>
     </aside>
+    <!-- Add overlay for better UX -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
     <div class="logo">StarForge.</div>
     <% if (user) { %>
         <div class="nav-buttons">
@@ -35,7 +38,7 @@
                     <span class="count-badge" id="wishlist-badge">
                         <%= wishlistCount %>
                     </span>
-                    <% } %>
+                <% } %>
             </a>
             <a href="/cart" class="nav-link position-relative" title="Cart" id="cart-link">
                 <i class="fas fa-shopping-cart"></i>
@@ -43,18 +46,22 @@
                     <span class="count-badge" id="cart-badge">
                         <%= cartCount %>
                     </span>
-                    <% } %>
+                <% } %>
             </a>
 
-            <a href="/LoadProfile" class="nav-link" title="My Account">
-                <i class="fas fa-user-circle"></i>
-            </a>
+            <div class="profile-container">
+                <i class="fas fa-user-circle profile-toggle" title="My Account"></i>
+                <div class="profile-dropdown">
+                    <a href="/LoadProfile">Profile</a>
+                    <a href="/orders">My Orders</a>
+                    <a href="#" id="logout-btn">Logout</a>
+                </div>
+            </div>
         </div>
-
-
-        <% } else { %>
+    <% } else { %>
+        <div class="nav-buttons">
             <a href="/login" class="auth-button login-button">Login</a>
             <a href="/signup" class="auth-button signup-button">Sign Up</a>
-            <% } %>
-                </div>
+        </div>
+    <% } %>
 </header>

@@ -5,50 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edit Product - StarForge</title>
   <link rel="stylesheet" href="/css/admin/addProduct.css">
-  <style>
-    /* Overlay for lazy loading */
-    .loading-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity 0.3s, visibility 0.3s;
-    }
-    .loading-overlay.active {
-      visibility: visible;
-      opacity: 1;
-    }
-    .spinner {
-      border: 6px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      border-top: 6px solid #ffffff;
-      width: 50px;
-      height: 50px;
-      animation: spin 1s linear infinite;
-      margin-bottom: 15px;
-    }
-    .loading-text {
-      color: white;
-      font-size: 18px;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    /* Custom style for wider SweetAlert */
-    .swal-wide {
-      width: 500px !important;
-    }
-  </style>
 </head>
 <body>
 
@@ -64,87 +20,78 @@
     <form id="editProductForm" action="/admin/products/edit/<%= product._id %>" method="POST" enctype="multipart/form-data">
       <div class="form-group">
         <label for="name">Product Name</label>
-        <input type="text" id="name" name="name" value="<%= product.name %>" required>
+        <input type="text" id="name" name="name" value="<%= product.name %>" >
+        <div class="error-message" id="name-error">Product name must be at least 3 characters.</div>
       </div>
       <div class="form-group">
         <label for="brand">Brand</label>
-        <input type="text" id="brand" name="brand" value="<%= product.brand %>" required>
+        <input type="text" id="brand" name="brand" value="<%= product.brand %>" >
+        <div class="error-message" id="brand-error">Brand must be at least 2 characters.</div>
       </div>
       <div class="form-group">
         <label for="price">Price</label>
-        <input type="number" id="price" name="price" step="0.01" value="<%= product.price %>" required>
+        <input type="number" id="price" name="price" step="0.01" value="<%= product.price %>" >
+        <div class="error-message" id="price-error">Price must be a positive number.</div>
       </div>
       <div class="form-group">
         <label for="offer">Offer (%)</label>
         <input type="number" id="offer" name="offer" step="0.01" value="<%= product.offer %>">
+        <div class="error-message" id="offer-error">Offer must be between 0 and 100.</div>
       </div>
       <div class="form-group">
         <label for="description">Description</label>
         <textarea id="description" name="description"><%= product.description %></textarea>
+        <div class="error-message" id="description-error">Description cannot be empty.</div>
       </div>
       <div class="form-group">
         <label for="category">Category</label>
-        <select id="category" name="category" required>
+        <select id="category" name="category" >
+          <option value="">Select a category</option>
           <% categories.forEach(category => { %>
             <option value="<%= category._id %>" <%= product.category.toString() === category._id.toString() ? 'selected' : '' %>>
               <%= category.name %>
             </option>
           <% }) %>
         </select>
+        <div class="error-message" id="category-error">Category must be selected.</div>
       </div>
       <div class="form-group">
         <label for="sizes">Sizes (comma-separated)</label>
         <input type="text" id="sizes" name="sizes" value="<%= product.sizes.join(', ') %>">
+        <div class="error-message" id="sizes-error">Sizes are required.</div>
       </div>
       <div class="form-group">
         <label for="rimMaterial">Rim Material</label>
         <input type="text" id="rimMaterial" name="rimMaterial" value="<%= product.rimMaterial %>">
+        <div class="error-message" id="rimMaterial-error">Rim Material cannot be empty.</div>
       </div>
       <div class="form-group">
         <label for="finish">Finish</label>
         <input type="text" id="finish" name="finish" value="<%= product.finish %>">
+        <div class="error-message" id="finish-error">Finish cannot be empty.</div>
       </div>
       <div class="form-group">
         <label for="stock">Stock</label>
-        <input type="number" id="stock" name="stock" value="<%= product.stock %>" required>
+        <input type="number" id="stock" name="stock" value="<%= product.stock %>" >
+        <div class="error-message" id="stock-error">Stock cannot be negative.</div>
       </div>
-      <div class="form-group">
-        <label for="boltPattern">Bolt Pattern</label>
-        <input type="text" id="boltPattern" name="boltPattern" value="<%= product.specifications.boltPattern %>">
-      </div>
-      <div class="form-group">
-        <label for="hubBore">Hub Bore</label>
-        <input type="text" id="hubBore" name="hubBore" value="<%= product.specifications.hubBore %>">
-      </div>
-      <div class="form-group">
-        <label for="offset">Offset</label>
-        <input type="text" id="offset" name="offset" value="<%= product.specifications.offset %>">
-      </div>
-      <div class="form-group">
-        <label for="color">Color</label>
-        <input type="text" id="color" name="color" value="<%= product.specifications.color %>">
-      </div>
-      <div class="form-group">
-        <label for="loadRating">Load Rating</label>
-        <input type="text" id="loadRating" name="loadRating" value="<%= product.specifications.loadRating %>">
-      </div>
-      <div class="form-group">
-        <label for="additionalInfo">Additional Info (comma-separated)</label>
-        <input type="text" id="additionalInfo" name="additionalInfo" value="<%= product.specifications.additionalInfo.join(', ') %>">
-      </div>
+
+   
+
       <div class="form-group">
         <label for="mainImage">Main Image (Current: <%= product.mainImage || 'None' %>)</label>
         <input type="file" id="mainImage" name="mainImage" accept="image/jpeg,image/png">
+        <div class="error-message" id="mainImage-error">Main image must be a valid JPEG or PNG file.</div>
       </div>
       <div class="form-group">
         <label for="additionalImages">Additional Images (Current: <%= product.additionalImages.length %>)</label>
         <input type="file" id="additionalImages" name="additionalImages" accept="image/jpeg,image/png" multiple>
+        <div class="error-message" id="additionalImages-error">Additional images must be valid JPEG or PNG files.</div>
       </div>
       <button type="submit" id="updateButton">Update Product</button>
     </form>
   </div>
 
-  <!-- Loading Overlay -->
   <div class="loading-overlay" id="loadingOverlay">
     <div class="spinner"></div>
     <div class="loading-text">Updating product...</div>
@@ -152,65 +99,119 @@
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
-    // Show success message using SweetAlert if message.type is 'success'
-    <% if (message && message.type === 'success') { %>
-      Swal.fire({
-        icon: 'success',
-        title: 'Success!',
-        text: '<%= message.text %>',
-        timer: 2000,
-        showConfirmButton: false
-      });
-    <% } %>
-
+   
     const form = document.getElementById("editProductForm");
     const loadingOverlay = document.getElementById("loadingOverlay");
 
+    function clearErrors() {
+      document.querySelectorAll('.form-group').forEach(group => {
+        group.classList.remove('error');
+      });
+    }
+
     form.addEventListener("submit", function (e) {
-      e.preventDefault(); // Always prevent default to handle submission manually
+      e.preventDefault();
       
-      // Validate form
+      clearErrors();
+
       let isValid = true;
-      let errorMsg = "";
+      const errors = [];
 
       const name = document.getElementById("name");
       const brand = document.getElementById("brand");
       const price = document.getElementById("price");
-      const stock = document.getElementById("stock");
-      const sizes = document.getElementById("sizes");
+      const offer = document.getElementById("offer");
+      const description = document.getElementById("description");
       const category = document.getElementById("category");
+      const sizes = document.getElementById("sizes");
+      const rimMaterial = document.getElementById("rimMaterial");
+      const finish = document.getElementById("finish");
+      const stock = document.getElementById("stock");
+      const boltPattern = document.getElementById("boltPattern");
+      const hubBore = document.getElementById("hubBore");
+      const offset = document.getElementById("offset");
+      const color = document.getElementById("color");
+      const loadRating = document.getElementById("loadRating");
+      const additionalInfo = document.getElementById("additionalInfo");
+      const mainImage = document.getElementById("mainImage");
+      const additionalImages = document.getElementById("additionalImages");
 
       if (name.value.trim().length < 3) {
-        errorMsg += "Product name must be at least 3 characters.\n";
+        document.getElementById("name").parentElement.classList.add('error');
+        errors.push("Product name must be at least 3 characters.");
         isValid = false;
       }
       if (brand.value.trim().length < 2) {
-        errorMsg += "Brand must be at least 2 characters.\n";
+        document.getElementById("brand").parentElement.classList.add('error');
+        errors.push("Brand must be at least 2 characters.");
         isValid = false;
       }
       if (Number(price.value) <= 0) {
-        errorMsg += "Price must be a positive number.\n";
+        document.getElementById("price").parentElement.classList.add('error');
+        errors.push("Price must be a positive number.");
         isValid = false;
       }
-      if (Number(stock.value) < 0) {
-        errorMsg += "Stock cannot be negative.\n";
+      if (offer.value && (Number(offer.value) < 0 || Number(offer.value) > 100)) {
+        document.getElementById("offer").parentElement.classList.add('error');
+        errors.push("Offer must be between 0 and 100.");
         isValid = false;
       }
-      if (!sizes.value.trim()) {
-        errorMsg += "Sizes are required.\n";
+      if (!description.value.trim()) {
+        document.getElementById("description").parentElement.classList.add('error');
+        errors.push("Description cannot be empty.");
         isValid = false;
       }
       if (!category.value) {
-        errorMsg += "Category must be selected.\n";
+        document.getElementById("category").parentElement.classList.add('error');
+        errors.push("Category must be selected.");
         isValid = false;
+      }
+      if (!sizes.value.trim()) {
+        document.getElementById("sizes").parentElement.classList.add('error');
+        errors.push("Sizes are required.");
+        isValid = false;
+      }
+      if (!rimMaterial.value.trim()) {
+        document.getElementById("rimMaterial").parentElement.classList.add('error');
+        errors.push("Rim Material cannot be empty.");
+        isValid = false;
+      }
+      if (!finish.value.trim()) {
+        document.getElementById("finish").parentElement.classList.add('error');
+        errors.push("Finish cannot be empty.");
+        isValid = false;
+      }
+      if (Number(stock.value) < 0) {
+        document.getElementById("stock").parentElement.classList.add('error');
+        errors.push("Stock cannot be negative.");
+        isValid = false;
+      }
+      
+      if (mainImage.files.length > 0) {
+        const validImageTypes = ['image/jpeg', 'image/png'];
+        if (!validImageTypes.includes(mainImage.files[0].type)) {
+          document.getElementById("mainImage").parentElement.classList.add('error');
+          errors.push("Main image must be a valid JPEG or PNG file.");
+          isValid = false;
+        }
+      }
+      if (additionalImages.files.length > 0) {
+        const validImageTypes = ['image/jpeg', 'image/png'];
+        for (let file of additionalImages.files) {
+          if (!validImageTypes.includes(file.type)) {
+            document.getElementById("additionalImages").parentElement.classList.add('error');
+            errors.push("Additional images must be valid JPEG or PNG files.");
+            isValid = false;
+            break;
+          }
+        }
       }
 
       if (!isValid) {
-        // Show validation error message
         Swal.fire({
           icon: 'error',
           title: 'Validation Error',
-          text: errorMsg,
+          html: errors.join('<br>'),
           customClass: {
             popup: 'swal-wide'
           }
@@ -218,7 +219,6 @@
         return;
       }
 
-      // If validation passes, show confirmation dialog
       Swal.fire({
         title: 'Update Product',
         text: 'Are you sure you want to update this product?',
@@ -229,10 +229,8 @@
         confirmButtonText: 'Yes, update it!'
       }).then((result) => {
         if (result.isConfirmed) {
-          // Show loading overlay
           loadingOverlay.classList.add('active');
           
-          // Submit the form after a short delay to show the loading state
           setTimeout(() => {
             form.submit();
           }, 500);

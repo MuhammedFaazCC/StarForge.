@@ -25,7 +25,7 @@ transporter.verify((error, success) => {
 
 const pageNotFound = async (req, res) => {
   try {
-    return res.render("pageNotFound");
+    return res.render("pageNotFound", { user: res.locals.userData });
   } catch (error) {
     res.redirect("/pageNotFound");
   }
@@ -33,7 +33,7 @@ const pageNotFound = async (req, res) => {
 
 const loadHomepage = async (req, res) => {
   try {
-    const user = req.session.user;
+    const user = res.locals.userData;
 
     const products = [
       { name: "StarForge Classic", price: 5000, image: "/images/wheel1.jpg" },
@@ -43,11 +43,6 @@ const loadHomepage = async (req, res) => {
       { name: "StarForge Nitro", price: 9000, image: "/images/wheel5.jpg" },
       { name: "StarForge Phantom", price: 7800, image: "/images/wheel6.jpg" },
     ];
-
-    if (user && user.isBlocked) {
-      req.session.error = "User was blocked by admin";
-      return res.redirect("/login");
-    }
 
     return res.render("landingPage", {
       products,
@@ -65,7 +60,7 @@ const loginPage = async (req, res) => {
       return res.redirect("/");
     }
     const error = req.session.error || null;
-    req.session.error = null; 
+    req.session.error = null;
     return res.render("userLogin", { error });
   } catch (error) {
     console.log("Page not found");
@@ -78,12 +73,14 @@ const login = async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (user && user.isBlocked) {
-      req.session.error = "User was blocked by admin";
-      return res.redirect("/login");
-    }
+
     if (!user) {
       req.session.error = "Email not found";
+      return res.redirect("/login");
+    }
+
+    if (user.isBlocked) {
+      req.session.error = "Your account has been blocked by an admin";
       return res.redirect("/login");
     }
 
@@ -93,9 +90,26 @@ const login = async (req, res) => {
       return res.redirect("/login");
     }
 
-    req.session.user = user;
-    res.redirect("/");
+    req.session.user = {
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role,
+      referralCode: user.referralCode,
+      isBlocked: user.isBlocked,
+      isLoggedIn: true,
+    };
+
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error:", err);
+        req.session.error = "Login failed, please try again";
+        return res.redirect("/login");
+      }
+      return res.redirect("/");
+    });
   } catch (error) {
+    console.error("Login error:", error);
     req.session.error = "An error occurred";
     res.redirect("/login");
   }
@@ -192,9 +206,23 @@ const signUp = async (req, res) => {
       action: "signup",
     };
 
-    await sendOTP(email, otp);
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error in signUp:", err);
+        req.session.error = "Failed to send OTP. Please try again.";
+        return res.redirect("/signup");
+      }
 
-    res.redirect("/otp-verification");
+      sendOTP(email, otp)
+        .then(() => {
+          res.redirect("/otp-verification");
+        })
+        .catch((error) => {
+          console.error("Error sending OTP:", error);
+          req.session.error = "Failed to send OTP. Please try again.";
+          res.redirect("/signup");
+        });
+    });
   } catch (error) {
     console.error("Error in signUp:", error.message);
     req.session.error = "Failed to send OTP. Please try again.";
@@ -223,6 +251,11 @@ const forgotPassword = async (req, res) => {
       return res.redirect("/forgotPassword");
     }
 
+    if (user.isBlocked) {
+      req.session.error = "Your account has been blocked by an admin";
+      return res.redirect("/forgotPassword");
+    }
+
     const otp = generateOTP();
     req.session.otp = {
       code: otp,
@@ -231,9 +264,23 @@ const forgotPassword = async (req, res) => {
       action: "forgotPassword",
     };
 
-    await sendOTP(email, otp);
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error in forgotPassword:", err);
+        req.session.error = "Failed to send OTP. Please try again.";
+        return res.redirect("/forgotPassword");
+      }
 
-    res.redirect("/otp-verification");
+      sendOTP(email, otp)
+        .then(() => {
+          res.redirect("/otp-verification");
+        })
+        .catch((error) => {
+          console.error("Error sending OTP:", error);
+          req.session.error = "Failed to send OTP. Please try again.";
+          res.redirect("/forgotPassword");
+        });
+    });
   } catch (error) {
     console.error("Error in forgotPassword:", error.message);
     req.session.error = "Failed to send OTP. Please try again.";
@@ -243,18 +290,30 @@ const forgotPassword = async (req, res) => {
 
 const otpVerificationPage = async (req, res) => {
   try {
-    if (!req.session.otp) {
+    const otpSession = req.session.otp;
+
+    if (!otpSession) {
       req.session.error = "No OTP session found";
-      return res.redirect(req.session.otp?.action === "signup" ? "/signup" : "/forgotPassword");
+      return res.redirect("/login"); // fallback safe redirect
     }
+
     const error = req.session.error || null;
     req.session.error = null;
-    res.render("otpVerification", { error, success: null });
+
+    const otpAction = otpSession.action;
+
+    res.render("otpVerification", {
+      error,
+      success: null,
+      otpAction
+    });
+
   } catch (error) {
-    console.log("Page not found");
+    console.log("Error rendering OTP page:", error);
     res.status(500).send("Server error");
   }
 };
+
 
 const verifyOTP = async (req, res) => {
   const { otp } = req.body;
@@ -300,13 +359,38 @@ const verifyOTP = async (req, res) => {
         await referringUser.save();
       }
 
-      req.session.user = newUser;
+      req.session.user = {
+        _id: newUser._id,
+        fullName: newUser.fullName,
+        email: newUser.email,
+        role: newUser.role,
+        referralCode: newUser.referralCode,
+        isLoggedIn: true,
+      };
+
       delete req.session.otp;
-      res.redirect("/");
+
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error in verifyOTP (signup):", err);
+          req.session.error = "Account created but login failed. Please login manually.";
+          return res.redirect("/login");
+        }
+        req.session.success = "Account created successfully!";
+        return res.redirect("/");
+      });
     } else if (action === "forgotPassword") {
       req.session.resetUserId = req.session.otp.userId;
       delete req.session.otp;
-      res.redirect("/resetPassword");
+
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error in verifyOTP (forgot password):", err);
+          req.session.error = "Verification successful but session error occurred";
+          return res.redirect("/forgotPassword");
+        }
+        return res.redirect("/resetPassword");
+      });
     }
   } catch (error) {
     console.error("Error in verifyOTP:", error.message);
@@ -361,8 +445,15 @@ const resetPasswordPost = async (req, res) => {
 
     delete req.session.resetUserId;
 
-    res.redirect("/login");
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error in resetPasswordPost:", err);
+      }
+      req.session.success = "Password reset successfully. Please login with your new password.";
+      return res.redirect("/login");
+    });
   } catch (error) {
+    console.error("Error in resetPasswordPost:", error);
     req.session.error = "An error occurred";
     res.redirect("/resetPassword");
   }
@@ -370,8 +461,8 @@ const resetPasswordPost = async (req, res) => {
 
 const wishlistPage = async (req, res) => {
   try {
-    let user = req.session.user;
-    let wishlistItems = [
+    const user = res.locals.userData;
+    const wishlistItems = [
       {
         id: 1,
         name: "Black forged alloy wheels",
@@ -399,6 +490,7 @@ const wishlistPage = async (req, res) => {
 
 const cartPage = async (req, res) => {
   try {
+    const user = res.locals.userData;
     const cartItems = [
       {
         name: "Lightweight Silver Alloys",
@@ -417,7 +509,7 @@ const cartPage = async (req, res) => {
     ];
     const subtotal = 450.0;
     const discountedSubtotal = 407.0;
-    res.render("cart", { cartItems, subtotal, discountedSubtotal });
+    res.render("cart", { user, cartItems, subtotal, discountedSubtotal });
   } catch {
     console.log("Page not found");
     res.status(500).send("Server error");
@@ -428,10 +520,11 @@ const logout = async (req, res) => {
   try {
     req.session.destroy((err) => {
       if (err) {
+        console.error("Error destroying session:", err);
         return res.redirect("/");
       }
       res.clearCookie("connect.sid");
-      res.redirect("/");
+      res.redirect("/login");
     });
   } catch (error) {
     console.log("Error during logout", error);
@@ -452,9 +545,31 @@ const googleCallback = async (req, res) => {
         referralCode: Math.random().toString(36).slice(2, 10).toUpperCase(),
       });
     }
-    req.session.user = user;
-    res.redirect("/");
+
+    if (user.isBlocked) {
+      req.session.error = "Your account has been blocked by an admin";
+      return res.redirect("/login");
+    }
+
+    req.session.user = {
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role,
+      referralCode: user.referralCode,
+      isLoggedIn: true,
+    };
+
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error in googleCallback:", err);
+        req.session.error = "Login failed, please try again";
+        return res.redirect("/login");
+      }
+      return res.redirect("/");
+    });
   } catch (error) {
+    console.error("Error in googleCallback:", error);
     req.session.error = "An error occurred";
     res.redirect("/login");
   }

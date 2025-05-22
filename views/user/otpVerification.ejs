@@ -27,7 +27,7 @@
                 </div>
                 <button type="submit">Verify OTP</button>
                 <div class="divider">
-                    <a href="/<%= session.otp?.action === 'signup' ? 'signup' : 'forgotPassword' %>">Back to <%= session.otp?.action === 'signup' ? 'Sign Up' : 'Forgot Password' %></a>
+                    <a href="/<%= otpAction === 'signup' ? 'signup' : 'forgotPassword' %>">Back to <%= otpAction === 'signup' ? 'Sign Up' : 'Forgot Password' %></a>
                 </div>
             </form>
         </div>

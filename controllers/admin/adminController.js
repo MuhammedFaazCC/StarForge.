@@ -5,11 +5,20 @@ const Category = require('../../models/categorySchema');
 const Product = require('../../models/productSchema');
 const validator = require("validator");
 
+
 const loginPage = async (req, res) => {
   try {
-    return res.render("login");
-  } catch {
-    console.log("Page not found");
+    // Force redirect to dashboard if already logged in
+    if (req.session.admin && req.session.admin._id) {
+      console.log("Admin already logged in, redirecting to dashboard");
+      return res.redirect("/admin/dashboard");
+    }
+    
+    const error = req.session.error || null;
+    req.session.error = null; 
+    return res.render("adminLogin", { error });
+  } catch (error) {
+    console.log("Admin login page error:", error);
     res.status(500).send("Server error");
   }
 };
@@ -19,39 +28,77 @@ const login = async (req, res) => {
 
   try {
     if (!email || !password) {
-      return res.redirect("login", { error: "Email and password are required" });
+      req.session.error = "Email and password are required";
+      return res.redirect("/admin");
     }
 
     const user = await User.findOne({ email });
+    
     if (!user) {
-      return res.redirect("login", { error: "Email not found" });
+      req.session.error = "Email not found";
+      return res.redirect("/admin");
+    }
+    
+    if (user.role !== "admin") {
+      req.session.error = "Access denied: Admins only";
+      return res.redirect("/admin");
     }
 
-    if (user.role !== "admin") {
-      return res.redirect("login", { error: "Access denied: Admins only" });
+    if (user.isBlocked) {
+      req.session.error = "Account has been blocked";
+      return res.redirect("/admin");
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.redirect("login", { error: "Invalid password" });
+      req.session.error = "Invalid password";
+      return res.redirect("/admin");
     }
 
-    req.session.user = {
-      id: user._id,
+    // Store only essential admin data in session
+    req.session.admin = {
+      _id: user._id,
+      fullName: user.fullName,
       email: user.email,
       role: user.role,
+      isLoggedIn: true
     };
 
-    res.redirect("/admin/dashboard");
-  } catch (error) {
-    console.error("Login error:", error);
-    res.redirect("login", {
-      error: "An error occurred. Please try again later.",
+    // Save the session explicitly before redirecting
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error:", err);
+        req.session.error = "Login failed, please try again";
+        return res.redirect("/admin");
+      }
+      return res.redirect("/admin/dashboard");
     });
+  } catch (error) {
+    console.error("Admin login error:", error);
+    req.session.error = "An error occurred";
+    res.redirect("/admin");
   }
 };
 
+const logout = async (req, res) => {
+  try {
+    // Completely destroy the session instead of just deleting admin
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Session destroy error in admin logout:", err);
+        return res.status(500).send("Error during logout");
+      }
+      // Clear the cookie as well
+      res.clearCookie("connect.sid");
+      return res.redirect("/admin");
+    });
+  } catch (error) {
+    console.error("Error during admin logout:", error);
+    res.status(500).send("Server error");
+  }
+};
 
+ 
 
 const dashboardPage = async (req, res) => {
   try {
@@ -203,4 +250,5 @@ module.exports = {
   salesPage,
   couponsPage,
   bannersPage,
+  logout,
 };

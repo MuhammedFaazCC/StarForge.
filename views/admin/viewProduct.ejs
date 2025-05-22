@@ -13,7 +13,7 @@
     <div class="main-image-container">
       <div class="main-image">
         <% if (product.mainImage) { %>
-          <img src="/uploads/<%= product.mainImage %>" alt="Main Image" />
+          <img src="/images/<%= product.mainImage %>" alt="Main Image" />
         <% } else { %>
           <p>No main image</p>
         <% } %>
@@ -23,7 +23,7 @@
         <div class="image-section">
           <% product.additionalImages.forEach(img => { %>
             <div class="image-box">
-              <img src="/uploads/<%= img %>" alt="Additional Image" />
+              <img src="/images/<%= img %>" alt="Additional Image" />
             </div>
           <% }) %>
         </div>
@@ -60,5 +60,6 @@
 </section>
 <%- include('../partials/admin/footer') %>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html>

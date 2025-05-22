@@ -13,7 +13,7 @@ const getAllCategories = async (req, res) => {
         if (sort === 'sales_desc') sortQuery = { sales: -1 };
         if (sort === 'sales_asc') sortQuery = { sales: 1 };
 
-        const limit = 10;
+        const limit = 6;
         const categories = await Category.find(query)
             .sort(sortQuery)
             .skip((page - 1) * limit)

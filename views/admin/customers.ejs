@@ -6,6 +6,8 @@
     <title>Customers - StarForge</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/admin/customers.css">
+    <!-- Add SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <%- include('../partials/admin/navbar') %>
@@ -16,7 +18,8 @@
             <div class="section-header">
                 <h2>Customers</h2>
                 <div class="controls">
-                    <input type="text" id="searchInput" placeholder="Search customers..." class="search-input">
+                    <input type="text" id="searchInput" placeholder="Search customers..." class="search-input" value="<%= query %>">
+                    <button id="clearResults" class="btn-danger">Clear</button>
                 </div>
             </div>
 
@@ -26,7 +29,7 @@
                 </div>
             <% } %>
 
-            <table class="customers-table">
+            <table class="customers-table" id="customersTable">
                 <thead>
                     <tr>
                         <th class="sortable" data-sort="fullName">Name <span class="sort-icon"></span></th>
@@ -44,7 +47,7 @@
                                 <td><%= customer.fullName %></td>
                                 <td><%= customer.email %></td>
                                 <td><%= new Date(customer.createdAt).toLocaleDateString() %></td>
-                                <td><%= customer.orders %></td>
+                                <td><%= customer.orders || 0 %></td>
                                 <td>
                                     <span class="status <%= customer.isBlocked ? 'blocked' : 'active' %>">
                                         <%= customer.isBlocked ? 'Blocked' : 'Active' %>
@@ -58,7 +61,7 @@
                                     </button>
                                 </td>
                             </tr>
-                        <% }); %>
+                        <% }) %>
                     <% } else { %>
                         <tr class="no-results">
                             <td colspan="6">No customers found</td>
@@ -68,11 +71,13 @@
             </table>
 
             <div class="pagination" id="pagination">
+            </div>
         </div>
     </div>
 
     <%- include('../partials/admin/footer') %>
 
     <script src="/js/admin/customers.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html>
