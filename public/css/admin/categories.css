@@ -266,13 +266,11 @@ body {
 }
 
 .status-toggle.active {
-    background-color: #10b981;
-    color: white;
+    color: green;
 }
 
 .status-toggle.inactive {
-    background-color: #6b7280;
-    color: white;
+    color: red;
 }
 
 .offer-remove {

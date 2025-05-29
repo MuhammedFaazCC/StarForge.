@@ -30,7 +30,6 @@ function deleteProduct(productId) {
     cancelButtonText: 'Cancel'
   }).then((result) => {
     if (result.isConfirmed) {
-      // Show loading state
       Swal.fire({
         title: 'Deleting...',
         text: 'Please wait while we delete the product.',
@@ -94,7 +93,6 @@ function filterTable() {
     }
   });
 
-  // Show message if no results found
   const noResultsRow = document.getElementById("noResultsRow");
   if (visibleRows === 0 && filter.length > 0) {
     if (!noResultsRow) {
@@ -141,7 +139,6 @@ function paginateTable() {
   }
 }
 
-// Enhanced error handling for page load
 window.addEventListener("load", () => {
   try {
     paginateTable();
@@ -165,7 +162,6 @@ window.addEventListener("load", () => {
   }
 });
 
-// Global error handler for uncaught errors
 window.addEventListener('error', function(event) {
   console.error('Global error:', event.error);
   Swal.fire({
@@ -176,7 +172,6 @@ window.addEventListener('error', function(event) {
   });
 });
 
-// Handle network errors
 window.addEventListener('offline', function() {
   Swal.fire({
     icon: 'warning',

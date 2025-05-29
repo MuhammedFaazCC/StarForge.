@@ -28,10 +28,7 @@ router.get("/logout", adminController.logout);
 
 router.get("/products", adminAuth, productController.productsPage);
 router.get("/products/add", adminAuth, productController.addProduct);
-router.post("/products/add", adminAuth, upload.fields([
-  { name: 'mainImage', maxCount: 1 },
-  { name: 'additionalImages', maxCount: 5 }
-]), productController.productAdd);
+router.post("/products/add", adminAuth, upload.fields([{ name: 'mainImage', maxCount: 1 },{ name: 'additionalImages', maxCount: 5 }]), productController.productAdd);
 router.get("/products/view/:id", adminAuth, productController.viewProduct);
 router.get("/products/edit/:id", adminAuth, productController.editProduct);
 router.post('/products/edit/:id', adminAuth, upload.fields([

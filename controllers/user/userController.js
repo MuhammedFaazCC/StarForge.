@@ -1,6 +1,9 @@
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const User = require("../../models/userSchema");
+const Address = require("../../models/addressSchema");
+const Order = require("../../models/orderSchema");
+const Wallet = require("../../models/walletSchema");
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -59,9 +62,14 @@ const loginPage = async (req, res) => {
     if (req.session.user) {
       return res.redirect("/");
     }
+
     const error = req.session.error || null;
     req.session.error = null;
-    return res.render("userLogin", { error });
+
+    const justLoggedOut = req.session.justLoggedOut || false;
+    req.session.justLoggedOut = null;
+
+    return res.render("userLogin", { error, justLoggedOut });
   } catch (error) {
     console.log("Page not found");
     res.status(500).send("Server error");
@@ -90,15 +98,7 @@ const login = async (req, res) => {
       return res.redirect("/login");
     }
 
-    req.session.user = {
-      _id: user._id,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
-      referralCode: user.referralCode,
-      isBlocked: user.isBlocked,
-      isLoggedIn: true,
-    };
+    req.session.user = user;
 
     req.session.save((err) => {
       if (err) {
@@ -124,6 +124,13 @@ const signUpPage = async (req, res) => {
     console.log("Page not found");
     res.status(500).send("Server error");
   }
+};
+
+const userDetails = async (req, res) => {
+  const user = req.session.user;
+  const addresses = await Address.find({ userId: user._id });
+  const orders = await Order.find({ userId: user._id });
+  res.render("userProfile", { user, addresses, orders });
 };
 
 const generateOTP = () => {
@@ -154,10 +161,57 @@ const sendOTP = async (email, otp) => {
   }
 };
 
-const signUp = async (req, res) => {
-  const { fullName, email, mobile, password, confirmPassword, referralCode } = req.body;
+const postEditProfile = async (req, res) => {
   try {
-    if (!fullName || fullName.trim().length < 2 || fullName.trim().length > 50) {
+    const userId = req.session.user._id;
+    const { fullName, email, mobile } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    if (email != req.session.user.email) {
+      const otp = generateOTP();
+      console.log(otp);
+      req.session.otp = {
+        code: otp,
+        expires: Date.now() + 5 * 60 * 1000,
+        userData: { fullName, email, mobile },
+        action: "editProfile",
+      };
+      const sendEmail = await sendOTP(email, otp);
+      if (sendEmail) {
+        return res.redirect("/otp-verification");
+      }
+    }
+    const newData = await User.findByIdAndUpdate(
+      { _id:userId },
+      {
+        fullName: fullName,
+        mobile: mobile,
+      },{new:true}
+    );
+    await newData.save();
+    req.session.user = newData;
+    res.redirect('/LoadProfile')
+  } catch (error) {
+    console.log(error)
+  }
+};
+
+
+
+const signUp = async (req, res) => {
+  const { fullName, email, mobile, password, confirmPassword, referralCode } =
+    req.body;
+  try {
+    if (
+      !fullName ||
+      fullName.trim().length < 2 ||
+      fullName.trim().length > 50
+    ) {
       req.session.error = "Full name must be between 2 and 50 characters";
       return res.redirect("/signup");
     }
@@ -199,9 +253,10 @@ const signUp = async (req, res) => {
     }
 
     const otp = generateOTP();
+    console.log(otp);
     req.session.otp = {
       code: otp,
-      expires: Date.now() + 5 * 60 * 1000, // 5 minutes
+      expires: Date.now() + 5 * 60 * 1000,
       userData: { fullName, email, mobile, password, referralCode },
       action: "signup",
     };
@@ -259,7 +314,7 @@ const forgotPassword = async (req, res) => {
     const otp = generateOTP();
     req.session.otp = {
       code: otp,
-      expires: Date.now() + 5 * 60 * 1000, // 5 minutes
+      expires: Date.now() + 5 * 60 * 1000,
       userId: user._id,
       action: "forgotPassword",
     };
@@ -288,13 +343,69 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+const resetPassword = async (req, res) => {
+  try {
+    if (!req.session.resetUserId) {
+      req.session.error = "Reset session expired";
+      return res.redirect("/forgotPassword");
+    }
+    const error = req.session.error || null;
+    req.session.error = null;
+    res.render("resetPassword", { error });
+  } catch (error) {
+    console.error("Error rendering reset page:", error);
+    res.status(500).send("Server error");
+  }
+};
+
+const passwordReset = async (req, res) => {
+  const { password, confirmPassword } = req.body;
+
+  try {
+    if (!req.session.resetUserId) {
+      req.session.error = "Reset session expired";
+      return res.redirect("/forgotPassword");
+    }
+
+    if (password !== confirmPassword) {
+      req.session.error = "Passwords do not match";
+      return res.redirect("/resetPassword");
+    }
+
+    if (password.length < 6) {
+      req.session.error = "Password must be at least 6 characters";
+      return res.redirect("/resetPassword");
+    }
+
+    const user = await User.findById(req.session.resetUserId);
+    if (!user) {
+      req.session.error = "User not found";
+      return res.redirect("/resetPassword");
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    delete req.session.resetUserId;
+
+    req.session.success =
+      "Password reset successfully. Please login with your new password.";
+    return res.redirect("/login");
+  } catch (error) {
+    console.error("Error in resetPasswordPost:", error);
+    req.session.error = "Something went wrong. Please try again.";
+    res.redirect("/resetPassword");
+  }
+};
+
 const otpVerificationPage = async (req, res) => {
   try {
     const otpSession = req.session.otp;
 
     if (!otpSession) {
       req.session.error = "No OTP session found";
-      return res.redirect("/login"); // fallback safe redirect
+      return res.redirect("/login");
     }
 
     const error = req.session.error || null;
@@ -305,15 +416,13 @@ const otpVerificationPage = async (req, res) => {
     res.render("otpVerification", {
       error,
       success: null,
-      otpAction
+      otpAction,
     });
-
   } catch (error) {
     console.log("Error rendering OTP page:", error);
     res.status(500).send("Server error");
   }
 };
-
 
 const verifyOTP = async (req, res) => {
   const { otp } = req.body;
@@ -338,10 +447,14 @@ const verifyOTP = async (req, res) => {
     }
 
     if (action === "signup") {
-      const { fullName, email, mobile, password, referralCode } = req.session.otp.userData;
+      const { fullName, email, mobile, password, referralCode } =
+        req.session.otp.userData;
 
       const hashedPassword = await bcrypt.hash(password, 10);
-      const newReferralCode = Math.random().toString(36).slice(2, 10).toUpperCase();
+      const newReferralCode = Math.random()
+        .toString(36)
+        .slice(2, 10)
+        .toUpperCase();
 
       const newUser = await User.create({
         fullName,
@@ -373,7 +486,8 @@ const verifyOTP = async (req, res) => {
       req.session.save((err) => {
         if (err) {
           console.error("Session save error in verifyOTP (signup):", err);
-          req.session.error = "Account created but login failed. Please login manually.";
+          req.session.error =
+            "Account created but login failed. Please login manually.";
           return res.redirect("/login");
         }
         req.session.success = "Account created successfully!";
@@ -385,12 +499,30 @@ const verifyOTP = async (req, res) => {
 
       req.session.save((err) => {
         if (err) {
-          console.error("Session save error in verifyOTP (forgot password):", err);
-          req.session.error = "Verification successful but session error occurred";
+          console.error(
+            "Session save error in verifyOTP (forgot password):",
+            err
+          );
+          req.session.error =
+            "Verification successful but session error occurred";
           return res.redirect("/forgotPassword");
         }
         return res.redirect("/resetPassword");
       });
+    } else if (action === "editProfile") {
+      const { fullName, email, mobile } = req.session.otp.userData;
+      const userId = req.session.user._id;
+      const newData = await User.findByIdAndUpdate(
+        { _id:userId },
+        {
+          fullName: fullName,
+          email: email,
+          mobile: mobile,
+        },{new:true}
+      );
+      await newData.save();
+      req.session.user = newData;
+      res.redirect('/LoadProfile')
     }
   } catch (error) {
     console.error("Error in verifyOTP:", error.message);
@@ -449,7 +581,8 @@ const resetPasswordPost = async (req, res) => {
       if (err) {
         console.error("Session save error in resetPasswordPost:", err);
       }
-      req.session.success = "Password reset successfully. Please login with your new password.";
+      req.session.success =
+        "Password reset successfully. Please login with your new password.";
       return res.redirect("/login");
     });
   } catch (error) {
@@ -488,34 +621,6 @@ const wishlistPage = async (req, res) => {
   }
 };
 
-const cartPage = async (req, res) => {
-  try {
-    const user = res.locals.userData;
-    const cartItems = [
-      {
-        name: "Lightweight Silver Alloys",
-        price: "USD $220.00",
-        discount: "USD $100",
-        quantity: 1,
-        image: "path/to/silver-alloys.jpg",
-      },
-      {
-        name: "Turquoise Checks Linen Blend Shirt",
-        price: "USD $230.00",
-        discount: "",
-        quantity: 1,
-        image: "path/to/turquoise-shirt.jpg",
-      },
-    ];
-    const subtotal = 450.0;
-    const discountedSubtotal = 407.0;
-    res.render("cart", { user, cartItems, subtotal, discountedSubtotal });
-  } catch {
-    console.log("Page not found");
-    res.status(500).send("Server error");
-  }
-};
-
 const logout = async (req, res) => {
   try {
     req.session.destroy((err) => {
@@ -533,17 +638,12 @@ const logout = async (req, res) => {
 };
 
 const googleCallback = async (req, res) => {
-  const profile = req.user;
   try {
-    let user = await User.findOne({ email: profile.emails[0].value });
+    const user = req.user;
+
     if (!user) {
-      user = await User.create({
-        fullName: profile.displayName,
-        email: profile.emails[0].value,
-        googleId: profile.id,
-        role: "customer",
-        referralCode: Math.random().toString(36).slice(2, 10).toUpperCase(),
-      });
+      req.session.error = "Login failed. Please try again.";
+      return res.redirect("/login");
     }
 
     if (user.isBlocked) {
@@ -575,6 +675,159 @@ const googleCallback = async (req, res) => {
   }
 };
 
+const getAddressList = async (req, res) => {
+  const user = req.session.user;
+  try {
+    const addresses = await Address.find({ userId: user._id }).sort({
+      createdAt: -1,
+    });
+    console.log(addresses);
+
+    res.render("profileAddressList", { user, addresses });
+  } catch (err) {
+    console.error("Error loading addresses:", err.message);
+    res.render("profileAddressList", { user, addresses: [] });
+  }
+};
+
+const getAddAddress = async (req, res) => {
+  res.render("profileAddAddress", { currentPage: "address" });
+};
+
+const postAddress = async (req, res) => {
+  const user = req.session.user;
+
+  const { address, district, state, city, pinCode } = req.body;
+
+  try {
+    await Address.create({
+      userId: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      address,
+      district,
+      state,
+      city,
+      pinCode,
+    });
+
+    res.redirect("/address");
+  } catch (err) {
+    console.error("Failed to save address:", err.message);
+    res.redirect("/address");
+  }
+};
+
+const getEditAddress = async (req, res) => {
+  res.render("editAddress", { Address });
+};
+
+const getUserOrders = async (req, res) => {
+  try {
+    const userId = req.session.user._id;
+
+    const orders = await Order.find({ user: userId }).sort({ createdAt: -1 });
+
+    res.render("profileOrders", {
+      user: req.session.user,
+      currentPage: "orders",
+      orders,
+    });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).send("Internal server error");
+  }
+};
+
+const cancelOrder = async (req, res) => {
+  try {
+    const userId = req.session.user._id;
+    const orderId = req.params.id;
+
+    const order = await Order.findOne({ _id: orderId, user: userId });
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    if (!["Processing", "Confirmed"].includes(order.status)) {
+      return res
+        .status(400)
+        .json({ error: "Order cannot be canceled at this stage" });
+    }
+
+    order.status = "Canceled";
+    await order.save();
+
+    res.json({ message: "Order canceled successfully" });
+  } catch (error) {
+    console.error("Error canceling order:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const getWallet = async (req, res) => {
+  try {
+    const userId = req.session.user._id;
+
+    const user = await User.findById(userId);
+
+    const walletHistory = await Wallet.find({ userId }).sort({ date: -1 });
+
+    res.render("profileWallet", {
+      user: {
+        fullName: user.fullName,
+        walletBalance: user.wallet.balance || 0,
+      },
+      walletHistory,
+    });
+  } catch (error) {
+    console.error("Error fetching wallet page:", error);
+    res
+      .status(500)
+      .render("errorPage", { message: "Unable to load wallet at the moment." });
+  }
+};
+
+const getChangePassword = (req, res) => {
+  res.render("profileChangePassword", {
+    user: req.session.user,
+    error: req.session.error,
+    success: req.session.success,
+  });
+  req.session.error = null;
+  req.session.success = null;
+};
+
+const postChangePassword = async (req, res) => {
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+
+  try {
+    const user = await User.findById(req.session.user._id);
+
+    if (!(await bcrypt.compare(currentPassword, user.password))) {
+      req.session.error = "Incorrect current password.";
+      return res.redirect("/change-password");
+    }
+
+    if (newPassword !== confirmPassword) {
+      req.session.error = "New passwords do not match.";
+      return res.redirect("/change-password");
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    req.session.success = "Password changed successfully.";
+    res.redirect("/change-password");
+  } catch (err) {
+    console.error(err);
+    req.session.error = "Something went wrong. Please try again.";
+    res.redirect("/change-password");
+  }
+};
+
 module.exports = {
   pageNotFound,
   loadHomepage,
@@ -582,14 +835,26 @@ module.exports = {
   login,
   signUpPage,
   signUp,
+  userDetails,
+  postEditProfile,
   forgotPasswordPage,
   forgotPassword,
+  resetPassword,
+  passwordReset,
   otpVerificationPage,
   verifyOTP,
   resetPasswordGet,
   resetPasswordPost,
   wishlistPage,
-  cartPage,
   logout,
   googleCallback,
+  getAddressList,
+  getAddAddress,
+  postAddress,
+  getEditAddress,
+  getUserOrders,
+  cancelOrder,
+  getWallet,
+  getChangePassword,
+  postChangePassword,
 };

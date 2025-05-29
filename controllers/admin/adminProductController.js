@@ -7,14 +7,15 @@ const productsPage = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = 8;
     const skip = (page - 1) * limit;
-    const totalProducts = await Product.countDocuments();
-    const products = await Product.find().skip(skip).limit(limit);
+    const totalProducts = await Product.countDocuments({ isListed: true });
+    const products = await Product.find({isListed:true}).sort({_id:-1}).skip(skip).limit(limit);
     const totalPages = Math.ceil(totalProducts / limit);
     let message = req.session.message;
     req.session.message = null;
 
     res.render('products', {
       products,
+      product:products,
       currentPage: page,
       totalPages,
       hasPrevPage: page > 1,
@@ -85,7 +86,6 @@ const productAdd = async (req, res) => {
       ? req.files.additionalImages.map(file => file.filename)
       : [];
 
-    // Validate required fields
     if (!name || !brand || !price || !category || !stock) {
       const categories = await Category.find({ isActive: true }).lean();
       return res.render("addProducts", {
@@ -97,7 +97,6 @@ const productAdd = async (req, res) => {
       });
     }
 
-    // Validate price and stock are positive numbers
     if (parseFloat(price) <= 0) {
       const categories = await Category.find({ isActive: true }).lean();
       return res.render("addProducts", {
@@ -138,12 +137,21 @@ const productAdd = async (req, res) => {
 
     await newProduct.save();
 
-    req.session.message = {
-      success: true,
-      text: `Product "${name}" has been added successfully!`
-    };
+    const page = parseInt(req.query.page) || 1;
+    const limit = 8;
+    const skip = (page - 1) * limit;
+    const totalProducts = await Product.countDocuments({ isListed: true });
+    const products = await Product.find({isListed:true}).sort({_id:-1}).skip(skip).limit(limit);
+    const totalPages = Math.ceil(totalProducts / limit);
+   
 
-    res.redirect("/admin/products");
+    res.render("products",{ products, success: true,hasPrevPage: page > 1,
+      currentPage: page,
+      hasNextPage: page < totalPages,
+      totalPages,
+      prevPage: page - 1,
+      nextPage: page + 1,
+      text: `Product "${name}" has been added successfully!`});
 
   } catch (err) {
     console.error("Error adding product:", err);
@@ -260,7 +268,6 @@ const productEdit = async (req, res) => {
       return res.redirect("/admin/products");
     }
 
-    // Validate required fields
     if (!name || !brand || !price || !category || stock === undefined) {
       const categories = await Category.find({ isActive: true }).lean();
       return res.render("editProduct", {
@@ -273,7 +280,6 @@ const productEdit = async (req, res) => {
       });
     }
 
-    // Validate price and stock
     if (parseFloat(price) <= 0) {
       const categories = await Category.find({ isActive: true }).lean();
       return res.render("editProduct", {
@@ -298,7 +304,6 @@ const productEdit = async (req, res) => {
       });
     }
 
-    // Update product fields
     product.name = name.trim();
     product.brand = brand.trim();
     product.price = parseFloat(price);
@@ -313,7 +318,6 @@ const productEdit = async (req, res) => {
       ? additionalInfo.split(",").map((info) => info.trim()) 
       : [];
 
-    // Update images only if new files are uploaded
     if (req.files) {
       if (req.files.mainImage?.[0]) {
         product.mainImage = req.files.mainImage[0].filename;
@@ -399,7 +403,6 @@ const softDeleteProduct = async (req, res) => {
   }
 };
 
-// Additional utility function for better error handling
 const handleDatabaseError = (err) => {
   if (err.code === 11000) {
     return "Duplicate entry found. Please use different values.";

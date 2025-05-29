@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Add Address</title>
+  <link rel="stylesheet" href="/css/user/userProfile.css" />
+</head>
+<body>
+  <nav class="top-navbar">
+    <a href="/" class="navbar-brand">StarForge.</a>
+    <div class="navbar-user">
+      <span>Welcome back, <%= user.fullName %></span>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div class="content-wrapper">
+      <!-- <div class="profile-grid"> -->
+
+        <%- include('../partials/user/profileSidebar', { currentPage: 'address' }) %>
+
+        <div class="profile-container">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Add New Address</h1>
+              <div class="breadcrumb">
+                <a href="/loadProfile">Profile</a> / <a href="/address">My Address</a> / Add Address
+              </div>
+            </div>
+          </div>
+
+          <form action="/address" method="POST">
+            <div class="detail-group">
+              <label class="detail-label" for="address">Address</label>
+              <textarea name="address" id="address" class="detail-value" placeholder="123 Main St, Apt 4B, Area Name" rows="3" required></textarea>
+            </div>
+
+            <div class="detail-group">
+              <label class="detail-label" for="district">District</label>
+              <input type="text" name="district" id="district" class="detail-value" placeholder="e.g. Ernakulam" required />
+            </div>
+
+            <div class="detail-group">
+              <label class="detail-label" for="state">State</label>
+              <input type="text" name="state" id="state" class="detail-value" placeholder="e.g. Kerala" required />
+            </div>
+
+            <div class="detail-group">
+              <label class="detail-label" for="city">City</label>
+              <input type="text" name="city" id="city" class="detail-value" placeholder="e.g. Kochi" required />
+            </div>
+
+            <div class="detail-group">
+              <label class="detail-label" for="pinCode">Pin Code</label>
+              <input type="text" name="pinCode" id="pinCode" class="detail-value" pattern="\d{6}" maxlength="6" placeholder="e.g. 682001" required />
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+              <a href="javascript:history.back()" class="btn-primary" style="background: #c62828;">Cancel</a>
+              <button type="submit" class="btn-primary">Add Address</button>
+            </div>
+          </form>
+        </div>
+
+      <!-- </div> -->
+    </div>
+  </div>
+
+  <script src="/js/user/userProfile.js"></script>
+</body>
+</html>

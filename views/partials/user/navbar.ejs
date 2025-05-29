@@ -1,67 +1,66 @@
 <header class="navbar">
-    <i class="fas fa-bars" id="hamburgerMenu"></i>
-    <aside class="sidebar" aria-hidden="true" role="navigation">
-        <div class="sidebar-header">
-            <h1>StarForge.</h1>
-        </div>
-        <nav class="sidebar-nav" aria-label="Categories">
-            <h2>Categories</h2>
-            <ul>
-                <li><a href="/products">All Products</a></li>
-                <li>
-                    <a href="/products/on-road">On-Road Wheels</a>
-                    <ul>
-                        <li><a href="/products/on-road/alloys">Alloys</a></li>
-                        <li><a href="/products/on-road/personalize">Personalize your Wheels</a></li>
-                    </ul>
-                </li>
-                <li>
-                    <a href="/products/off-road">Off-Road Wheels</a>
-                    <ul>
-                        <li><a href="/products/off-road/alloy">Alloy</a></li>
-                        <li><a href="/products/off-road/steel">Steel wheels</a></li>
-                    </ul>
-                </li>
-                <li><a href="/products/classic">Classic Wheels</a></li>
-            </ul>
-        </nav>
-    </aside>
-    <!-- Add overlay for better UX -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-    
-    <div class="logo">StarForge.</div>
-    <% if (user) { %>
-        <div class="nav-buttons">
-            <a href="/wishlist" class="nav-link position-relative" title="Wishlist" id="wishlist-link">
-                <i class="far fa-heart"></i>
-                <% if (typeof wishlistCount !=='undefined' && wishlistCount> 0) { %>
-                    <span class="count-badge" id="wishlist-badge">
-                        <%= wishlistCount %>
-                    </span>
-                <% } %>
-            </a>
-            <a href="/cart" class="nav-link position-relative" title="Cart" id="cart-link">
-                <i class="fas fa-shopping-cart"></i>
-                <% if (typeof cartCount !=='undefined' && cartCount> 0) { %>
-                    <span class="count-badge" id="cart-badge">
-                        <%= cartCount %>
-                    </span>
-                <% } %>
-            </a>
+    <% if (!minimalNavbar) { %>
+        <i class="fas fa-bars" id="hamburgerMenu"></i>
+        <aside class="sidebar" aria-hidden="true" role="navigation">
+            <div class="sidebar-header">
+                <h1>StarForge.</h1>
+            </div>
+            <nav class="sidebar-nav" aria-label="Categories">
+                <h2>Categories</h2>
+                <ul>
+                    <li><a href="/products">All Products</a></li>
+                    <li>
+                        <a href="/products/on-road">On-Road Wheels</a>
+                        <ul>
+                            <li><a href="/products/on-road/alloys">Alloys</a></li>
+                            <li><a href="/products/on-road/personalize">Personalize your Wheels</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="/products/off-road">Off-Road Wheels</a>
+                        <ul>
+                            <li><a href="/products/off-road/alloy">Alloy</a></li>
+                            <li><a href="/products/off-road/steel">Steel wheels</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="/products/classic">Classic Wheels</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <% } %>
 
-            <div class="profile-container">
-                <i class="fas fa-user-circle profile-toggle" title="My Account"></i>
-                <div class="profile-dropdown">
-                    <a href="/LoadProfile">Profile</a>
-                    <a href="/orders">My Orders</a>
-                    <a href="#" id="logout-btn">Logout</a>
+    <div class="logo">StarForge.</div>
+
+    <% if (!minimalNavbar) { %>
+        <% if (user) { %>
+            <div class="nav-buttons">
+                <a href="/wishlist" class="nav-link position-relative" title="Wishlist" id="wishlist-link">
+                    <i class="far fa-heart"></i>
+                    <% if (typeof wishlistCount !== 'undefined' && wishlistCount > 0) { %>
+                        <span class="count-badge" id="wishlist-badge"><%= wishlistCount %></span>
+                    <% } %>
+                </a>
+                <a href="/cart" class="nav-link position-relative" title="Cart" id="cart-link">
+                    <i class="fas fa-shopping-cart"></i>
+                    <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %>
+                        <span class="count-badge" id="cart-badge"><%= cartCount %></span>
+                    <% } %>
+                </a>
+                <div class="profile-container">
+                    <i class="fas fa-user-circle profile-toggle" title="My Account"></i>
+                    <div class="profile-dropdown">
+                        <a href="/LoadProfile">Profile</a>
+                        <a href="/orders">My Orders</a>
+                        <a href="#" id="logout-btn">Logout</a>
+                    </div>
                 </div>
             </div>
-        </div>
-    <% } else { %>
-        <div class="nav-buttons">
-            <a href="/login" class="auth-button login-button">Login</a>
-            <a href="/signup" class="auth-button signup-button">Sign Up</a>
-        </div>
+        <% } else { %>
+            <div class="nav-buttons">
+                <a href="/login" class="auth-button login-button">Login</a>
+                <a href="/signup" class="auth-button signup-button">Sign Up</a>
+            </div>
+        <% } %>
     <% } %>
 </header>

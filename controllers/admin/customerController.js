@@ -1,5 +1,7 @@
 const User = require('../../models/userSchema');
 const Order = require('../../models/orderSchema');
+const bcrypt = require('bcrypt');
+
 
 async function getOrderCountForCustomer(customerId) {
     try {
@@ -14,7 +16,7 @@ async function getOrderCountForCustomer(customerId) {
 const customersPage = async function customersPage(req, res) {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = 8;
+    const limit = 4;
     const skip = (page - 1) * limit;
 
     const searchQuery = { role: 'customer' };
@@ -31,7 +33,7 @@ const customersPage = async function customersPage(req, res) {
     const totalPages = Math.ceil(totalCustomers / limit);
 
     const customersWithOrders = await Promise.all(customers.map(async (customer) => {
-      const orderCount = await getOrderCountForCustomer(customer._id); // Ensure this function exists
+      const orderCount = await getOrderCountForCustomer(customer._id);
       return {
         ...customer.toObject(),
         orders: orderCount
@@ -54,10 +56,19 @@ const customersPage = async function customersPage(req, res) {
     });
   } catch (err) {
     console.error("Error loading customers page:", err);
+
+    if (req.xhr || req.headers.accept.includes('json')) {
+      return res.status(500).json({
+        success: false,
+        message: 'Error loading customers',
+        error: err.message
+      });
+    }
+
     req.flash('message', { type: 'error', text: 'Error loading customers' });
     res.redirect('/admin/customers');
   }
-}
+};
 
 const customerClear = async (req, res) => {
   try {
@@ -83,7 +94,6 @@ const getAllCustomers = async (req, res) => {
             .select("fullName email mobile isActive isBlocked referralPoints createdAt orders")
             .sort({ createdAt: -1 });
 
-        // Add orders count for each customer
         const customersWithOrders = await Promise.all(customers.map(async (customer) => {
             const orderCount = await getOrderCountForCustomer(customer._id);
             return {
@@ -110,7 +120,7 @@ const searchCustomers = async (req, res) => {
   try {
     const query = req.query.q || '';
     const page = parseInt(req.query.page) || 1;
-    const limit = 8; // Set to 8 customers per page
+    const limit = 8;
     const sortField = req.query.sortField || 'createdAt';
     const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
 
@@ -257,7 +267,7 @@ const customerToggleBlock = async (req, res) => {
 };
 
 const customerAdd = async (req, res) => {
-  const { fullName, email, mobile, password, orders, isBlocked } = req.body;
+  const { fullName, email, mobile, password, isBlocked } = req.body;
 
   try {
     const existingUser = await User.findOne({ $or: [{ email }, { mobile }] });
@@ -271,7 +281,7 @@ const customerAdd = async (req, res) => {
       fullName,
       email,
       mobile,
-      orders: parseInt(orders) || 0,
+      orders: 0,
       isBlocked: isBlocked === "on",
       role: "customer",
     };

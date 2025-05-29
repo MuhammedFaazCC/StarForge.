@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profile - Dashboard</title>
+  <link rel="stylesheet" href="/css/user/userProfile.css">
+</head>
+
+<body>
+  <nav class="top-navbar">
+    <a href="/" class="navbar-brand">StarForge.</a>
+    <div class="navbar-user">
+      <span>Welcome back, <%= user.fullName %></span>
+    </div>
+  </nav>
+
+  <%- include('../partials/user/profileSidebar', { currentPage: 'profile' }) %>
+  <div id="toast" style="
+  visibility: hidden;
+  min-width: 250px;
+  margin-left: -125px;
+  background-color: #4BB543; /* green */
+  color: white;
+  text-align: center;
+  border-radius: 5px;
+  padding: 16px;
+  position: fixed;
+  z-index: 1000;
+  left: 50%;
+  bottom: 30px;
+  font-size: 17px;
+  ">
+</div>
+
+
+    <main class="main-content">
+      <div class="content-wrapper">
+        <div class="profile-container">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">My Profile</h1>
+              <div class="breadcrumb">Profile</div>
+            </div>
+<button type="button" class="edit-profile-btn">Edit Profile</button>
+          </div>
+
+          <div class="profile-grid">
+            <div class="profile-image-section">
+              <img
+                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80"
+                alt="Profile" class="profile-image" />
+            </div>
+
+            <div class="profile-details">
+              <div class="detail-group">
+                <span class="detail-label">Full Name:</span>
+                <span class="detail-value">
+                  <%= user.fullName %>
+                </span>
+              </div>
+              <div class="detail-group">
+                <span class="detail-label">Email:</span>
+                <span class="detail-value">
+                  <%= user.email %>
+                </span>
+              </div>
+              <div class="detail-group">
+                <span class="detail-label">Mobile:</span>
+                <span class="detail-value">
+                  <%= user.mobile %>
+                </span>
+              </div>
+              <div class="detail-group">
+                <span class="detail-label">Member Since:</span>
+                <span class="detail-value">
+                  <%= new Date(user.createdAt).toLocaleDateString() %>
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        </div>
+    </main>
+<div id="editProfileModal" class="modal-overlay hidden">
+  <div class="modal-content">
+    <h2>Edit Profile</h2>
+    <form id="editProfileForm" action="/editProfile" method="post">
+      <label>Full Name</label>
+      <input type="text" name="fullName" value="<%= user.fullName %>" >
+
+      <label>Email</label>
+      <input type="email" name="email" value="<%= user.email %>" >
+
+      <label>Mobile</label>
+      <input type="text" name="mobile" value="<%= user.mobile %>" >
+
+      <div class="modal-actions">
+        <button type="button" onclick="closeModal()">Cancel</button>
+        <button type="submit">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+  <script src="/js/user/userProfile.js"></script>
+  
+</body>
+
+</html>

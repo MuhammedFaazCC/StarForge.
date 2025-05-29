@@ -3,26 +3,36 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/userSchema');
 
 passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "http://localhost:8080/auth/google/callback"
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: "http://localhost:8080/auth/google/callback"
 }, async (accessToken, refreshToken, profile, done) => {
-    try {
-        let user = await User.findOne({ email: profile.emails[0].value });
-        if (!user) {
-            user = await User.create({
-                fullName: profile.displayName,
-                email: profile.emails[0].value,
-                googleId: profile.id,
-                role: 'customer',
-                referralCode: Math.random().toString(36).slice(2, 10).toUpperCase()
-            });
-        }
-        return done(null, user);
-    } catch (error) {
-        return done(error, null);
+  console.log("✅ Raw Google profile:", JSON.stringify(profile, null, 2));
+
+  if (!profile.emails || !profile.emails.length) {
+    console.error(" Google profile missing emails");
+    return done(new Error("No email received from Google"), null);
+  }
+
+  try {
+    let user = await User.findOne({ email: profile.emails[0].value });
+
+    if (!user) {
+      user = await User.create({
+        fullName: profile.displayName,
+        email: profile.emails[0].value,
+        googleId: profile.id,
+        role: 'customer',
+        referralCode: Math.random().toString(36).slice(2, 10).toUpperCase()
+      });
     }
+
+    return done(null, user);
+  } catch (error) {
+    return done(error, null);
+  }
 }));
+
 
 passport.serializeUser((user, done) => {
     done(null, user.id);

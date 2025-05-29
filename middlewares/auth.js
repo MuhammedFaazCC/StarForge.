@@ -1,18 +1,13 @@
 const User = require("../models/userSchema");
 
 const userAuth = (req, res, next) => {
-  // Check if user session exists and has userId
   if (req.session.user && req.session.user._id) {
-    // Find user in database to ensure they're still valid
     User.findById(req.session.user._id)
       .then(data => {
         if (data && !data.isBlocked) {
-          // Add full user data to res.locals to make it available in templates
           res.locals.userData = data;
-          // Continue to the requested route
           next();
         } else {
-          // Clear session if user is blocked or deleted
           req.session.error = data ? "Your account has been blocked by an admin" : "User not found";
           req.session.destroy((err) => {
             if (err) {
@@ -27,7 +22,6 @@ const userAuth = (req, res, next) => {
         res.status(500).send("Internal server error");
       });
   } else {
-    // No valid session, redirect to login
     req.session.error = "Please log in to access this page";
     res.redirect("/login");
   }

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Addresses</title>
+  <link rel="stylesheet" href="/css/user/userProfile.css" />
+</head>
+<body>
+  <nav class="top-navbar">
+        <a href="#" class="navbar-brand">StarForge.</a>
+        <div class="navbar-user">
+            <span>Welcome back, <%= user.fullName %></span>
+        </div>
+    </nav>
+
+  <div class="main-content">
+    <div class="content-wrapper">
+      <!-- <div class="profile-grid"> -->
+
+        <%- include('../partials/user/profileSidebar', { currentPage: 'address' }) %>
+
+        <div class="profile-container">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">My Address</h1>
+              <div class="breadcrumb"><a href="/LoadProfile">My Profile</a> / My Address</div>
+            </div>
+            <a href="/address/add" class="btn-primary">Add New Address</a>
+          </div>
+
+          <% if (addresses.length === 0) { %>
+            <div class="empty-state">
+              <img src="/images/empty-address.svg" class="empty-icon" />
+              <div class="empty-title">No addresses found</div>
+              <div class="empty-description">You haven’t added any delivery addresses yet.</div>
+              <a href="/address/add" class="btn-primary">Add Address</a>
+            </div>
+          <% } else { %>
+            <div class="card-grid">
+              <% addresses.forEach(address => { %>
+                <div class="info-card">
+                  <div class="card-header">
+                    <span class="card-title"><%= address.fullName %></span>
+                    <a href="javascript:void(0);" class="card-action" onclick="openEditModal('<%= address._id %>')">Edit</a>
+                  </div>
+                  <p>
+                    <%= address.address %><br />
+                    <%= address.city %>, <%= address.district %>, <%= address.state %> - <%= address.pinCode %><br />
+                    <strong><%= address.email %></strong>
+                  </p>
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
+        </div>
+
+      <!-- </div> -->
+    </div>
+  </div>
+<div id="editModal" class="modal hidden">
+  <div class="modal-content" id="editModalContent"></div>
+</div>
+  <script>
+  function openEditModal(addressId) {
+    fetch(`/user/address/edit/${addressId}`)
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById('editModalContent').innerHTML = html;
+        document.getElementById('editModal').classList.remove('hidden');
+      })
+      .catch(err => {
+        alert("Failed to load edit form.");
+        console.error(err);
+      });
+  }
+
+  function closeModal() {
+    document.getElementById('editModal').classList.add('hidden');
+    document.getElementById('editModalContent').innerHTML = '';
+  }
+</script>
+
+</body>
+</html>

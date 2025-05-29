@@ -105,7 +105,6 @@
 
     <script src="/js/admin/products.js"></script>
     <script>
-        // Enhanced navigation handlers with loading states
         function handleAddProduct() {
             Swal.fire({
                 title: 'Loading...',
@@ -154,7 +153,6 @@
             }, 500);
         }
 
-        // Display session messages with SweetAlert2
         <% if (message) { %>
             <% if (message.success !== undefined) { %>
                 Swal.fire({
@@ -179,7 +177,6 @@
             <% } %>
         <% } %>
 
-        // Page load success notification
         document.addEventListener('DOMContentLoaded', function() {
             const productsCount = document.querySelectorAll('#productsTable tbody tr').length;
             if (productsCount > 0) {

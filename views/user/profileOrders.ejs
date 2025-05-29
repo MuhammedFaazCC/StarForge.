@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <!-- <link rel="stylesheet" href="/css/user/profileOrders.css" /> -->
+  <link rel="stylesheet" href="/css/user/userProfile.css" />
+</head>
+
+<body>
+  <nav class="top-navbar">
+    <a href="/" class="navbar-brand">StarForge.</a>
+    <div class="navbar-user">
+      <span>Welcome back, <%= user.fullName %></span>
+    </div>
+  </nav>
+
+  <%- include('../partials/user/profileSidebar', { user, currentPage: 'orders' }) %>
+
+  <div class="userMainContainer">
+    
+
+    <main class="main-content">
+      <div class="content-wrapper">
+      <div class="profile-container">
+      <h1 class="pageTitle">My Orders</h1>
+
+      <% if (orders.length===0) { %>
+        <p class="noDataMessage">You have no orders yet.</p>
+        <% } else { %>
+          <table class="userTable orderTable">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Placed On</th>
+                <th>Status</th>
+                <th>Total</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% orders.forEach(order=> { %>
+                <tr>
+                  <td>
+                    <%= order._id %>
+                  </td>
+                  <td>
+                    <%= order.createdAt.toLocaleDateString() %>
+                  </td>
+                  <td class="orderStatus <%= order.status.toLowerCase() %>">
+                    <%= order.status %>
+                  </td>
+                  <td>$<%= order.total.toFixed(2) %>
+                  </td>
+                  <td>
+                    <a href="/user/orders/<%= order._id %>" class="btn btn-info">View</a>
+                    <% if (order.status==='Processing' || order.status==='Confirmed' ) { %>
+                      <button class="btn btn-danger cancelOrderBtn" data-id="<%= order._id %>">Cancel</button>
+                      <% } else { %>
+                        <span class="disabledBtn">No Actions</span>
+                        <% } %>
+                  </td>
+                </tr>
+                <% }) %>
+            </tbody>
+          </table>
+          <% } %>
+          </div>
+          </div>
+    </main>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.cancelOrderBtn').forEach(button => {
+        button.addEventListener('click', async () => {
+          const orderId = button.dataset.id;
+          if (confirm('Are you sure you want to cancel this order?')) {
+            try {
+              const response = await fetch(`/user/orders/${orderId}/cancel`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+              });
+              const data = await response.json();
+              if (response.ok) {
+                alert('Order canceled successfully');
+                location.reload();
+              } else {
+                alert(data.error || 'Failed to cancel order');
+              }
+            } catch {
+              alert('Error occurred. Try again later.');
+            }
+          }
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>

@@ -8,7 +8,6 @@ const validator = require("validator");
 
 const loginPage = async (req, res) => {
   try {
-    // Force redirect to dashboard if already logged in
     if (req.session.admin && req.session.admin._id) {
       console.log("Admin already logged in, redirecting to dashboard");
       return res.redirect("/admin/dashboard");
@@ -55,7 +54,6 @@ const login = async (req, res) => {
       return res.redirect("/admin");
     }
 
-    // Store only essential admin data in session
     req.session.admin = {
       _id: user._id,
       fullName: user.fullName,
@@ -64,7 +62,6 @@ const login = async (req, res) => {
       isLoggedIn: true
     };
 
-    // Save the session explicitly before redirecting
     req.session.save((err) => {
       if (err) {
         console.error("Session save error:", err);
@@ -82,13 +79,11 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    // Completely destroy the session instead of just deleting admin
     req.session.destroy((err) => {
       if (err) {
         console.error("Session destroy error in admin logout:", err);
         return res.status(500).send("Error during logout");
       }
-      // Clear the cookie as well
       res.clearCookie("connect.sid");
       return res.redirect("/admin");
     });

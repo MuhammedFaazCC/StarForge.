@@ -24,7 +24,6 @@ app.set("views", [
   path.join(__dirname, "views/user"),
 ]);
 
-// Improved session configuration
 app.use(session({
     secret: process.env.SESSION_SECRET || 'starforge-secret',
     resave: false,
@@ -39,9 +38,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Global middleware to check admin login status before all routes
 app.use((req, res, next) => {
-    // For admin login page specifically
     if (req.path === '/admin' || req.path === '/admin/') {
         if (req.session.admin && req.session.admin._id) {
             console.log("Admin redirect middleware: redirecting to dashboard");

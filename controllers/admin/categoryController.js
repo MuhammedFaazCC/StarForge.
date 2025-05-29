@@ -1,11 +1,10 @@
 const Category = require("../../models/categorySchema");
 
-// GET all categories with search, pagination, sorting
 const getAllCategories = async (req, res) => {
     try {
         const { search = '', sort = 'desc', page = 1 } = req.query;
         let sortOption = sort;
-        let query = { isDeleted: false }; // Exclude soft-deleted categories
+        let query = { isDeleted: false };
         if (search) {
             query.name = { $regex: search, $options: 'i' };
         }

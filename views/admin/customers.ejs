@@ -71,7 +71,26 @@
             </table>
 
             <div class="pagination" id="pagination">
-            </div>
+  <% if (pagination.totalPages > 1) { %>
+    <% const startPage = Math.max(1, pagination.currentPage - 2); %>
+    <% const endPage = Math.min(pagination.totalPages, startPage + 4); %>
+
+    <% if (pagination.currentPage > 1) { %>
+      <a href="?page=<%= pagination.currentPage - 1 %>" class="page-link">«</a>
+    <% } %>
+
+    <% for (let i = startPage; i <= endPage; i++) { %>
+      <a href="?page=<%= i %>" class="page-link <%= i === pagination.currentPage ? 'active' : '' %>">
+        <%= i %>
+      </a>
+    <% } %>
+
+    <% if (pagination.currentPage < pagination.totalPages) { %>
+      <a href="?page=<%= pagination.currentPage + 1 %>" class="page-link">»</a>
+    <% } %>
+  <% } %>
+</div>
+
         </div>
     </div>
 
@@ -79,5 +98,24 @@
 
     <script src="/js/admin/customers.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+  function fetchCustomers(page = 1) {
+  fetch(`/admin/customers?page=${page}`, {
+    headers: {
+      Accept: "application/json"
+    }
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        updateCustomerTable(data.customers);
+        renderPagination(data.pagination);
+      }
+    })
+    .catch(err => console.error("Error loading customers:", err));
+}
+
+
+    </script>
 </body>
 </html>

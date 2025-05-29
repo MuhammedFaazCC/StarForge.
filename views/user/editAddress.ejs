@@ -1,0 +1,56 @@
+<form action="/user/address/edit/<%= address._id %>" method="POST" id="editAddressForm">
+  <div class="detail-group">
+    <label class="detail-label">Address:</label>
+    <textarea name="address" class="detail-value" required><%= address.address %></textarea>
+  </div>
+  <div class="detail-group">
+    <label class="detail-label">District:</label>
+    <input type="text" name="district" class="detail-value" value="<%= address.district %>" required />
+  </div>
+  <div class="detail-group">
+    <label class="detail-label">State:</label>
+    <input type="text" name="state" class="detail-value" value="<%= address.state %>" required />
+  </div>
+  <div class="detail-group">
+    <label class="detail-label">City:</label>
+    <input type="text" name="city" class="detail-value" value="<%= address.city %>" required />
+  </div>
+  <div class="detail-group">
+    <label class="detail-label">Pin Code:</label>
+    <input type="text" name="pinCode" class="detail-value" value="<%= address.pinCode %>" required />
+  </div>
+  <div style="margin-top: 1rem; display: flex; justify-content: flex-end; gap: 1rem;">
+    <button type="button" class="btn-primary" onclick="closeModal()">Cancel</button>
+    <button type="submit" class="btn-primary">Update Address</button>
+  </div>
+</form>
+<style>
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999; /* must be higher than navbar/sidebar */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 600px;
+  max-width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.hidden {
+  display: none;
+}
+
+</style>

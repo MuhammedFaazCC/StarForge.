@@ -1,5 +1,3 @@
-
-
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
@@ -55,10 +53,31 @@ const userSchema = new mongoose.Schema({
     isBlocked: {
         type: Boolean,
         default: false
-    }
+    },
+
+    wallet: {
+    balance: {
+      type: Number,
+      default: 0
+    },
+    transactions: [
+      {
+        amount: Number,
+        type: {
+          type: String,
+          enum: ['credit', 'debit']
+        },
+        description: String,
+        date: {
+          type: Date,
+          default: Date.now
+        }
+      }
+    ]
+  }
 }, {
     timestamps: true
-});
+}); 
 
 
 userSchema.methods.isUserBlocked = function() {

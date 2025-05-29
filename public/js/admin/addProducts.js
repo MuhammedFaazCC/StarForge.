@@ -47,12 +47,12 @@ document.addEventListener("DOMContentLoaded", () => {
     cropImage.src = URL.createObjectURL(file);
     cropModal.style.display = "block";
     if (cropper) cropper.destroy();
-    cropper = new cropper(cropImage, {
-      aspectRatio: 1,
-      viewMode: 1,
-      autoCropArea: 0.8,
-      responsive: true,
-    });
+    cropper = new Cropper(cropImage, {
+  aspectRatio: 1,
+  viewMode: 1,
+  autoCropArea: 0.8,
+  responsive: true,
+});
   };
 
   cropButton.addEventListener("click", () => {
@@ -163,6 +163,12 @@ document.addEventListener("DOMContentLoaded", () => {
   form.addEventListener("submit", (e) => {
     console.log("Form submit event triggered");
     e.preventDefault();
+
+    console.log("Form action:", form.action);
+  console.log("Form method:", form.method);
+  console.log("Form data entries:");
+
+
 
     const formData = new FormData(form);
     if (croppedFiles.mainImage) {

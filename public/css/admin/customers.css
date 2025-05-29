@@ -118,6 +118,7 @@ body {
     font-weight: 600;
 }
 
+
 /* Main Content */
 .main-content {
     margin-left: 220px;
@@ -249,13 +250,11 @@ body {
 }
 
 .status.active {
-    background-color: #10b981;
-    color: white;
+    color: green;
 }
 
 .status.blocked {
-    background-color: #6b7280;
-    color: white;
+    color: red;
 }
 
 .btn-action {
@@ -277,39 +276,23 @@ body {
 }
 
 .pagination {
-    margin-top: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
+  margin-top: 20px;
+  text-align: center;
+}
+.page-link {
+  display: inline-block;
+  margin: 0 4px;
+  padding: 6px 12px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  text-decoration: none;
+  color: #333;
+}
+.page-link.active {
+  background: #fca120;
+  color: #fff;
 }
 
-.pagination .btn-arrow {
-    padding: 6px 10px;
-    border: 1px solid #d1d5db;
-    background-color: #fff;
-    border-radius: 4px;
-    cursor: pointer;
-    color: #374151;
-    font-size: 0.9rem;
-}
-
-.pagination .btn-arrow:disabled {
-    background-color: #f1f5f9;
-    color: #6b7280;
-    cursor: not-allowed;
-}
-
-.pagination .btn-arrow:hover:not(:disabled) {
-    background-color: #e5e7eb;
-    color: #1a1a1a;
-}
-
-.pagination button.active {
-    background-color: #3b82f6;
-    color: white;
-    border: 1px solid #3b82f6;
-}
 
 footer p {
     width: 100%;

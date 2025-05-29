@@ -1,0 +1,176 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f9f9f9;
+  color: #333;
+}
+
+.top-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background-color: #fff;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 1000;
+}
+
+.navbar-brand {
+  font-size: 24px;
+  font-weight: bold;
+  text-decoration: none;
+  color: #111;
+}
+
+.navbar-user span {
+  font-size: 16px;
+  color: #555;
+}
+
+.userMainContainer {
+  display: flex;
+  padding-top: 70px;
+  min-height: 100vh;
+  margin: 20px;
+  margin-left: 380px;
+  border-radius: 15%;
+}
+
+.sidebarContainer {
+  width: 220px;
+  background-color: #ffffff;
+  padding: 20px;
+  border-right: 1px solid #e0e0e0;
+}
+
+.userProfileMain {
+  flex: 1;
+  padding: 30px;
+  background-color: #fdfdfd;
+}
+
+.pageTitle {
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #222;
+}
+
+.noDataMessage {
+  font-size: 18px;
+  color: #777;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.userTable {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.userTable th,
+.userTable td {
+  padding: 14px 18px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.userTable th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+  color: #444;
+}
+
+.orderStatus {
+  font-weight: bold;
+  text-transform: capitalize;
+}
+
+.orderStatus.processing {
+  color: #ff9800;
+}
+
+.orderStatus.confirmed {
+  color: #2196f3;
+}
+
+.orderStatus.shipped {
+  color: #00bcd4;
+}
+
+.orderStatus.delivered {
+  color: #4caf50;
+}
+
+.orderStatus.cancelled {
+  color: #f44336;
+}
+
+.btn {
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 4px;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.3s ease;
+}
+
+.btn-info {
+  background-color: #2196f3;
+  color: #fff;
+}
+
+.btn-info:hover {
+  background-color: #1976d2;
+}
+
+.btn-danger {
+  background-color: #f44336;
+  color: #fff;
+  margin-left: 6px;
+}
+
+.btn-danger:hover {
+  background-color: #d32f2f;
+}
+
+.disabledBtn {
+  color: #aaa;
+  font-style: italic;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .userMainContainer {
+    flex-direction: column;
+  }
+
+  .sidebarContainer {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .userProfileMain {
+    padding: 20px;
+  }
+
+  .userTable th,
+  .userTable td {
+    padding: 10px;
+  }
+}

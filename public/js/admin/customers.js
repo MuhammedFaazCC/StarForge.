@@ -4,8 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const clearResultsBtn = document.getElementById("clearResults");
     const paginationContainer = document.getElementById("pagination");
 
-    let customers = []; // Store all customers
-    const rowsPerPage = 8; // Match original backend limit
+    let customers = [];
+    const rowsPerPage = 8;
     let currentPage = 1;
     let currentSort = {
         field: 'createdAt',
@@ -13,7 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     let searchTimeout = null;
 
-    // Fetch all customers on load
     async function fetchAllCustomers() {
         try {
             tableBody.classList.add('loading');
@@ -37,13 +36,11 @@ document.addEventListener("DOMContentLoaded", () => {
             paginateTable();
         } catch (error) {
             console.error('Error fetching customers:', error);
-            showToast('error', 'Failed to load customers');
-        } finally {
+                } finally {
             tableBody.classList.remove('loading');
         }
     }
 
-    // Helper function for showing toast notifications
     function showToast(icon, title, text = '') {
         Swal.fire({
             icon,
@@ -56,7 +53,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Handle block/unblock button clicks
     if (tableBody) {
         tableBody.addEventListener("click", async (event) => {
             const target = event.target;
@@ -110,7 +106,6 @@ document.addEventListener("DOMContentLoaded", () => {
                             button.dataset.action = "block";
                         }
 
-                        // Update customers array
                         const customer = customers.find(c => c._id === customerId);
                         if (customer) {
                             customer.isBlocked = action === 'block';
@@ -128,26 +123,19 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // IMPROVED: Search input handling with robust debouncing
     if (searchInput) {
-        // Apply any initial value that might be in the input
         const initialSearchValue = searchInput.value.trim();
         if (initialSearchValue) {
-            // Wait a moment to ensure DOM is fully loaded before performing initial search
             setTimeout(() => performSearch(initialSearchValue), 100);
         }
         
-        // Set up the event listener with proper debouncing
         searchInput.addEventListener("input", () => {
-            // Clear any existing timeout
             if (searchTimeout) {
                 clearTimeout(searchTimeout);
                 searchTimeout = null;
             }
             
-            // Set new timeout for debouncing
             const searchTerm = searchInput.value.trim();
-            // Show loading indicator
             tableBody.classList.add('loading');
             
             searchTimeout = setTimeout(() => {
@@ -156,7 +144,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }, 300);
         });
         
-        // Also handle enter key for immediate search
         searchInput.addEventListener("keydown", (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -169,19 +156,15 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // IMPROVED: Extract search functionality to separate function
     function performSearch(searchTerm) {
         console.log("Performing search with term:", searchTerm);
-        currentPage = 1; // Reset to first page on new search
+        currentPage = 1;
         
-        // Direct search the customers array and render results
         const filteredCustomers = filterCustomers(searchTerm);
         console.log(`Found ${filteredCustomers.length} matching customers`);
         
-        // Reset pagination and display results
         paginateTable(searchTerm);
         
-        // Update URL with search param for bookmarking/sharing
         const url = new URL(window.location);
         if (searchTerm) {
             url.searchParams.set('query', searchTerm);
@@ -191,13 +174,11 @@ document.addEventListener("DOMContentLoaded", () => {
         history.replaceState({}, '', url);
     }
     
-    // Helper function to filter customers by search term
     function filterCustomers(searchTerm) {
         if (!searchTerm) return customers;
         
         const term = searchTerm.toLowerCase();
         return customers.filter(customer => {
-            // Safety checks for null/undefined properties
             const fullName = (customer.fullName || '').toLowerCase();
             const email = (customer.email || '').toLowerCase();
             
@@ -205,21 +186,18 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Clear search results
     if (clearResultsBtn) {
         clearResultsBtn.addEventListener("click", () => {
             if (searchInput) {
                 searchInput.value = "";
-                performSearch(""); // Explicitly search with empty string
+                performSearch("");
                 
-                // Visually indicate the search has been cleared
                 searchInput.focus();
                 showToast('info', 'Search cleared');
             }
         });
     }
 
-    // Sortable table headers
     const sortableHeaders = document.querySelectorAll('.sortable');
     if (sortableHeaders) {
         sortableHeaders.forEach(header => {
@@ -249,7 +227,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Sort customers array
     function sortCustomers() {
         customers.sort((a, b) => {
             const aValue = a[currentSort.field] !== undefined ? a[currentSort.field] : '';
@@ -267,27 +244,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 return currentSort.order === 'asc' ? aNum - bNum : bNum - aNum;
             }
             
-            // String comparison for text fields
             return currentSort.order === 'asc'
                 ? String(aValue).localeCompare(String(bValue))
                 : String(bValue).localeCompare(String(aValue));
         });
     }
 
-    // IMPROVED: Paginate table with more robust filtering
     function paginateTable(overrideFilter) {
-        // Use provided filter or get from search input
         const filter = overrideFilter !== undefined 
             ? overrideFilter.toLowerCase() 
             : (searchInput ? searchInput.value.trim().toLowerCase() : '');
         
-        // Apply filtering with improved case handling
         const filteredCustomers = filterCustomers(filter);
         console.log(`Pagination: ${filteredCustomers.length} customers after filtering`);
 
         const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / rowsPerPage));
         
-        // Ensure current page is within valid range
         if (currentPage > totalPages) {
             currentPage = totalPages;
         }
@@ -299,13 +271,11 @@ document.addEventListener("DOMContentLoaded", () => {
         renderTableRows(rows, filter);
         renderPagination(totalPages);
         
-        // Show or hide the clear button depending on whether there's a filter
         if (clearResultsBtn) {
             clearResultsBtn.style.display = filter ? 'inline-block' : 'none';
         }
     }
     
-    // IMPROVED: Separate table rendering function
     function renderTableRows(rows, filter) {
         tableBody.innerHTML = '';
 
@@ -341,28 +311,22 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
     
-    // IMPROVED: Separate pagination rendering function
-    function renderPagination(totalPages) {
-        paginationContainer.innerHTML = '';
+        function renderPagination(totalPages) {
+            paginationContainer.innerHTML = '';
+            
+            if (totalPages <= 1) return;
+            
+            if (currentPage > 1) {
+                addPaginationButton('«', currentPage - 1);
+            }
+            
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+            
+            if (endPage - startPage < 4) {
+                startPage = Math.max(1, endPage - 4);
+            }
         
-        // Don't show pagination if there's only one page
-        if (totalPages <= 1) return;
-        
-        // Add Previous button if not on first page
-        if (currentPage > 1) {
-            addPaginationButton('«', currentPage - 1);
-        }
-        
-        // Logic for showing limited number of pages
-        let startPage = Math.max(1, currentPage - 2);
-        let endPage = Math.min(totalPages, startPage + 4);
-        
-        // Adjust start if we're near the end
-        if (endPage - startPage < 4) {
-            startPage = Math.max(1, endPage - 4);
-        }
-        
-        // First page
         if (startPage > 1) {
             addPaginationButton(1, 1);
             if (startPage > 2) {
@@ -370,12 +334,10 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
         
-        // Page numbers
         for (let i = startPage; i <= endPage; i++) {
             addPaginationButton(i, i, i === currentPage);
         }
         
-        // Last page
         if (endPage < totalPages) {
             if (endPage < totalPages - 1) {
                 addEllipsis();
@@ -383,13 +345,11 @@ document.addEventListener("DOMContentLoaded", () => {
             addPaginationButton(totalPages, totalPages);
         }
         
-        // Add Next button if not on last page
         if (currentPage < totalPages) {
             addPaginationButton('»', currentPage + 1);
         }
     }
     
-    // Helper for pagination buttons
     function addPaginationButton(text, page, isActive = false) {
         const btn = document.createElement('button');
         btn.innerText = text;
@@ -404,7 +364,6 @@ document.addEventListener("DOMContentLoaded", () => {
         paginationContainer.appendChild(btn);
     }
     
-    // Helper for pagination ellipsis
     function addEllipsis() {
         const span = document.createElement('span');
         span.innerText = '...';
@@ -412,6 +371,5 @@ document.addEventListener("DOMContentLoaded", () => {
         paginationContainer.appendChild(span);
     }
 
-    // Initial fetch
     fetchAllCustomers();
 });

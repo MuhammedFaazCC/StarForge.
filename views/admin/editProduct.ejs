@@ -66,18 +66,10 @@
         <div class="error-message" id="rimMaterial-error">Rim Material cannot be empty.</div>
       </div>
       <div class="form-group">
-        <label for="finish">Finish</label>
-        <input type="text" id="finish" name="finish" value="<%= product.finish %>">
-        <div class="error-message" id="finish-error">Finish cannot be empty.</div>
-      </div>
-      <div class="form-group">
         <label for="stock">Stock</label>
         <input type="number" id="stock" name="stock" value="<%= product.stock %>" >
         <div class="error-message" id="stock-error">Stock cannot be negative.</div>
       </div>
-
-   
-
       <div class="form-group">
         <label for="mainImage">Main Image (Current: <%= product.mainImage || 'None' %>)</label>
         <input type="file" id="mainImage" name="mainImage" accept="image/jpeg,image/png">
@@ -174,11 +166,6 @@
       if (!rimMaterial.value.trim()) {
         document.getElementById("rimMaterial").parentElement.classList.add('error');
         errors.push("Rim Material cannot be empty.");
-        isValid = false;
-      }
-      if (!finish.value.trim()) {
-        document.getElementById("finish").parentElement.classList.add('error');
-        errors.push("Finish cannot be empty.");
         isValid = false;
       }
       if (Number(stock.value) < 0) {

@@ -5,33 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>StarForge - Wishlist</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="/css/user/wishlist.css">
+  <link rel="stylesheet" href="/css/user/userProfile.css">
 </head>
 <body>
-  
-    <%- include('.././partials/user/navbar') %>
-    <%- include('../partials/user/sidebar') %>
+  <nav class="top-navbar">
+    <a href="/" class="navbar-brand">StarForge.</a>
+    <div class="navbar-user">
+      <span>Welcome back, <%= user.fullName %></span>
+    </div>
+  </nav>
+
+  <%- include('../partials/user/profileSidebar', { currentPage: 'wishlist' }) %>
 
   <main class="main-content">
-    <div class="wishlist-items">
-      <div class="product-card">
-        <img src="https://via.placeholder.com/150" alt="Black forged alloy wheels">
-        <h3>Black forged alloy wheels</h3>
-        <p class="price">$1999</p>
-        <button class="add-to-cart">Add To Cart</button>
-        <button class="remove-from-wishlist">Remove from wishlist</button>
-      </div>
-      <div class="product-card">
-        <img src="https://via.placeholder.com/150" alt="Black forged alloy wheels">
-        <h3>Black forged alloy wheels</h3>
-        <p class="price">$1999</p>
-        <button class="add-to-cart">Add To Cart</button>
-        <button class="remove-from-wishlist">Remove from wishlist</button>
+    <div class="content-wrapper">
+      <div class="profile-container">
+      <h1 class="pageTitle">My Wishlist</h1>
+
+      <div class="wishlist-items">
+        <div class="userTable" style="display: flex; flex-wrap: wrap; gap: 20px; border: none; box-shadow: none;">
+          <div class="product-card" style="background-color: #d1d1d1; padding: 20px; border-radius: 8px; width: 250px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+            <img src="https://via.placeholder.com/150" alt="Black forged alloy wheels" style="width: 100%; border-radius: 6px;">
+            <h3 style="margin-top: 12px; font-size: 18px;">Black forged alloy wheels</h3>
+            <p class="price" style="font-weight: bold; color: #444;">$1999</p>
+            <button class="btn btn-info">Add To Cart</button>
+            <button class="btn btn-danger">Remove from wishlist</button>
+          </div>
+
+          <div class="product-card" style="background-color: #d1d1d1; padding: 20px; border-radius: 8px; width: 250px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+            <img src="https://via.placeholder.com/150" alt="Black forged alloy wheels" style="width: 100%; border-radius: 6px;">
+            <h3 style="margin-top: 12px; font-size: 18px;">Black forged alloy wheels</h3>
+            <p class="price" style="font-weight: bold; color: #444;">$1999</p>
+            <button class="btn btn-info">Add To Cart</button>
+            <button class="btn btn-danger">Remove from wishlist</button>
+          </div>
+        </div>
       </div>
     </div>
+    </div>
   </main>
-
-  <%- include('../partials/user/footer') %>
 
   <script src="/js/user/wishlist.js"></script>
 </body>

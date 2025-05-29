@@ -47,13 +47,10 @@ const productSchema = new mongoose.Schema({
     required: true,
     min: 0,
   },
-  specifications: {
-    boltPattern: { type: String, trim: true, default: '' },
-    hubBore: { type: String, trim: true, default: '' },
-    offset: { type: String, trim: true, default: '' },
-    color: { type: String, trim: true, default: '' },
-    loadRating: { type: String, trim: true, default: '' },
-    additionalInfo: { type: [String], default: [] },
+   color: {
+    type: String,
+    trim: true,
+    default: ''
   },
   mainImage: {
     type: String,

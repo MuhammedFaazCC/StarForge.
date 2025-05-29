@@ -1,62 +1,35 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const cartItems = [
-        { name: 'Lightweight Silver Alloys', price: 'USD $220.00', discount: 'USD $100', quantity: 1, image: 'path/to/silver-alloys.jpg' },
-        { name: 'Turquoise Checks Linen Blend Shirt', price: 'USD $230.00', discount: '', quantity: 1, image: 'path/to/turquoise-shirt.jpg' }
-    ];
+async function updateCartQuantity(cartItemId, change) {
+  try {
+    const res = await fetch(`/cart/update/${cartItemId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ change })
+    });
 
-    function calculateSubtotal() {
-        let subtotal = 0;
-        let discountedSubtotal = 0;
-
-        cartItems.forEach(item => {
-            const price = parseFloat(item.price.replace('USD $', ''));
-            const quantity = item.quantity;
-            subtotal += price * quantity;
-
-            if (item.discount) {
-                const discount = parseFloat(item.discount.replace('USD $', ''));
-                discountedSubtotal += (price - discount) * quantity;
-            } else {
-                discountedSubtotal += price * quantity;
-            }
-        });
-
-        document.querySelector('.original').textContent = `USD $${subtotal.toFixed(2)}`;
-        document.querySelector('.discounted').textContent = `USD $${discountedSubtotal.toFixed(2)}`;
+    const data = await res.json();
+    if (data.success) {
+      location.reload();
+    } else {
+      alert(data.error || 'Update failed');
     }
+  } catch (err) {
+    console.error('Update error:', err);
+    alert('Something went wrong');      
+  }
+}
 
-    document.querySelectorAll('.cart-item').forEach((item, index) => {
-        const decreaseBtn = item.querySelector('.decrease');
-        const increaseBtn = item.querySelector('.increase');
-        const quantitySpan = item.querySelector('.quantity');
-        const removeBtn = item.querySelector('.remove');
-
-        decreaseBtn.addEventListener('click', () => {
-            if (cartItems[index].quantity > 1) {
-                cartItems[index].quantity--;
-                quantitySpan.textContent = cartItems[index].quantity;
-                calculateSubtotal();
-            }
-        });
-
-        increaseBtn.addEventListener('click', () => {
-            cartItems[index].quantity++;
-            quantitySpan.textContent = cartItems[index].quantity;
-            calculateSubtotal();
-        });
-
-        removeBtn.addEventListener('click', () => {
-            cartItems.splice(index, 1);
-            item.remove();
-            calculateSubtotal();
-        });
-    });
-
-    document.querySelector('.empty-cart').addEventListener('click', () => {
-        cartItems.length = 0;
-        document.querySelector('.cart-items').innerHTML = '';
-        calculateSubtotal();
-    });
-
-    calculateSubtotal();
-});
+async function removeFromCart(cartItemId) {
+  if (!confirm('Remove this item from cart?')) return;
+  try {
+    const res = await fetch(`/cart/remove/${cartItemId}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      location.reload();
+    } else {
+      alert(data.error || 'Remove failed');
+    }
+  } catch (err) {
+    console.error('Remove error:', err);
+    alert('Something went wrong');
+  }
+}
