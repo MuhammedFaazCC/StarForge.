@@ -187,7 +187,7 @@ i {
 }
 
 .product-card {
-  background-color: white;
+  background-color: rgb(254, 254, 254);
   border-radius: 12px;
   overflow: hidden;
   transition: transform 0.3s, box-shadow 0.3s;
@@ -530,6 +530,50 @@ i {
 .profile-dropdown.show {
   display: flex;
 }
+
+.wishlist-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: white;
+  border-radius: 50%;
+  padding: 6px;
+  z-index: 2;
+  text-decoration: none;
+  color: #dc3545;
+  box-shadow: 0 2px 6px var(--shadow-color);
+  transition: transform 0.2s ease;
+}
+
+.wishlist-btn:hover {
+  transform: scale(1.1);
+  background-color: #ffe6ea;
+}
+
+.toast {
+  visibility: hidden;
+  min-width: 200px;
+  margin-left: -100px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 8px;
+  padding: 12px;
+  position: fixed;
+  z-index: 9999;
+  left: 50%;
+  bottom: 30px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.3s ease, bottom 0.3s ease;
+}
+
+.toast.show {
+  visibility: visible;
+  opacity: 1;
+  bottom: 50px;
+}
+
 
 @media (max-width: 767.98px) {
   .filter-sidebar {

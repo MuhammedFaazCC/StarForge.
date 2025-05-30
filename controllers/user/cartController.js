@@ -14,25 +14,24 @@ const addToCart = async (req, res) => {
     const productId = req.params.id;
     const userId = req.session.user._id;
     const quantity = parseInt(req.body.quantity) || 1;
+    const source = req.body.source;
+    if (!req.session || !req.session.user || !req.session.user._id) {
+      return res.status(401).json({ message: 'User not logged in' });
+    }
 
     const product = await Product.findById(productId).populate('category');
-
-    if (!req.session || !req.session.user || !req.session.user._id) {
-  return res.status(401).json({ message: 'User not logged in' });
-}
 
     if (!product || !product.isListed || !product.category?.isActive || product.stock === 0) {
       return res.status(400).send('Product not available');
     }
 
     let cart = await Cart.findOne({ userId: userId });
-    console.log(JSON.stringify(cart, null, 2));
 
     if (!cart) {
       cart = new Cart({ userId: userId, items: [] });
     }
 
-const itemIndex = cart.items.findIndex(item => item.productId && item.productId.toString() === productId.toString());
+    const itemIndex = cart.items.findIndex(item => item.productId && item.productId.toString() === productId.toString());
 
     if (itemIndex !== -1) {
       if (cart.items[itemIndex].quantity + quantity <= product.stock) {
@@ -44,11 +43,16 @@ const itemIndex = cart.items.findIndex(item => item.productId && item.productId.
       if (quantity > product.stock) {
         return res.status(400).json({ error: 'Not enough stock' });
       }
-cart.items.push({ productId: productId, quantity: quantity});
 
+      cart.items.push({ productId: productId, quantity: quantity });
     }
 
-    await Wishlist.updateOne({ userId: userId }, { $pull: { items: productId } });
+    if (source === 'wishlist') {
+      await Wishlist.updateOne(
+        { userId: userId },
+        { $pull: { items: { productId: productId } } }
+      );
+    }
 
     await cart.save();
     res.redirect('/cart');
@@ -57,6 +61,7 @@ cart.items.push({ productId: productId, quantity: quantity});
     res.status(500).send('Internal server error');
   }
 };
+
 
 
 

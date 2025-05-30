@@ -85,6 +85,7 @@ const productAdd = async (req, res) => {
     const additionalImages = req.files?.additionalImages
       ? req.files.additionalImages.map(file => file.filename)
       : [];
+      
 
     if (!name || !brand || !price || !category || !stock) {
       const categories = await Category.find({ isActive: true }).lean();

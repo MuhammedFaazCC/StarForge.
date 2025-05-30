@@ -4,6 +4,7 @@ const User = require("../../models/userSchema");
 const Address = require("../../models/addressSchema");
 const Order = require("../../models/orderSchema");
 const Wallet = require("../../models/walletSchema");
+const Wishlist = require("../../models/wishlistSchema");
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -595,29 +596,58 @@ const resetPasswordPost = async (req, res) => {
 const wishlistPage = async (req, res) => {
   try {
     const user = res.locals.userData;
-    const wishlistItems = [
-      {
-        id: 1,
-        name: "Black forged alloy wheels",
-        price: 1999,
-        image: "https://via.placeholder.com/150",
-      },
-      {
-        id: 2,
-        name: "Black forged alloy wheels",
-        price: 1999,
-        image: "https://via.placeholder.com/150",
-      },
-    ];
+    const wishlist = await Wishlist.findOne({ userId: user._id }).populate('items.productId');
+
+    const wishlistItems = wishlist?.items.map(item => item.productId) || [];
+
     res.render("wishlist", {
       user,
       currentPage: "wishlist",
-      wishlistItems: wishlistItems,
-      wishlistCount: wishlistItems.length,
+      wishlistItems,
+      wishlistCount: wishlistItems.length
     });
   } catch (error) {
-    console.log("Page not found");
+    console.error("Wishlist load error:", error);
     res.status(500).send("Server error");
+  }
+};
+
+
+const addToWishlist = async (req, res) => {
+  const userId = req.session.user._id;
+  const productId = req.body.productId;
+
+  try {
+    let wishlist = await Wishlist.findOne({ userId });
+    if (!wishlist) {
+      wishlist = new Wishlist({ userId, items: [{ productId }] });
+    } else {
+      const exists = wishlist.items.find(item => item.productId.equals(productId));
+      if (!exists) {
+        wishlist.items.push({ productId });
+      }
+    }
+    await wishlist.save();
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Add to wishlist error:", error);
+    res.status(500).json({ success: false });
+  }
+};
+
+const removeFromWishlist = async (req, res) => {
+  const userId = req.session.user._id;
+  const productId = req.body.productId;
+
+  try {
+    await Wishlist.updateOne(
+      { userId },
+      { $pull: { items: { productId } } }
+    );
+    res.redirect("/wishlist")
+  } catch (error) {
+    console.error("Remove from wishlist error:", error);
+    res.status(500).redirect("/wishlist");
   }
 };
 
@@ -681,7 +711,6 @@ const getAddressList = async (req, res) => {
     const addresses = await Address.find({ userId: user._id }).sort({
       createdAt: -1,
     });
-    console.log(addresses);
 
     res.render("profileAddressList", { user, addresses });
   } catch (err) {
@@ -718,8 +747,23 @@ const postAddress = async (req, res) => {
   }
 };
 
-const getEditAddress = async (req, res) => {
-  res.render("editAddress", { Address });
+const putEditAddress = async (req, res) => {
+  try {
+    const addressId = req.params.id || req.query.id;
+    if (!addressId) {
+      return res.status(400).send("Address ID is required.");
+    }
+
+    const address = await Address.findById(addressId);
+    if (!address) {
+      return res.status(404).send("Address not found.");
+    }
+
+    res.render("editAddress", { addresses: address });
+  } catch (err) {
+    console.error("Error fetching address:", err);
+    res.status(500).send("Internal Server Error");
+  }
 };
 
 const getUserOrders = async (req, res) => {
@@ -846,12 +890,14 @@ module.exports = {
   resetPasswordGet,
   resetPasswordPost,
   wishlistPage,
+  addToWishlist,
+  removeFromWishlist,
   logout,
   googleCallback,
   getAddressList,
   getAddAddress,
   postAddress,
-  getEditAddress,
+  putEditAddress,
   getUserOrders,
   cancelOrder,
   getWallet,

@@ -3,6 +3,7 @@ const router = express.Router();
 const userController = require("../controllers/user/userController");
 const productController = require("../controllers/user/productContrller");
 const cartController = require("../controllers/user/cartController");
+const checkoutController = require("../controllers/user/checkoutController");
 const noCache = require("../middlewares/noCache");
 const bcrypt = require("bcrypt");
 const passport = require("passport");
@@ -27,14 +28,16 @@ router.get("/products", userAuth, productController.getAllProduct);
 router.get("/product/:id", userAuth, productController.getProductDetails);
 router.post('/product/:id/review', productController.postReview);
 router.get("/wishlist", userAuth, userController.wishlistPage);
+router.get('/wishlist', userController.wishlistPage);
+router.post('/wishlist/add', userController.addToWishlist);
+router.post('/wishlist/remove', userController.removeFromWishlist);
 router.get("/logout", userAuth, userController.logout);
 router.get("/LoadProfile", userAuth, userController.userDetails);
 router.post("/editProfile", userAuth, userController.postEditProfile);
-// router.post('/profile/request-otp', userAuth, userController.requestOtpForEmailChange);
 router.get('/address', userAuth, userController.getAddressList);
 router.get("/address/add", userAuth, userController.getAddAddress);
 router.post('/address', userAuth, userController.postAddress);
-router.get("/editAddress", userAuth, userController.getEditAddress);
+router.put("/editAddress", userAuth, userController.putEditAddress);
 router.get('/orders', userAuth, userController.getUserOrders);
 router.post('/orders/:id/cancel', userAuth, userController.cancelOrder);
 router.get('/wallet', userAuth, userController.getWallet)
@@ -46,5 +49,8 @@ router.post("/cart/add/:id", userAuth, cartController.addToCart);
 router.patch("/cart/update/:id",userAuth,cartController.updateCartQuantity)
 router.delete("/cart/remove/:id",userAuth, cartController.removeFromCart)
 
+
+router.get('/checkout',userAuth, checkoutController.getCheckoutPage);
+router.post('/checkout',userAuth, checkoutController.postCheckoutPage);
 
 module.exports = router;

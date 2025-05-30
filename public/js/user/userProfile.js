@@ -68,44 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
     modal.classList.add('show');
   });
 
-  const editForm = document.getElementById('editProfileForm');
-  if (editForm) {
-    // editForm.addEventListener('submit', async (e) => {
-    //   e.preventDefault();
-
-    //   const formData = new FormData(editForm);
-    //   const payload = {
-    //     fullName: formData.get('fullName'),
-    //     email: formData.get('email'),
-    //     mobile: formData.get('mobile')
-    //   };
-
-    //   try {
-    //     const res = await fetch('/profile/request-otp', {
-    //       method: 'POST',
-    //       headers: { 'Content-Type': 'application/json' },
-    //       body: JSON.stringify(payload)
-    //     });
-
-    //     const data = await res.json();
-
-    //     if (data.success) {
-    //       closeModal();
-    //       document.querySelector('.profile-details .detail-group:nth-child(1) .detail-value').textContent = payload.fullName;
-    //       document.querySelector('.profile-details .detail-group:nth-child(2) .detail-value').textContent = payload.email;
-    //       document.querySelector('.profile-details .detail-group:nth-child(3) .detail-value').textContent = payload.mobile;
-
-    //       showToast('Profile updated successfully!');
-    //     } else {
-    //       showToast(data.message || 'Failed to save changes.');
-    //     }
-    //   } catch (err) {
-    //     console.error('Error saving profile:', err);
-    //     showToast('Something went wrong.');
-    //   }
-    // });
-  }
-
   const urlParams = new URLSearchParams(window.location.search);
   const msg = urlParams.get('msg');
   if (msg) {

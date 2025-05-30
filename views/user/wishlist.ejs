@@ -24,23 +24,33 @@
 
       <div class="wishlist-items">
         <div class="userTable" style="display: flex; flex-wrap: wrap; gap: 20px; border: none; box-shadow: none;">
-          <div class="product-card" style="background-color: #d1d1d1; padding: 20px; border-radius: 8px; width: 250px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-            <img src="https://via.placeholder.com/150" alt="Black forged alloy wheels" style="width: 100%; border-radius: 6px;">
-            <h3 style="margin-top: 12px; font-size: 18px;">Black forged alloy wheels</h3>
-            <p class="price" style="font-weight: bold; color: #444;">$1999</p>
-            <button class="btn btn-info">Add To Cart</button>
-            <button class="btn btn-danger">Remove from wishlist</button>
-          </div>
+  <% if (wishlistItems.length > 0) { %>
+    <% wishlistItems.forEach(item => { %>
+      <div class="product-card">
+        <img src="<%= item.image %>" alt="<%= item.name %>">
+        <div class="product-card-content">
+          <h3><%= item.name %></h3>
+          <p class="price">$<%= item.price %></p>
 
-          <div class="product-card" style="background-color: #d1d1d1; padding: 20px; border-radius: 8px; width: 250px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-            <img src="https://via.placeholder.com/150" alt="Black forged alloy wheels" style="width: 100%; border-radius: 6px;">
-            <h3 style="margin-top: 12px; font-size: 18px;">Black forged alloy wheels</h3>
-            <p class="price" style="font-weight: bold; color: #444;">$1999</p>
-            <button class="btn btn-info">Add To Cart</button>
-            <button class="btn btn-danger">Remove from wishlist</button>
-          </div>
+          <form action="/cart/add/<%= item._id %>" method="POST">
+  <input type="hidden" name="quantity" value="1">
+  <input type="hidden" name="source" value="wishlist">
+  <button type="submit" class="add-to-cart">Add to Cart</button>
+</form>
+
+          <form action="/wishlist/remove" method="POST">
+            <input type="hidden" name="productId" value="<%= item._id %>">
+            <button class="remove-from-wishlist" type="submit">Remove</button>
+          </form>
         </div>
       </div>
+    <% }); %>
+  <% } else { %>
+    <p>Your wishlist is empty.</p>
+  <% } %>
+</div>
+</div>
+
     </div>
     </div>
   </main>

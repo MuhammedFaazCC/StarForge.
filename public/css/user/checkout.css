@@ -1,0 +1,293 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f9f9f9;
+}
+
+.top-navbar {
+  background: #000;
+  padding: 1rem 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 70px;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.navbar-brand {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-decoration: none;
+  background-color: #fca120;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.navbar-user {
+  color: white;
+  display: flex;
+  align-items: center;
+}
+
+.checkout-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+.checkout-container h2 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.checkout-grid {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.shipping-section {
+  flex: 2;
+  background: #fff;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.shipping-section h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+textarea,
+select {
+  width: 100%;
+  font-size: 1rem;
+  padding: 0.6rem;
+  margin-bottom: 1.5rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  resize: vertical;
+  background: #f9f9f9;
+}
+
+.order-summary {
+  flex: 1;
+  background: #fff;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.order-summary h3 {
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+}
+
+.order-summary ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem 0;
+}
+
+.order-summary li {
+  background: #f0f0f0;
+  padding: 0.5rem;
+  border-radius: 5px;
+  margin-bottom: 0.5rem;
+}
+
+.order-summary .total {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-top: 1rem;
+}
+
+.checkout-btn {
+  background: #28a745;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 5px;
+  border: none;
+  text-decoration: none;
+  font-size: 1rem;
+  cursor: pointer;
+  display: inline-block;
+  margin-top: 1rem;
+}
+
+.checkout-btn:hover {
+  background: #218838;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.btn-secondary {
+  margin-top: 0.5rem;
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.info-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  width: calc(50% - 0.5rem);
+  box-sizing: border-box;
+}
+
+.info-card.selected {
+  border: 2px solid #28a745;
+  box-shadow: 0 0 10px rgba(40, 167, 69, 0.2);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.card-title {
+  font-weight: 600;
+}
+
+.card-action {
+  font-size: 0.9rem;
+  color: #007bff;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  background: #f9f9f9;
+  border: 2px dashed #ccc;
+  border-radius: 10px;
+}
+
+.empty-icon {
+  height: 80px;
+  margin-bottom: 1rem;
+}
+
+.empty-title {
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.empty-description {
+  margin-bottom: 1rem;
+  color: #666;
+}
+
+.order-summary ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.order-summary li {
+  background: #f0f0f0;
+  border-radius: 8px;
+  padding: 0.6rem;
+  margin-bottom: 0.6rem;
+  line-height: 1.4;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 2rem;
+  width: 400px;
+  max-width: 90%;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.modal-content label {
+  display: block;
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.3rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.modal-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.modal-actions button {
+  padding: 0.5rem 1rem;
+  border: none;
+  background-color: #333;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modal-actions button:hover {
+  background-color: #555;
+}
