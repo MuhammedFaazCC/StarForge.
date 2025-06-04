@@ -5,7 +5,10 @@ const Wishlist = require('../../models/wishlistSchema');
 
 const viewCart = async (req, res) => {
   const userId = req.session.user._id;
-  const cart = await Cart.findOne({ userId: req.session.user._id }).populate('items.productId');
+  const cart = await Cart.findOne({ userId:userId }).populate('items.productId');
+  // let total= cart.items.reduce((sum, item)=> item.productId ? sum + item.productId.salesPrice* item.quantity : sum, 0).toFixed(2)
+  // console.log(total);
+  
   res.render('cart', { cart });
 };
 
@@ -94,6 +97,7 @@ const updateCartQuantity = async (req, res) => {
 const removeFromCart = async (req, res) => {
   try {
     const {  id: cartItemId  } = req.params;
+    console.log(req.params)
     await Cart.updateOne(
       { userId: req.session.user._id },
       { $pull: { items: { _id: cartItemId } } }

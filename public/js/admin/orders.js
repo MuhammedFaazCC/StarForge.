@@ -1,19 +1,31 @@
-const toggleBtn = document.querySelector(".toggle-btn");
-const sidePanel = document.querySelector(".side-panel");
-const mainContent = document.querySelector(".main-content");
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.status-select').forEach(select => {
+    select.addEventListener('change', async function () {
+      const orderId = this.getAttribute('data-order-id');
+      const newStatus = this.value;
 
-toggleBtn.addEventListener("click", () => {
-  sidePanel.classList.toggle("visible");
-  sidePanel.classList.toggle("hidden");
-  mainContent.classList.toggle("expanded");
-});
+      const confirmed = confirm(`Change order ${orderId} status to "${newStatus}"?`);
+      if (!confirmed) return;
 
-document.querySelectorAll(".side-panel a").forEach((link) => {
-  link.addEventListener("click", (e) => {
-    e.preventDefault();
-    document
-      .querySelectorAll(".side-panel a")
-      .forEach((l) => l.classList.remove("active"));
-    link.classList.add("active");
+      try {
+        const res = await fetch(`/admin/orders/${orderId}/status`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ status: newStatus })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          alert('Order status updated successfully.');
+        } else {
+          alert('Failed to update order status.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('An error occurred.');
+      }
+    });
   });
 });

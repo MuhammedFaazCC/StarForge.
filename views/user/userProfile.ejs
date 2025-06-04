@@ -12,7 +12,7 @@
   <nav class="top-navbar">
     <a href="/" class="navbar-brand">StarForge.</a>
     <div class="navbar-user">
-      <span>Welcome back, <%= user.fullName %></span>
+      <span>Welcome, <%= user.fullName %></span>
     </div>
   </nav>
 
@@ -21,7 +21,7 @@
   visibility: hidden;
   min-width: 250px;
   margin-left: -125px;
-  background-color: #4BB543; /* green */
+  background-color: #4BB543;
   color: white;
   text-align: center;
   border-radius: 5px;
@@ -47,11 +47,10 @@
           </div>
 
           <div class="profile-grid">
-            <div class="profile-image-section">
-              <img
-                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80"
-                alt="Profile" class="profile-image" />
-            </div>
+            <form action="/profile/upload" method="POST" enctype="multipart/form-data">
+            <input type="file" name="profileImage" accept="image/*" required />
+            <button type="submit">Upload Profile Picture</button>
+            </form>
 
             <div class="profile-details">
               <div class="detail-group">

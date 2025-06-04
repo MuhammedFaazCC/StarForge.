@@ -611,29 +611,34 @@ const wishlistPage = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
-
-
 const addToWishlist = async (req, res) => {
   const userId = req.session.user._id;
-  const productId = req.body.productId;
+  const productId = req.params.id;
 
   try {
     let wishlist = await Wishlist.findOne({ userId });
+
     if (!wishlist) {
       wishlist = new Wishlist({ userId, items: [{ productId }] });
     } else {
-      const exists = wishlist.items.find(item => item.productId.equals(productId));
-      if (!exists) {
+      const index = wishlist.items.findIndex(item => item.productId.toString() === productId);
+      if (index > -1) {
+        // Remove if already exists
+        wishlist.items.splice(index, 1);
+      } else {
         wishlist.items.push({ productId });
       }
     }
+
     await wishlist.save();
-    res.json({ success: true });
+    res.json({ success: true, message: 'Wishlist updated' });
   } catch (error) {
-    console.error("Add to wishlist error:", error);
-    res.status(500).json({ success: false });
+    console.error('Add to wishlist error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
+
 
 const removeFromWishlist = async (req, res) => {
   const userId = req.session.user._id;
@@ -747,36 +752,70 @@ const postAddress = async (req, res) => {
   }
 };
 
-const putEditAddress = async (req, res) => {
+const loadEdit = async (req, res) => {
   try {
-    const addressId = req.params.id || req.query.id;
-    if (!addressId) {
-      return res.status(400).send("Address ID is required.");
-    }
+    const addressId = req.params.addressId;
+    const address = await Address.findOne({ _id: addressId });
 
-    const address = await Address.findById(addressId);
     if (!address) {
-      return res.status(404).send("Address not found.");
+      return res.status(404).json({ success: false, message: "Address not found" });
     }
 
-    res.render("editAddress", { addresses: address });
-  } catch (err) {
-    console.error("Error fetching address:", err);
-    res.status(500).send("Internal Server Error");
+    res.status(200).json({
+      name: address.fullName,
+      mobile: address.mobile || "",
+      address: address.address,
+      city: address.city,
+      state: address.state,
+      pincode: address.pinCode,
+      isDefault: address.isDefault || false
+    });
+  } catch (error) {
+    console.error("Error fetching address:", error);
+    res.status(500).json({ success: false, message: "Error fetching address" });
   }
 };
+
+
+const putEditAddress = async (req, res) => {
+  try {
+    const addressId = req.params.id;
+    const { name, mobile, address, pincode, city, state, isDefault } = req.body;
+
+    const updatedData = {
+      fullName: name,
+      mobile,
+      address,
+      pinCode: pincode,
+      city,
+      state,
+      isDefault: isDefault === 'true' || isDefault === true,
+    };
+
+    await Address.findByIdAndUpdate(addressId, updatedData);
+
+    if (updatedData.isDefault) {
+      await Address.updateMany(
+        { _id: { $ne: addressId }, userId: req.session.user._id },
+        { $set: { isDefault: false } }
+      );
+    }
+
+    res.json({ success: true, message: 'Address updated successfully' });
+  } catch (err) {
+    console.error('Error updating address:', err);
+    res.status(500).json({ success: false, message: 'Failed to update address' });
+  }
+};
+
 
 const getUserOrders = async (req, res) => {
   try {
     const userId = req.session.user._id;
 
-    const orders = await Order.find({ user: userId }).sort({ createdAt: -1 });
+    const orders = await Order.find({ userId: userId }).sort({ createdAt: -1 });
 
-    res.render("profileOrders", {
-      user: req.session.user,
-      currentPage: "orders",
-      orders,
-    });
+    res.render("profileOrders", { user: req.session.user, currentPage: "orders", orders });
   } catch (error) {
     console.error("Error fetching orders:", error);
     res.status(500).send("Internal server error");
@@ -851,12 +890,12 @@ const postChangePassword = async (req, res) => {
 
     if (!(await bcrypt.compare(currentPassword, user.password))) {
       req.session.error = "Incorrect current password.";
-      return res.redirect("/change-password");
+      return res.redirect("/changePassword");
     }
 
     if (newPassword !== confirmPassword) {
       req.session.error = "New passwords do not match.";
-      return res.redirect("/change-password");
+      return res.redirect("/changePassword");
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -864,11 +903,11 @@ const postChangePassword = async (req, res) => {
     await user.save();
 
     req.session.success = "Password changed successfully.";
-    res.redirect("/change-password");
+    res.redirect("/changePassword");
   } catch (err) {
     console.error(err);
     req.session.error = "Something went wrong. Please try again.";
-    res.redirect("/change-password");
+    res.redirect("/changePassword");
   }
 };
 
@@ -896,6 +935,7 @@ module.exports = {
   googleCallback,
   getAddressList,
   getAddAddress,
+  loadEdit,
   postAddress,
   putEditAddress,
   getUserOrders,

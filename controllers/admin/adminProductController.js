@@ -85,7 +85,6 @@ const productAdd = async (req, res) => {
     const additionalImages = req.files?.additionalImages
       ? req.files.additionalImages.map(file => file.filename)
       : [];
-      
 
     if (!name || !brand || !price || !category || !stock) {
       const categories = await Category.find({ isActive: true }).lean();
@@ -119,12 +118,18 @@ const productAdd = async (req, res) => {
         categories,
       });
     }
+    const parsedPrice = parseFloat(price);
+    const parsedOffer = offer ? parseFloat(offer) : 0;
+    const salesPrice = parsedOffer > 0 
+      ? parsedPrice - (parsedPrice * parsedOffer / 100)
+      : parsedPrice;
 
     const newProduct = new Product({
       name: name.trim(),
       brand: brand.trim(),
-      price: parseFloat(price),
-      offer: offer ? parseFloat(offer) : 0,
+      price: parsedPrice,
+      offer: parsedOffer,
+      salesPrice: parseFloat(salesPrice.toFixed(2)),
       description: description?.trim() || '',
       category,
       sizes: productSizes,
@@ -144,15 +149,18 @@ const productAdd = async (req, res) => {
     const totalProducts = await Product.countDocuments({ isListed: true });
     const products = await Product.find({isListed:true}).sort({_id:-1}).skip(skip).limit(limit);
     const totalPages = Math.ceil(totalProducts / limit);
-   
 
-    res.render("products",{ products, success: true,hasPrevPage: page > 1,
+    res.render("products", {
+      products, 
+      success: true,
+      hasPrevPage: page > 1,
       currentPage: page,
       hasNextPage: page < totalPages,
       totalPages,
       prevPage: page - 1,
       nextPage: page + 1,
-      text: `Product "${name}" has been added successfully!`});
+      text: `Product "${name}" has been added successfully!`
+    });
 
   } catch (err) {
     console.error("Error adding product:", err);
@@ -253,11 +261,9 @@ const productEdit = async (req, res) => {
       offer,
       description,
       category,
+      stock,
       sizes,
       rimMaterial,
-      finish,
-      stock,
-      additionalInfo
     } = req.body;
 
     const product = await Product.findById(productId);
@@ -305,19 +311,22 @@ const productEdit = async (req, res) => {
       });
     }
 
+    const parsedPrice = parseFloat(price);
+    const parsedOffer = offer ? parseFloat(offer) : 0;
+    const salesPrice = parsedOffer > 0 
+      ? parsedPrice - (parsedPrice * parsedOffer / 100)
+      : parsedPrice;
+
     product.name = name.trim();
     product.brand = brand.trim();
-    product.price = parseFloat(price);
-    product.offer = offer ? parseFloat(offer) : 0;
+    product.price = parsedPrice;
+    product.offer = parsedOffer;
     product.description = description?.trim() || '';
     product.category = category;
+    product.stock = parseInt(stock);
     product.sizes = sizes ? sizes.split(",").map((s) => s.trim()) : [];
     product.rimMaterial = rimMaterial?.trim() || '';
-    product.finish = finish?.trim() || '';
-    product.stock = parseInt(stock);
-    product.additionalInfo = additionalInfo 
-      ? additionalInfo.split(",").map((info) => info.trim()) 
-      : [];
+    product.salesPrice = parseFloat(salesPrice.toFixed(2));
 
     if (req.files) {
       if (req.files.mainImage?.[0]) {

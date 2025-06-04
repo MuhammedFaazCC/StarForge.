@@ -1,6 +1,6 @@
 async function updateCartQuantity(cartItemId, change) {
   try {
-    const res = await fetch(`/cart/update/${cartItemId}`, {
+    const res = await fetch(`/user/cart/update/${cartItemId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ change })
@@ -18,16 +18,22 @@ async function updateCartQuantity(cartItemId, change) {
   }
 }
 
-async function removeFromCart(cartItemId) {
+ function removeFromCart(cartItemId) {
   if (!confirm('Remove this item from cart?')) return;
+  console.log(cartItemId,"id")
   try {
-    const res = await fetch(`/cart/remove/${cartItemId}`, { method: 'DELETE' });
-    const data = await res.json();
-    if (data.success) {
-      location.reload();
-    } else {
-      alert(data.error || 'Remove failed');
-    }
+     fetch(`/cart/remove/${cartItemId}`, { method: 'DELETE' })
+    .then((response)=>response.json())
+    .then((data)=>{
+      if(data.success){
+        window.location.reload()
+      }else{
+        alert(data.error || 'Remove failed');
+      }
+    })
+    
+
+    
   } catch (err) {
     console.error('Remove error:', err);
     alert('Something went wrong');

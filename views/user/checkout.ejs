@@ -19,13 +19,14 @@
     <h2>Checkout</h2>
 
     <form action="/checkout" method="POST" id="checkoutForm">
-      <div class="checkout-grid">
         <input type="hidden" name="selectedAddressId" id="selectedAddressId" />
         
+        <div class="checkout-grid">
+
         <section class="shipping-section">
           <div class="section-header">
             <h3>Shipping Address</h3>
-            <a href="/address/add" class="btn-primary">+ Add Address</a>
+            <a href="/address/add" class="btn-primary">Add Address</a>
           </div>
 
           <% if (addresses.length === 0) { %>
@@ -71,12 +72,12 @@
             <% cartItems.forEach(item => { %>
               <li>
                 <strong><%= item.product.name %></strong><br/>
-                Qty: <%= item.quantity %> — $<%= item.subtotal %>
+                Qty: <%= item.quantity %> — $<%= item.subtotal.toFixed(2)%>
               </li>
             <% }) %>
           </ul>
 
-          <p class="total">Total: $<%= total %></p>
+          <p class="total">Total: $<%= total.toFixed(2) %></p>
           <button type="submit" class="checkout-btn">Place Order</button>
         </aside>
       </div>

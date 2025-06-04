@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>My Addresses</title>
   <link rel="stylesheet" href="/css/user/userProfile.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
 <body>
   <nav class="top-navbar">
@@ -41,7 +42,7 @@
                 <div class="info-card">
                   <div class="card-header">
                     <span class="card-title"><%= address.fullName %></span>
-                    <a href="javascript:void(0);" class="card-action" onclick="openEditModal('<%= address._id %>')">Edit</a>
+                    <a href="#" class="card-action" onclick="openEditModal(event, '<%= address._id %>')">Edit</a>
                   </div>
                   <p>
                     <%= address.address %><br />
@@ -56,27 +57,157 @@
 
     </div>
   </div>
-<div id="editModal" class="modal hidden">
-  <div class="modal-content" id="editModalContent"></div>
+    <!-- ------------------------ -->
+<div class="modal fade" id="editAddressModal" tabindex="-1" aria-labelledby="editAddressModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editAddressModalLabel">Edit Address</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editAddressForm">
+          <input type="hidden" id="editAddressId" name="addressId">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="editName" class="form-label">Full Name</label>
+              <input type="text" class="form-control" id="editName" name="name" required>
+              <div class="invalid-feedback" style="display: none;"></div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="editMobile" class="form-label">Mobile Number</label>
+              <input type="tel" class="form-control" id="editMobile" name="mobile" required>
+              <div class="invalid-feedback" style="display: none;"></div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="editAddress" class="form-label">Address (House No, Building, Street, Area)</label>
+            <textarea class="form-control" id="editAddress" name="address" rows="2" required></textarea>
+            <div class="invalid-feedback" style="display: none;"></div>
+          </div>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label for="editPincode" class="form-label">Pincode</label>
+              <input type="text" class="form-control" id="editPincode" name="pincode" required>
+              <div class="invalid-feedback" style="display: none;"></div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="editCity" class="form-label">City</label>
+              <input type="text" class="form-control" id="editCity" name="city" required>
+              <div class="invalid-feedback" style="display: none;"></div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="editState" class="form-label">State</label>
+              <input type="text" class="form-control" id="editState" name="state" required>
+              <div class="invalid-feedback" style="display: none;"></div>
+            </div>
+          </div>
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="editIsDefault" name="isDefault">
+            <label class="form-check-label" for="editIsDefault">Make this my default address</label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn" style="background-color: #fca120;" id="updateAddressBtn">Update Address</button>
+      </div>
+    </div>
+  </div>
 </div>
-  <script>
-  function openEditModal(addressId) {
-    fetch(`/user/address/edit/${addressId}`)
-      .then(res => res.text())
-      .then(html => {
-        document.getElementById('editModalContent').innerHTML = html;
-        document.getElementById('editModal').classList.remove('hidden');
-      })
-      .catch(err => {
-        alert("Failed to load edit form.");
-        console.error(err);
-      });
-  }
 
-  function closeModal() {
-    document.getElementById('editModal').classList.add('hidden');
-    document.getElementById('editModalContent').innerHTML = '';
-  }
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+  function openEditModal(event, addressId) {
+  event.preventDefault();
+  fetch(`/account/addresses/edit/${addressId}`)
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+      return response.json();
+    })
+    .then(data => {
+      const modalElement = document.getElementById("editAddressModal");
+      const modal = new bootstrap.Modal(modalElement);
+      modal.show();
+
+      setTimeout(() => {
+        document.getElementById("editAddressId").value = addressId;
+        document.getElementById("editName").value = data.name || "";
+        document.getElementById("editMobile").value = data.mobile || "";
+        document.getElementById("editAddress").value = data.address || "";
+        document.getElementById("editPincode").value = data.pincode || "";
+        document.getElementById("editCity").value = data.city || "";
+        document.getElementById("editState").value = data.state || "";
+        document.getElementById("editIsDefault").checked = data.isDefault || false;
+      }, 300);
+    })
+    .catch(error => {
+      console.error("Failed to open modal:", error);
+      const addressCard = event.target.closest(".info-card");
+      if (addressCard) {
+        try {
+          const name = addressCard.querySelector(".card-title").textContent.trim();
+          document.getElementById("editName").value = name;
+
+          const pTags = addressCard.querySelectorAll("p");
+          const addressLine = pTags[0].textContent.trim();
+          const cityLine = pTags[1].textContent.trim(); 
+          document.getElementById("editAddress").value = addressLine;
+
+          document.getElementById("editIsDefault").checked = false; 
+
+          const modalElement = document.getElementById("editAddressModal");
+          const modal = new bootstrap.Modal(modalElement);
+          modal.show();
+
+        } catch (extractError) {
+          console.error("Error extracting data from card:", extractError);
+          alert("Failed to load address data");
+        }
+      } else {
+        alert("Failed to load address data");
+      }
+    });
+}
+
+document.getElementById('updateAddressBtn').addEventListener('click', () => {
+  const addressId = document.getElementById('editAddressId').value;
+  const name = document.getElementById('editName').value.trim();
+  const mobile = document.getElementById('editMobile').value.trim();
+  const address = document.getElementById('editAddress').value.trim();
+  const pincode = document.getElementById('editPincode').value.trim();
+  const city = document.getElementById('editCity').value.trim();
+  const state = document.getElementById('editState').value.trim();
+  const isDefault = document.getElementById('editIsDefault').checked;
+
+  fetch(`/address/${addressId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name, mobile, address, pincode, city, state, isDefault }),
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        const modalElement = document.getElementById('editAddressModal');
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        modal.hide();
+
+        location.reload();
+
+      } else {
+        alert('Failed to update address: ' + data.message);
+      }
+    })
+    .catch((err) => {
+      console.error('Update failed:', err);
+      alert('Something went wrong while updating the address.');
+    });
+});
+
+
 </script>
 
 </body>

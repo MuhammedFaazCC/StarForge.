@@ -48,11 +48,11 @@ document.addEventListener("DOMContentLoaded", () => {
     cropModal.style.display = "block";
     if (cropper) cropper.destroy();
     cropper = new Cropper(cropImage, {
-  aspectRatio: 1,
-  viewMode: 1,
-  autoCropArea: 0.8,
-  responsive: true,
-});
+      aspectRatio: 1,
+      viewMode: 1,
+      autoCropArea: 0.8,
+      responsive: true,
+    });
   };
 
   cropButton.addEventListener("click", () => {
@@ -165,8 +165,8 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
 
     console.log("Form action:", form.action);
-  console.log("Form method:", form.method);
-  console.log("Form data entries:");
+    console.log("Form method:", form.method);
+    console.log("Form data entries:");
 
 
 

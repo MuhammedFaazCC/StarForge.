@@ -37,7 +37,9 @@ router.post('/products/edit/:id', adminAuth, upload.fields([
 ]), productController.productEdit);
 router.delete("/products/delete/:id", adminAuth, productController.softDeleteProduct);
 
-router.get("/orders", adminAuth, adminController.ordersPage);
+router.get('/orders', adminAuth, adminController.getAdminOrdersPage);
+router.post('/admin/orders/:id/status', adminAuth, adminController.statusUpdate);
+
 
 router.get("/customers", adminAuth, customerController.customersPage);
 router.post('/customers/clear', adminAuth, customerController.customerClear);

@@ -12,7 +12,6 @@ body {
     background-color: #f8fafc;
 }
 
-/* Navbar */
 .navbar {
     display: flex;
     justify-content: space-between;
@@ -55,7 +54,6 @@ body {
     color: #ffffff;
 }
 
-/* Side Panel */
 .side-panel {
     width: 220px;
     background-color: #808080;
@@ -109,7 +107,6 @@ body {
     font-weight: 600;
 }
 
-/* Main Content */
 .main-content {
     margin-left: 220px;
     margin-top: 50px;
@@ -119,7 +116,27 @@ body {
     background-color: #f8fafc;
 }
 
-/* Orders Section */
+.filter-bar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.btn-view {
+  padding: 6px 10px;
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+}
+.btn-clear {
+  background-color: #dc3545;
+  color: white;
+  padding: 6px 10px;
+  text-decoration: none;
+  border-radius: 4px;
+}
+
+
 .orders-section {
     background: #e5e7eb;
     padding: 20px;
@@ -146,14 +163,14 @@ body {
 
 .orders-table th,
 .orders-table td {
-    padding: 12px 15px; /* Increased padding for readability */
+    padding: 12px 15px;
     text-align: left;
     font-size: 0.9rem;
     border-bottom: 1px solid #d1d5db;
 }
 
 .orders-table th {
-    background: #d1d5db; /* Darker header background */
+    background: #d1d5db;
     font-weight: 600;
     color: #1f2937;
 }
@@ -163,7 +180,7 @@ body {
 }
 
 .orders-table tr:nth-child(even) {
-    background: #eceff1; /* Alternating row colors */
+    background: #eceff1;
 }
 
 .orders-table tr:last-child td {
@@ -174,7 +191,6 @@ body {
     background: #e5e7eb;
 }
 
-/* Footer */
 footer {
     padding: 10px;
     text-align: center;
@@ -184,7 +200,6 @@ footer {
     font-size: 0.8rem;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
     .side-panel {
         width: 180px;

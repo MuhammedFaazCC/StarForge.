@@ -1,7 +1,11 @@
-function toggleSidebar() {
-  const sidebar = document.getElementById('sidebar');
-  sidebar.classList.toggle('open');
-}
+// const multer = require('multer');
+// const path = require('path');
+
+
+// function toggleSidebar() {
+//   const sidebar = document.getElementById('sidebar');
+//   sidebar.classList.toggle('open');
+// }
 
 document.addEventListener('click', function(event) {
   const sidebar = document.getElementById('sidebar');
@@ -62,7 +66,9 @@ function showToast(message) {
 
 document.addEventListener('DOMContentLoaded', () => {
   const editBtn = document.querySelector('.edit-profile-btn');
+  console.log('Edit button found:', editBtn);
   editBtn.addEventListener('click', () => {
+    console.log('Edit button clicked');
     const modal = document.getElementById('editProfileModal');
     modal.classList.remove('hidden');
     modal.classList.add('show');
@@ -74,4 +80,12 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast(msg);
     window.history.replaceState({}, document.title, window.location.pathname);
   }
+
+  const modal = document.getElementById('editProfileModal');
+modal.addEventListener('click', (e) => {
+  if (e.target === modal) {
+    closeModal();
+  }
+});
+
 });

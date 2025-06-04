@@ -2,6 +2,7 @@ const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
 const User = require("../../models/userSchema");
 const Review = require('../../models/reviewSchema');
+const Wishlist = require('../../models/wishlistSchema')
 
 const getAllProduct = async (req, res) => {
   try {
@@ -204,8 +205,12 @@ const getAllProduct = async (req, res) => {
     
     const productSchemaFields = await Product.findOne().lean();
     console.log('Product Schema Fields:', Object.keys(productSchemaFields || {}));
+
+     const wishlist = await Wishlist.findOne({ userId : user._id }).populate('items.productId');
+      wishlistItems = wishlist ? wishlist.items : [];
     
     res.render("allproduct", {
+    
       user: userData,
       products: formattedProducts,
       totalProducts,
@@ -213,6 +218,7 @@ const getAllProduct = async (req, res) => {
       totalPages,
       filters: filters,
       priceRange: priceRange,
+      userWishlistItems: wishlistItems,
       categories: categories,
       buildUrl,
       noProductsMessage: products.length === 0 && totalProducts > 0 
@@ -259,6 +265,8 @@ const getProductDetails = async (req, res) => {
       _id: { $ne: product._id },
       isListed: true
     }).limit(4).lean();
+
+
 
     res.render('productDetails', {
       user: userData,

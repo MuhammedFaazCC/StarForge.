@@ -18,6 +18,30 @@
             <div class="main-content" id="main-content">
                 <div class="orders-section">
                     <h2>Orders</h2>
+                    <form method="GET" action="/admin/orders" class="filter-bar">
+                        <input type="text" name="search" placeholder="Search by name or email"
+                            value="<%= search || '' %>">
+
+                        <select name="status">
+                            <option value="">All Statuses</option>
+                            <option value="Pending" <%=status==='Pending' ? 'selected' : '' %>>Pending</option>
+                            <option value="Placed" <%=status==='Placed' ? 'selected' : '' %>>Placed</option>
+                            <option value="Shipped" <%=status==='Shipped' ? 'selected' : '' %>>Shipped</option>
+                            <option value="Out for Delivery" <%=status==='Out for Delivery' ? 'selected' : '' %>>Out for
+                                Delivery</option>
+                            <option value="Delivered" <%=status==='Delivered' ? 'selected' : '' %>>Delivered</option>
+                            <option value="Cancelled" <%=status==='Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                        </select>
+
+                        <select name="sort">
+                            <option value="desc" <%=sort==='desc' ? 'selected' : '' %>>Newest First</option>
+                            <option value="asc" <%=sort==='asc' ? 'selected' : '' %>>Oldest First</option>
+                        </select>
+
+                        <button type="submit">Apply</button>
+                        <a href="/admin/orders" class="btn-clear">Clear</a>
+                    </form>
+
                     <table class="orders-table">
                         <thead>
                             <tr>
@@ -29,34 +53,45 @@
                             </tr>
                         </thead>
                         <tbody>
-                                <% orders.forEach(order=> { %>
-                                    <tr>
-                                        <td>
-                                            <%= order.id %>
-                                        </td>
-                                        <td>
-                                            <%= order.customer %>
-                                        </td>
-                                        <td>
-                                            <%= order.date %>
-                                        </td>
-                                        <td>
-                                            <%= order.total %>
-                                        </td>
-                                        <td>
-                                            <%= order.status %>
-                                        </td>
-                                    </tr>
-                                    <% }); %>
+                            <% orders.forEach(order=> { %>
+                                <tr>
+                                    <td>
+                                        <%= order._id %>
+                                    </td>
+                                    <td>
+                                        <%= order.userId.fullName || order.userId.email %>
+                                    </td>
+                                    <td>
+                                        <%= order.createdAt.toLocaleDateString() %>
+                                    </td>
+                                    <td>$<%= order.totalAmount.toFixed(2) %>
+                                    </td>
+                                    <td>
+                                        <select class="status-select" data-order-id="<%= order._id %>">
+                                            <% ['Pending', 'Placed' , 'Shipped' , 'Out for Delivery' , 'Delivered'
+                                                , 'Cancelled' ].forEach(s=> { %>
+                                                <option value="<%= s %>" <%=s===order.status ? 'selected' : '' %>><%= s
+                                                        %>
+                                                </option>
+                                                <% }) %>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <a href="/admin/orders/<%= order._id %>" class="btn-view">View</a>
+                                    </td>
+                                </tr>
+                                <% }); %>
+
+
                         </tbody>
                     </table>
                 </div>
             </div>
 
-        <%- include('../partials/admin/footer') %>
+            <%- include('../partials/admin/footer') %>
 
-    <script src="/js/admin/orders.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+                <script src="/js/admin/orders.js"></script>
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 
 </html>

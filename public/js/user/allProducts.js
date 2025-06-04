@@ -25,7 +25,6 @@ document.addEventListener('DOMContentLoaded', function () {
     return newUrl.toString();
   }
 
-  // Toggle sidebar
   const filterToggle = document.querySelector('.filter-toggle');
   const filterContent = document.querySelector('.filter-content');
   if (filterToggle) {
@@ -34,7 +33,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Price Range
   const priceRangeSlider = document.getElementById('priceRangeSlider');
   const minPriceInput = document.getElementById('minPrice');
   const maxPriceInput = document.getElementById('maxPrice');
@@ -58,7 +56,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Apply Price Filter
   const applyPriceFilterBtn = document.getElementById('applyPriceFilter');
   if (applyPriceFilterBtn) {
     applyPriceFilterBtn.addEventListener('click', function () {
@@ -68,14 +65,12 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Category Change
   document.querySelectorAll('.category-filter').forEach(input => {
     input.addEventListener('change', () => {
       window.location.href = buildUrl({ category: input.value, page: 1 });
     });
   });
 
-  // Sort Change
   const sortFilter = document.getElementById('sortFilter');
   if (sortFilter) {
     sortFilter.addEventListener('change', function () {
@@ -83,7 +78,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Clear Filter Badges
   document.querySelectorAll('.filter-badge .close').forEach(closeBtn => {
     closeBtn.addEventListener('click', function () {
       const type = this.getAttribute('data-filter');
@@ -102,7 +96,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // Clear All Filters
   const clearAllBtn = document.getElementById('clearAllFilters');
   if (clearAllBtn) {
     clearAllBtn.addEventListener('click', () => {
@@ -117,21 +110,60 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Wishlist Button
   document.querySelectorAll('.wishlist-btn').forEach(button => {
-    button.addEventListener('click', function (e) {
-      e.preventDefault();
-      const productId = this.getAttribute('data-product-id');
-      fetch(`/wishlist/add/${productId}`, { method: 'POST' })
-        .then(res => res.json())
-        .then(data => {
+  button.addEventListener('click', function (e) {
+    e.preventDefault();
+    const productId = this.getAttribute('data-product-id');
+
+    fetch(`/wishlist/add/${productId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        const toast = document.getElementById('toast');
+        if (toast) {
+          toast.textContent = data.message || 'Added to wishlist!';
+          toast.classList.add('show');
+          setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+      })
+      .catch(err => {
+        console.error('Error adding to wishlist:', err);
+      });
+  });
+});
+});
+
+document.querySelectorAll('.wishlist-btn').forEach(button => {
+  button.addEventListener('click', function (e) {
+    e.preventDefault();
+
+    const productId = this.getAttribute('data-product-id');
+    const icon = this.querySelector('i');
+
+    fetch(`/wishlist/add/${productId}`, {
+      method: 'POST',
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          icon.classList.toggle('bi-heart');
+          icon.classList.toggle('bi-heart-fill');
+          icon.classList.toggle('text-danger');
+
           const toast = document.getElementById('toast');
           if (toast) {
-            toast.textContent = data.message || 'Added to wishlist!';
+            toast.textContent = data.message || 'Wishlist updated!';
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 2000);
           }
-        });
-    });
+        }
+      })
+      .catch(err => {
+        console.error('Wishlist update error:', err);
+      });
   });
 });

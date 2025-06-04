@@ -19,6 +19,7 @@ router.post("/forgotPassword", userController.forgotPassword);
 router.get("/otp-verification", userController.otpVerificationPage);
 router.post("/otp-verification", userController.verifyOTP);
 router.get("/resetPassword", userController.resetPassword);
+router.patch("/resetPassword", userController.passwordReset);
 router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 router.get("/auth/google/callback", passport.authenticate("google", { failureRedirect: "/login" }), userController.googleCallback);
 
@@ -29,7 +30,7 @@ router.get("/product/:id", userAuth, productController.getProductDetails);
 router.post('/product/:id/review', productController.postReview);
 router.get("/wishlist", userAuth, userController.wishlistPage);
 router.get('/wishlist', userController.wishlistPage);
-router.post('/wishlist/add', userController.addToWishlist);
+router.post('/wishlist/add/:id', userController.addToWishlist);
 router.post('/wishlist/remove', userController.removeFromWishlist);
 router.get("/logout", userAuth, userController.logout);
 router.get("/LoadProfile", userAuth, userController.userDetails);
@@ -37,7 +38,8 @@ router.post("/editProfile", userAuth, userController.postEditProfile);
 router.get('/address', userAuth, userController.getAddressList);
 router.get("/address/add", userAuth, userController.getAddAddress);
 router.post('/address', userAuth, userController.postAddress);
-router.put("/editAddress", userAuth, userController.putEditAddress);
+router.get('/account/addresses/edit/:addressId', userAuth, userController.loadEdit);
+router.put('/address/:id', userAuth, userController.putEditAddress);
 router.get('/orders', userAuth, userController.getUserOrders);
 router.post('/orders/:id/cancel', userAuth, userController.cancelOrder);
 router.get('/wallet', userAuth, userController.getWallet)

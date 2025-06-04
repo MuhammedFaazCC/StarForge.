@@ -4,7 +4,9 @@
     font-size: 0.875rem;
     text-transform: none;
     letter-spacing: normal;
-}* {
+}
+
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -376,7 +378,7 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #fca120 0%, #ff8c42 100%);
+    background-color: #fca120;
     color: white;
     padding: 0.75rem 1.5rem;
     border-radius: 25px;
@@ -493,7 +495,192 @@ form button:hover {
   border-radius: 6px;
 }
 
-/* --- Modal Styles --- */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1050;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  outline: 0;
+}
+
+.modal.show {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  z-index: 1055;
+}
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-dialog {
+  max-width: 600px;
+  width: 100%;
+  margin: auto;
+  transition: transform 0.3s ease-out;
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 7px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 400px;
+}
+
+.modal-header {
+  background-color: #fca120;
+  color: white;
+  border-bottom: none;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.modal-title {
+  font-weight: 600;
+}
+
+.modal-header .btn-close {
+  filter: invert(1);
+}
+
+.form-control {
+  border-radius: 5px;
+  padding: 0.5rem 0.75rem;
+}
+
+.form-control:focus {
+  border-color: #fca120;
+  box-shadow: 0 0 0 0.2rem rgba(0, 150, 136, 0.25);
+}
+
+.was-validated .form-control:invalid ~ .invalid-feedback,
+.form-control.is-invalid ~ .invalid-feedback {
+  display: block !important;
+}
+
+.form-check-label {
+  margin-left: 5px;
+}
+
+.modal-footer .btn-secondary {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+}
+
+.modal-footer .btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+#updateAddressBtn {
+  background-color: #fca120;
+  color: white;
+  border: none;
+  transition: background-color 0.3s ease;
+}
+
+#updateAddressBtn:hover {
+  background-color: #fca120;
+}
+
+
+.userTable.orderTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.userTable.orderTable thead {
+  background-color: #f7f7f7;
+}
+
+.userTable.orderTable th,
+.userTable.orderTable td {
+  padding: 12px 16px;
+  text-align: left;
+  background-color: white;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.userTable.orderTable tbody tr {
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.userTable.orderTable .orderStatus {
+  font-weight: 600;
+  text-transform: capitalize;
+  padding: 6px 12px;
+  border-radius: 20px;
+  display: inline-block;
+  font-size: 13px;
+}
+
+.orderStatus.processing {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.orderStatus.confirmed {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.orderStatus.delivered {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.orderStatus.cancelled {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.cancelOrderBtn {
+  background-color: #dc3545;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.cancelOrderBtn:hover {
+  background-color: #c82333;
+}
+
+.btn-info {
+  background-color: #fca120;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.btn-info:hover {
+  background-color: #fca120;
+}
+
+.disabledBtn {
+  font-size: 13px;
+  color: #aaa;
+  padding: 6px 12px;
+  display: inline-block;
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -504,60 +691,21 @@ form button:hover {
   display: none;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
+  z-index: 2000;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
 }
 
 .modal-overlay.show {
   display: flex;
+  pointer-events: auto;
 }
 
-.modal-content {
-  background-color: #fff;
-  padding: 2rem;
-  width: 400px;
-  max-width: 90%;
-  border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+.modal-overlay.hidden {
+  display: none;
 }
 
-.modal-content h2 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-}
 
-.modal-content label {
-  display: block;
-  margin-top: 1rem;
-  font-weight: 600;
-}
-
-.modal-content input {
-  width: 100%;
-  padding: 0.5rem;
-  margin-top: 0.3rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.modal-actions {
-  margin-top: 1.5rem;
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-}
-
-.modal-actions button {
-  padding: 0.5rem 1rem;
-  border: none;
-  background-color: #333;
-  color: #fff;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.modal-actions button:hover {
-  background-color: #555;
-}
 
 
 

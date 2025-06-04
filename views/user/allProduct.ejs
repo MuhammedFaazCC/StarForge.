@@ -138,9 +138,13 @@
             <% products.forEach(function(product) { %>
               <div class="col">
                 <div class="card product-card h-100">
-                  <a href="#" class="wishlist-btn" data-product-id="<%= product._id %>" title="Add to Wishlist">
-  <i class="bi bi-heart-fill"></i>
+<a href="#" class="wishlist-btn" data-product-id="<%= product._id %>">
+  <% const inWishlist = userWishlistItems.some(item => item.productId.toString() === product._id.toString()); %>
+  <i class="bi <%= inWishlist ? 'bi-heart-fill text-danger' : 'bi-heart' %>"></i>
 </a>
+
+
+
                   <% if (product.offer > 0) { %>
                     <div class="product-discount">-<%= product.offer %>%</div>
                   <% } %>

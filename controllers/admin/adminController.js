@@ -1,9 +1,6 @@
-const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const User = require("../../models/userSchema");
-const Category = require('../../models/categorySchema');
-const Product = require('../../models/productSchema');
-const validator = require("validator");
+const Order = require("../../models/orderSchema");
 
 
 const loginPage = async (req, res) => {
@@ -104,39 +101,59 @@ const dashboardPage = async (req, res) => {
   }
 };
 
-
-
-
-const ordersPage = async (req, res) => {
+const getAdminOrdersPage = async (req, res) => {
   try {
-    const orders = [
-      {
-        id: "ORD001",
-        User: "John Doe",
-        date: "2025-05-01",
-        total: "₹2,500",
-        status: "Delivered",
-      },
-      {
-        id: "ORD002",
-        User: "Jane Smith",
-        date: "2025-05-02",
-        total: "₹1,800",
-        status: "Processing",
-      },
-      {
-        id: "ORD003",
-        User: "Sam Wilson",
-        date: "2025-05-03",
-        total: "₹3,200",
-        status: "Shipped",
-      },
-    ];
+    const { page = 1, search = '', status = '', sort = 'desc' } = req.query;
+    const limit = 10;
+    const query = {};
 
-    res.render("orders", { orders });
+    if (search) {
+      const users = await User.find({ 
+        $or: [
+          { fullName: new RegExp(search, 'i') },
+          { email: new RegExp(search, 'i') }
+        ]
+      }).select('_id');
+      query.userId = { $in: users.map(u => u._id) };
+    }
+
+    if (status) {
+      query.status = status;
+    }
+
+    const orders = await Order.find(query)
+      .populate('userId')
+      .sort({ createdAt: sort === 'asc' ? 1 : -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    const totalOrders = await Order.countDocuments(query);
+    const totalPages = Math.ceil(totalOrders / limit);
+
+    res.render('orders', {
+      orders,
+      currentPage: parseInt(page),
+      totalPages,
+      search,
+      status,
+      sort
+    });
   } catch (error) {
-    console.log("Error loading orders page:", error);
-    res.status(500).send("Server error");
+    console.error("Admin order page error:", error);
+    res.status(500).send("Server Error");
+  }
+};
+
+const statusUpdate = async (req, res) => {
+  const { status } = req.body;
+  const { id } = req.params;
+
+  try {
+    await Order.findByIdAndUpdate(id, { status });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Status update failed:', error);
+    res.status(500).json({ success: false });
   }
 };
 
@@ -241,7 +258,8 @@ module.exports = {
   loginPage,
   login,
   dashboardPage,
-  ordersPage,
+  getAdminOrdersPage,
+  statusUpdate,
   salesPage,
   couponsPage,
   bannersPage,
