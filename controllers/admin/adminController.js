@@ -76,16 +76,11 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    req.session.destroy((err) => {
-      if (err) {
-        console.error("Session destroy error in admin logout:", err);
-        return res.status(500).send("Error during logout");
-      }
-      res.clearCookie("connect.sid");
-      return res.redirect("/admin");
-    });
+    delete req.session.user;
+    res.clearCookie("connect.sid");
+    res.redirect("/login");
   } catch (error) {
-    console.error("Error during admin logout:", error);
+    console.error("Error during logout:", error);
     res.status(500).send("Server error");
   }
 };

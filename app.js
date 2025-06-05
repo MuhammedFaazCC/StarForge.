@@ -59,7 +59,8 @@ app.use((req, res, next) => {
 
 app.use("/", userRouter);
 app.use("/admin", adminRouter);
-app.use((req, res) => { 
+app.use((req, res,error) => { 
+  console.log(error)
   res.status(404).render("pageNotFound");
 });
 app.use((req, res, next) => {

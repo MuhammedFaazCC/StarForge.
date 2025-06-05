@@ -168,8 +168,6 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Form method:", form.method);
     console.log("Form data entries:");
 
-
-
     const formData = new FormData(form);
     if (croppedFiles.mainImage) {
       formData.set("mainImage", croppedFiles.mainImage, croppedFiles.mainImage.name);

@@ -13,7 +13,7 @@ const getAllProduct = async (req, res) => {
     });
 
     const user = req.session.user;
-    const userData = user ? await User.findOne({ _id: user }) : null;
+    const userData = user ? await User.findOne({ _id: user._id }) : null;
     
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = 9;
@@ -198,7 +198,7 @@ const getAllProduct = async (req, res) => {
         queryParts.push(`page=${finalParams.page}`);
       }
       
-      const url = queryParts.length > 0 ? `/allproduct?${queryParts.join('&')}` : '/allproduct';
+      const url = queryParts.length > 0 ? `/products?${queryParts.join('&')}` : '/products';
       console.log('Generated buildUrl:', url);
       return url;
     };

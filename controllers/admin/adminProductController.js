@@ -74,50 +74,25 @@ const productAdd = async (req, res) => {
       additionalInfo
     } = req.body;
 
-    const productSizes = sizes
-      ? sizes.split(",").map((size) => size.trim())
-      : [];
-    const additionalInfoList = additionalInfo
-      ? additionalInfo.split(",").map((info) => info.trim())
-      : [];
+    const productSizes = sizes ? sizes.split(",").map((size) => size.trim()) : [];
+    const additionalInfoList = additionalInfo ? additionalInfo.split(",").map((info) => info.trim()) : [];
 
     const mainImage = req.files?.mainImage?.[0]?.filename || '';
-    const additionalImages = req.files?.additionalImages
-      ? req.files.additionalImages.map(file => file.filename)
-      : [];
+    const additionalImages = req.files?.additionalImages?.map(file => file.filename) || [];
 
     if (!name || !brand || !price || !category || !stock) {
-      const categories = await Category.find({ isActive: true }).lean();
-      return res.render("addProducts", {
-        message: { 
-          success: false, 
-          text: "Please fill in all required fields (Name, Brand, Price, Category, Stock)" 
-        },
-        categories,
-      });
+      const error = "Please fill in all required fields (Name, Brand, Price, Category, Stock)";
+      return res.status(400).json({ success: false, message: error });
     }
 
     if (parseFloat(price) <= 0) {
-      const categories = await Category.find({ isActive: true }).lean();
-      return res.render("addProducts", {
-        message: { 
-          success: false, 
-          text: "Price must be a positive number" 
-        },
-        categories,
-      });
+      return res.status(400).json({ success: false, message: "Price must be a positive number" });
     }
 
     if (parseInt(stock) < 0) {
-      const categories = await Category.find({ isActive: true }).lean();
-      return res.render("addProducts", {
-        message: { 
-          success: false, 
-          text: "Stock cannot be negative" 
-        },
-        categories,
-      });
+      return res.status(400).json({ success: false, message: "Stock cannot be negative" });
     }
+
     const parsedPrice = parseFloat(price);
     const parsedOffer = offer ? parseFloat(offer) : 0;
     const salesPrice = parsedOffer > 0 
@@ -143,45 +118,23 @@ const productAdd = async (req, res) => {
 
     await newProduct.save();
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = 8;
-    const skip = (page - 1) * limit;
-    const totalProducts = await Product.countDocuments({ isListed: true });
-    const products = await Product.find({isListed:true}).sort({_id:-1}).skip(skip).limit(limit);
-    const totalPages = Math.ceil(totalProducts / limit);
-
-    res.render("products", {
-      products, 
+    return res.status(200).json({
       success: true,
-      hasPrevPage: page > 1,
-      currentPage: page,
-      hasNextPage: page < totalPages,
-      totalPages,
-      prevPage: page - 1,
-      nextPage: page + 1,
-      text: `Product "${name}" has been added successfully!`
+      message: `Product "${name}" has been added successfully!`
     });
 
   } catch (err) {
     console.error("Error adding product:", err);
-    const categories = await Category.find({ isActive: true }).lean();
-    
     let errorMessage = "Failed to add product. Please try again.";
     if (err.code === 11000) {
       errorMessage = "A product with this name already exists.";
     } else if (err.name === 'ValidationError') {
       errorMessage = "Please check your input data and try again.";
     }
-
-    res.render("addProducts", {
-      message: { 
-        success: false, 
-        text: errorMessage 
-      },
-      categories,
-    });
+    return res.status(500).json({ success: false, message: errorMessage });
   }
 };
+
 
 const viewProduct = async (req, res) => {
   try {

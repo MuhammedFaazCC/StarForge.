@@ -658,19 +658,15 @@ const removeFromWishlist = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    req.session.destroy((err) => {
-      if (err) {
-        console.error("Error destroying session:", err);
-        return res.redirect("/");
-      }
-      res.clearCookie("connect.sid");
-      res.redirect("/login");
-    });
+    delete req.session.user;
+    res.clearCookie("connect.sid");
+    res.redirect("/login");
   } catch (error) {
-    console.log("Error during logout", error);
+    console.error("Error during logout:", error);
     res.status(500).send("Server error");
   }
 };
+
 
 const googleCallback = async (req, res) => {
   try {

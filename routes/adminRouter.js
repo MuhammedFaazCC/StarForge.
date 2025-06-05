@@ -31,10 +31,7 @@ router.get("/products/add", adminAuth, productController.addProduct);
 router.post("/products/add", adminAuth, upload.fields([{ name: 'mainImage', maxCount: 1 },{ name: 'additionalImages', maxCount: 5 }]), productController.productAdd);
 router.get("/products/view/:id", adminAuth, productController.viewProduct);
 router.get("/products/edit/:id", adminAuth, productController.editProduct);
-router.post('/products/edit/:id', adminAuth, upload.fields([
-  { name: 'mainImage', maxCount: 1 },
-  { name: 'additionalImages', maxCount: 5 }
-]), productController.productEdit);
+router.post('/products/edit/:id', adminAuth, upload.fields([ { name: 'mainImage', maxCount: 1 }, { name: 'additionalImages', maxCount: 5 } ]), productController.productEdit);
 router.delete("/products/delete/:id", adminAuth, productController.softDeleteProduct);
 
 router.get('/orders', adminAuth, adminController.getAdminOrdersPage);

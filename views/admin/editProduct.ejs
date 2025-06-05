@@ -72,12 +72,12 @@
       </div>
       <div class="form-group">
         <label for="mainImage">Main Image (Current: <%= product.mainImage || 'None' %>)</label>
-        <input type="file" id="mainImage" name="mainImage" accept="image/jpeg,image/png">
+        <input type="file" id="mainImage" name="mainImage" accept="image/jpeg,image/png,image/jpg,image/webp">
         <div class="error-message" id="mainImage-error">Main image must be a valid JPEG or PNG file.</div>
       </div>
       <div class="form-group">
         <label for="additionalImages">Additional Images (Current: <%= product.additionalImages.length %>)</label>
-        <input type="file" id="additionalImages" name="additionalImages" accept="image/jpeg,image/png" multiple>
+        <input type="file" id="additionalImages" name="additionalImages" accept="image/jpeg,image/png,image/jpg,image/webp" multiple>
         <div class="error-message" id="additionalImages-error">Additional images must be valid JPEG or PNG files.</div>
       </div>
       <button type="submit" id="updateButton">Update Product</button>
@@ -117,14 +117,8 @@
       const category = document.getElementById("category");
       const sizes = document.getElementById("sizes");
       const rimMaterial = document.getElementById("rimMaterial");
-      const finish = document.getElementById("finish");
       const stock = document.getElementById("stock");
-      const boltPattern = document.getElementById("boltPattern");
-      const hubBore = document.getElementById("hubBore");
-      const offset = document.getElementById("offset");
       const color = document.getElementById("color");
-      const loadRating = document.getElementById("loadRating");
-      const additionalInfo = document.getElementById("additionalInfo");
       const mainImage = document.getElementById("mainImage");
       const additionalImages = document.getElementById("additionalImages");
 
@@ -175,7 +169,7 @@
       }
       
       if (mainImage.files.length > 0) {
-        const validImageTypes = ['image/jpeg', 'image/png'];
+        const validImageTypes = ['image/jpeg','image/jpg','image/webp', 'image/png'];
         if (!validImageTypes.includes(mainImage.files[0].type)) {
           document.getElementById("mainImage").parentElement.classList.add('error');
           errors.push("Main image must be a valid JPEG or PNG file.");
@@ -183,7 +177,7 @@
         }
       }
       if (additionalImages.files.length > 0) {
-        const validImageTypes = ['image/jpeg', 'image/png'];
+        const validImageTypes = ['image/jpeg','image/jpg','image/webp', 'image/png'];
         for (let file of additionalImages.files) {
           if (!validImageTypes.includes(file.type)) {
             document.getElementById("additionalImages").parentElement.classList.add('error');
