@@ -19,7 +19,7 @@ router.post("/forgotPassword", userController.forgotPassword);
 router.get("/otp-verification", userController.otpVerificationPage);
 router.post("/otp-verification", userController.verifyOTP);
 router.get("/resetPassword", userController.resetPassword);
-router.patch("/resetPassword", userController.passwordReset);
+router.post("/resetPassword", userController.passwordReset);
 router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 router.get("/auth/google/callback", passport.authenticate("google", { failureRedirect: "/login" }), userController.googleCallback);
 
@@ -54,5 +54,8 @@ router.delete("/cart/remove/:id",userAuth, cartController.removeFromCart)
 
 router.get('/checkout',userAuth, checkoutController.getCheckoutPage);
 router.post('/checkout',userAuth, checkoutController.postCheckoutPage);
+router.post('/create-order', userAuth, checkoutController.postRazorpay);
+router.get('/order/success', userAuth, checkoutController.orderSuccess);
+
 
 module.exports = router;

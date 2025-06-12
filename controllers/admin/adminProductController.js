@@ -77,8 +77,10 @@ const productAdd = async (req, res) => {
     const productSizes = sizes ? sizes.split(",").map((size) => size.trim()) : [];
     const additionalInfoList = additionalInfo ? additionalInfo.split(",").map((info) => info.trim()) : [];
 
-    const mainImage = req.files?.mainImage?.[0]?.filename || '';
-    const additionalImages = req.files?.additionalImages?.map(file => file.filename) || [];
+    const basePath = '/images/';
+
+    const mainImage = req.files?.mainImage?.[0] ? basePath + req.files.mainImage[0].filename : '';
+    const additionalImages = req.files?.additionalImages ? req.files.additionalImages.map(file => basePath + file.filename) : [];
 
     if (!name || !brand || !price || !category || !stock) {
       const error = "Please fill in all required fields (Name, Brand, Price, Category, Stock)";
@@ -134,7 +136,6 @@ const productAdd = async (req, res) => {
     return res.status(500).json({ success: false, message: errorMessage });
   }
 };
-
 
 const viewProduct = async (req, res) => {
   try {
@@ -281,12 +282,14 @@ const productEdit = async (req, res) => {
     product.rimMaterial = rimMaterial?.trim() || '';
     product.salesPrice = parseFloat(salesPrice.toFixed(2));
 
+    const basePath = '/images/';
+
     if (req.files) {
       if (req.files.mainImage?.[0]) {
-        product.mainImage = req.files.mainImage[0].filename;
+        product.mainImage = basePath + req.files.mainImage[0].filename;
       }
       if (req.files.additionalImages?.length > 0) {
-        product.additionalImages = req.files.additionalImages.map(file => file.filename);
+        product.additionalImages = basePath + req.files.additionalImages.map(file => file.filename);
       }
     }
 
@@ -366,19 +369,19 @@ const softDeleteProduct = async (req, res) => {
   }
 };
 
-const handleDatabaseError = (err) => {
-  if (err.code === 11000) {
-    return "Duplicate entry found. Please use different values.";
-  }
-  if (err.name === 'ValidationError') {
-    const errors = Object.values(err.errors).map(e => e.message);
-    return `Validation failed: ${errors.join(', ')}`;
-  }
-  if (err.name === 'CastError') {
-    return "Invalid data format provided.";
-  }
-  return "An unexpected error occurred. Please try again.";
-};
+// const handleDatabaseError = (err) => {
+//   if (err.code === 11000) {
+//     return "Duplicate entry found. Please use different values.";
+//   }
+//   if (err.name === 'ValidationError') {
+//     const errors = Object.values(err.errors).map(e => e.message);
+//     return `Validation failed: ${errors.join(', ')}`;
+//   }
+//   if (err.name === 'CastError') {
+//     return "Invalid data format provided.";
+//   }
+//   return "An unexpected error occurred. Please try again.";
+// };
 
 module.exports = {
   productsPage,

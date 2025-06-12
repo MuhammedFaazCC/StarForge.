@@ -53,11 +53,9 @@
                           <%= order.status %>
                         </td>
                         <td>
-                          <% order.items.forEach(item=> { %>
-                            <p>$<%= Number(item.salesPrice).toFixed(2) %>
-                            </p>
+                          <% order.items.forEach(item => { %>
+                            <p><%= (item.salesPrice * item.quantity).toFixed(2) %></p>
                           <% }) %>
-
                         </td>
                         <td>
                           <a href="/user/orders/<%= order._id %>" class="btn btn-info">View</a>

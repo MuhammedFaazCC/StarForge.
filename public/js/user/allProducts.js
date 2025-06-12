@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
       search: url.searchParams.get('search') || '',
       page: url.searchParams.get('page') || '1'
     };
-    const finalParams = { ...currentParams, ...params };
+    const finalParams = { ...currentParams, ...params };  
 
     const newUrl = new URL(window.location.pathname, window.location.origin);
     if (finalParams.category !== 'all') newUrl.searchParams.set('category', finalParams.category);
@@ -33,36 +33,177 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  const priceRangeSlider = document.getElementById('priceRangeSlider');
+  const minPriceSlider = document.getElementById('minPriceSlider');
+  const maxPriceSlider = document.getElementById('maxPriceSlider');
   const minPriceInput = document.getElementById('minPrice');
   const maxPriceInput = document.getElementById('maxPrice');
+  const priceTrack = document.getElementById('priceTrack');
+  const applyPriceBtn = document.getElementById('applyPriceFilter');
 
-  if (priceRangeSlider && minPriceInput && maxPriceInput) {
-    priceRangeSlider.addEventListener('input', function () {
-      maxPriceInput.value = this.value;
+  if (minPriceSlider && maxPriceSlider && minPriceInput && maxPriceInput && priceTrack) {
+    const priceMin = parseInt(minPriceSlider.min);
+    const priceMax = parseInt(minPriceSlider.max);
+    const step = 10;
+
+    function updateTrack() {
+      const minVal = parseInt(minPriceSlider.value);
+      const maxVal = parseInt(maxPriceSlider.value);
+      const range = priceMax - priceMin;
+      
+      const minPercent = ((minVal - priceMin) / range) * 100;
+      const maxPercent = ((maxVal - priceMin) / range) * 100;
+      
+      priceTrack.style.left = minPercent + '%';
+      priceTrack.style.width = (maxPercent - minPercent) + '%';
+    }
+
+    function updateFromSlider(type) {
+      const minVal = parseInt(minPriceSlider.value);
+      const maxVal = parseInt(maxPriceSlider.value);
+      
+      if (type === 'min') {
+        if (minVal >= maxVal) {
+          minPriceSlider.value = Math.max(priceMin, maxVal - step);
+        }
+        minPriceInput.value = minPriceSlider.value;
+      } else {
+        if (maxVal <= minVal) {
+          maxPriceSlider.value = Math.min(priceMax, minVal + step);
+        }
+        maxPriceInput.value = maxPriceSlider.value;
+      }
+      
+      updateTrack();
+    }
+
+    function updateFromInput(type) {
+      const minVal = parseInt(minPriceInput.value) || priceMin;
+      const maxVal = parseInt(maxPriceInput.value) || priceMax;
+      
+      if (type === 'min') {
+        const clampedMin = Math.max(priceMin, Math.min(minVal, maxVal - step));
+        minPriceInput.value = clampedMin;
+        minPriceSlider.value = clampedMin;
+      } else {
+        const clampedMax = Math.min(priceMax, Math.max(maxVal, minVal + step));
+        maxPriceInput.value = clampedMax;
+        maxPriceSlider.value = clampedMax;
+      }
+      
+      updateTrack();
+    }
+
+    minPriceSlider.addEventListener('input', () => updateFromSlider('min'));
+    maxPriceSlider.addEventListener('input', () => updateFromSlider('max'));
+    
+    minPriceInput.addEventListener('input', () => updateFromInput('min'));
+    maxPriceInput.addEventListener('input', () => updateFromInput('max'));
+    
+    minPriceInput.addEventListener('blur', () => updateFromInput('min'));
+    maxPriceInput.addEventListener('blur', () => updateFromInput('max'));
+
+    if (applyPriceBtn) {
+      applyPriceBtn.addEventListener('click', function() {
+        const minPrice = parseInt(minPriceInput.value);
+        const maxPrice = parseInt(maxPriceInput.value);
+        
+        if (minPrice >= maxPrice) {
+          alert('Minimum price must be less than maximum price');
+          return;
+        }
+        
+        window.location.href = buildUrl({ 
+          minPrice: minPrice, 
+          maxPrice: maxPrice, 
+          page: 1 
+        });
+      });
+    }
+
+    let isSliding = false;
+    
+    minPriceSlider.addEventListener('mousedown', () => { isSliding = true; });
+    maxPriceSlider.addEventListener('mousedown', () => { isSliding = true; });
+    
+    minPriceSlider.addEventListener('mouseup', () => {
+      if (isSliding) {
+        isSliding = false;
+        applyPriceFilter();
+      }
     });
-
-    minPriceInput.addEventListener('input', function () {
-      if (parseInt(this.value) > parseInt(maxPriceInput.value)) {
-        maxPriceInput.value = this.value;
+    
+    maxPriceSlider.addEventListener('mouseup', () => {
+      if (isSliding) {
+        isSliding = false;
+        applyPriceFilter();
       }
     });
 
-    maxPriceInput.addEventListener('input', function () {
-      if (parseInt(this.value) < parseInt(minPriceInput.value)) {
-        minPriceInput.value = this.value;
-      }
-      priceRangeSlider.value = this.value;
+    minPriceSlider.addEventListener('touchend', () => {
+      setTimeout(() => applyPriceFilter(), 100);
     });
-  }
+    
+    maxPriceSlider.addEventListener('touchend', () => {
+      setTimeout(() => applyPriceFilter(), 100);
+    });
 
-  const applyPriceFilterBtn = document.getElementById('applyPriceFilter');
-  if (applyPriceFilterBtn) {
-    applyPriceFilterBtn.addEventListener('click', function () {
-      const minPrice = parseInt(minPriceInput.value) || minLimit;
-      const maxPrice = parseInt(maxPriceInput.value) || maxLimit;
-      window.location.href = buildUrl({ minPrice, maxPrice, page: 1 });
+    function applyPriceFilter() {
+      const minPrice = parseInt(minPriceInput.value);
+      const maxPrice = parseInt(maxPriceInput.value);
+      
+      const currentUrl = new URL(window.location.href);
+      const currentMin = parseInt(currentUrl.searchParams.get('minPrice')) || minLimit;
+      const currentMax = parseInt(currentUrl.searchParams.get('maxPrice')) || maxLimit;
+      
+      if (minPrice !== currentMin || maxPrice !== currentMax) {
+        window.location.href = buildUrl({ 
+          minPrice: minPrice, 
+          maxPrice: maxPrice, 
+          page: 1 
+        });
+      }
+    }
+
+    minPriceInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        const minPrice = parseInt(this.value);
+        const maxPrice = parseInt(maxPriceInput.value);
+        
+        if (minPrice >= maxPrice) {
+          alert('Minimum price must be less than maximum price');
+          return;
+        }
+        
+        window.location.href = buildUrl({ 
+          minPrice: minPrice, 
+          maxPrice: maxPrice, 
+          page: 1 
+        });
+      }
     });
+
+    maxPriceInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        const minPrice = parseInt(minPriceInput.value);
+        const maxPrice = parseInt(this.value);
+        
+        if (minPrice >= maxPrice) {
+          alert('Minimum price must be less than maximum price');
+          return;
+        }
+        
+        window.location.href = buildUrl({ 
+          minPrice: minPrice, 
+          maxPrice: maxPrice, 
+          page: 1 
+        });
+      }
+    });
+
+    maxPriceSlider.style.zIndex = '2';
+    minPriceSlider.style.zIndex = '1';
+
+    updateTrack();
   }
 
   document.querySelectorAll('.category-filter').forEach(input => {
@@ -92,6 +233,7 @@ document.addEventListener('DOMContentLoaded', function () {
       } else if (type === 'search') {
         newParams.search = '';
       }
+      newParams.page = 1;
       window.location.href = buildUrl(newParams);
     });
   });
@@ -111,48 +253,24 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   document.querySelectorAll('.wishlist-btn').forEach(button => {
-  button.addEventListener('click', function (e) {
-    e.preventDefault();
-    const productId = this.getAttribute('data-product-id');
+    button.addEventListener('click', function (e) {
+      e.preventDefault();
+      const productId = this.getAttribute('data-product-id');
+      const icon = this.querySelector('i');
 
-    fetch(`/wishlist/add/${productId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-      .then(res => res.json())
-      .then(data => {
-        const toast = document.getElementById('toast');
-        if (toast) {
-          toast.textContent = data.message || 'Added to wishlist!';
-          toast.classList.add('show');
-          setTimeout(() => toast.classList.remove('show'), 2000);
+      fetch(`/wishlist/add/${productId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
         }
       })
-      .catch(err => {
-        console.error('Error adding to wishlist:', err);
-      });
-  });
-});
-});
-
-document.querySelectorAll('.wishlist-btn').forEach(button => {
-  button.addEventListener('click', function (e) {
-    e.preventDefault();
-
-    const productId = this.getAttribute('data-product-id');
-    const icon = this.querySelector('i');
-
-    fetch(`/wishlist/add/${productId}`, {
-      method: 'POST',
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          icon.classList.toggle('bi-heart');
-          icon.classList.toggle('bi-heart-fill');
-          icon.classList.toggle('text-danger');
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            icon.classList.toggle('bi-heart');
+            icon.classList.toggle('bi-heart-fill');
+            icon.classList.toggle('text-danger');
+          }
 
           const toast = document.getElementById('toast');
           if (toast) {
@@ -160,10 +278,28 @@ document.querySelectorAll('.wishlist-btn').forEach(button => {
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 2000);
           }
-        }
-      })
-      .catch(err => {
-        console.error('Wishlist update error:', err);
-      });
+        })
+        .catch(err => {
+          console.error('Wishlist update error:', err);
+        });
+    });
   });
+
+  const searchInput = document.getElementById('searchInput');
+  const searchClear = document.getElementById('searchClear');
+
+  if (searchInput) {
+    searchInput.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        window.location.href = buildUrl({ search: searchInput.value.trim(), page: 1 });
+      }
+    });
+  }
+
+  if (searchClear) {
+    searchClear.addEventListener('click', function () {
+      searchInput.value = '';
+      window.location.href = buildUrl({ search: '', page: 1 });
+    });
+  }
 });

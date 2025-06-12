@@ -211,8 +211,8 @@ i {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 10rem;
+  height: 10rem;
   object-fit: contain;
   padding: 1rem;
   transition: transform 0.3s;
@@ -572,6 +572,85 @@ i {
   visibility: visible;
   opacity: 1;
   bottom: 50px;
+}
+
+.dual-range-slider {
+    position: relative;
+    width: 100%;
+    height: 6px;
+    background: #ddd;
+    border-radius: 3px;
+    margin: 20px 0;
+}
+
+.dual-range-slider .track {
+    position: absolute;
+    height: 100%;
+    background: #007bff;
+    border-radius: 3px;
+}
+
+.dual-range-slider input[type="range"] {
+    position: absolute;
+    width: 100%;
+    height: 6px;
+    background: transparent;
+    appearance: none;
+    pointer-events: none;
+    top: 0;
+}
+
+.dual-range-slider input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #007bff;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    cursor: pointer;
+    pointer-events: all;
+    position: relative;
+    z-index: 2;
+}
+
+.dual-range-slider input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #007bff;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    cursor: pointer;
+    pointer-events: all;
+    border: none;
+}
+
+.dual-range-slider input[type="range"]::-webkit-slider-track {
+    background: transparent;
+}
+
+.dual-range-slider input[type="range"]::-moz-range-track {
+    background: transparent;
+    border: none;
+}
+
+.range-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-size: 0.875rem;
+    color: #666;
+}
+
+.price-inputs {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.price-inputs .input-group {
+    flex: 1;
 }
 
 

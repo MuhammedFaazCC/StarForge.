@@ -23,14 +23,17 @@
       <h1 class="pageTitle">My Wishlist</h1>
 
       <div class="wishlist-items">
-        <div class="userTable" style="display: flex; flex-wrap: wrap; gap: 20px; border: none; box-shadow: none;">
+        <div class="userTable">
   <% if (wishlistItems.length > 0) { %>
     <% wishlistItems.forEach(item => { %>
       <div class="product-card">
-        <img src="<%= item.image %>" alt="<%= item.name %>">
+        <div class="image-wrapper">
+  <img src="<%= item.mainImage %>" alt="<%= item.name %>">
+</div>
+
         <div class="product-card-content">
           <h3><%= item.name %></h3>
-          <p class="price">$<%= item.price %></p>
+          <p class="price">$<%= item.salesPrice %></p>
 
           <form action="/cart/add/<%= item._id %>" method="POST">
   <input type="hidden" name="quantity" value="1">

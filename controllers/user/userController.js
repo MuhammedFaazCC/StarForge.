@@ -6,6 +6,7 @@ const Order = require("../../models/orderSchema");
 const Wallet = require("../../models/walletSchema");
 const Wishlist = require("../../models/wishlistSchema");
 
+
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
@@ -155,6 +156,7 @@ const sendOTP = async (email, otp) => {
 
     const info = await transporter.sendMail(mailOptions);
     console.log("Email sent successfully. Message ID:", info.messageId);
+    console.log(otp);
     return info;
   } catch (error) {
     console.error("Error sending OTP email:", error.message);
@@ -597,7 +599,7 @@ const wishlistPage = async (req, res) => {
   try {
     const user = res.locals.userData;
     const wishlist = await Wishlist.findOne({ userId: user._id }).populate('items.productId');
-
+    
     const wishlistItems = wishlist?.items.map(item => item.productId) || [];
 
     res.render("wishlist", {
@@ -623,7 +625,6 @@ const addToWishlist = async (req, res) => {
     } else {
       const index = wishlist.items.findIndex(item => item.productId.toString() === productId);
       if (index > -1) {
-        // Remove if already exists
         wishlist.items.splice(index, 1);
       } else {
         wishlist.items.push({ productId });

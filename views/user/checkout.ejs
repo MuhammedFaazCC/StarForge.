@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Checkout | StarForge</title>
   <link rel="stylesheet" href="/css/user/checkout.css" />
+
 </head>
 <body>
 
@@ -72,12 +73,12 @@
             <% cartItems.forEach(item => { %>
               <li>
                 <strong><%= item.product.name %></strong><br/>
-                Qty: <%= item.quantity %> — $<%= item.subtotal.toFixed(2)%>
+                Qty: <%= item.quantity %> — <%= item.subtotal.toFixed(2)%>
               </li>
             <% }) %>
           </ul>
 
-          <p class="total">Total: $<%= total.toFixed(2) %></p>
+          <p class="total">Total: <%= total.toFixed(2) %></p>
           <button type="submit" class="checkout-btn">Place Order</button>
         </aside>
       </div>
@@ -110,7 +111,13 @@
     </form>
   </div>
 </div>
-  
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+  const RAZORPAY_KEY = "<%= razorpayKey %>";
+  const USER_NAME = "<%= user.fullName %>";
+  const USER_EMAIL = "<%= user.email %>";
+</script>
+
 <script src="/js/user/checkout.js"></script>
 </body>
 </html>

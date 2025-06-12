@@ -216,39 +216,6 @@ const couponsPage = async (req, res) => {
   }
 };
 
-const bannersPage = async (req, res) => {
-  try {
-    const banners = [
-      {
-        imageUrl: "https://via.placeholder.com/50",
-        title: "Summer Sale",
-        startingDate: "01/06/2024",
-        endingDate: "30/06/2024",
-        status: "Active",
-      },
-      {
-        imageUrl: "https://via.placeholder.com/50",
-        title: "Winter Collection",
-        startingDate: "01/12/2024",
-        endingDate: "31/12/2024",
-        status: "Scheduled",
-      },
-      {
-        imageUrl: "https://via.placeholder.com/50",
-        title: "Black Friday",
-        startingDate: "25/11/2024",
-        endingDate: "28/11/2024",
-        status: "Expired",
-      },
-    ];
-
-    res.render("banner", { banners });
-  } catch (error) {
-    console.error("Failed to load banners page:", error);
-    res.status(500).send("Server error");
-  }
-};
-
 module.exports = {
   loginPage,
   login,
@@ -257,6 +224,5 @@ module.exports = {
   statusUpdate,
   salesPage,
   couponsPage,
-  bannersPage,
   logout,
 };

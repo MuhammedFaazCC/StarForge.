@@ -19,7 +19,27 @@ const orderSchema = new mongoose.Schema({
         enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],
         default: 'pending'
     },
-    items: [{ name: String }],
+    paymentMethod: {
+        type: String,
+        enum: ['Online','COD','Wallet'],
+        required: true
+    },
+    address: {
+        type: String,
+        required: true
+    },
+    items: [
+    {
+        productId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product',
+        },
+        name: String,
+        quantity: Number,
+        salesPrice: Number
+    }
+    ],
+
     deliveredAt: Date,
     createdAt: Date
 }, {
