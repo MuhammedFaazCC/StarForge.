@@ -709,32 +709,62 @@ const googleCallback = async (req, res) => {
 
 const getAddressList = async (req, res) => {
   const user = req.session.user;
+  const error = req.session.error || null;
+  const success = req.session.success || null;
+  req.session.error = null;
+  req.session.success = null;
+
   try {
     const addresses = await Address.find({ userId: user._id }).sort({
       createdAt: -1,
     });
 
-    res.render("profileAddressList", { user, addresses });
+    res.render("profileAddressList", { user, addresses, error, success });
   } catch (err) {
     console.error("Error loading addresses:", err.message);
-    res.render("profileAddressList", { user, addresses: [] });
+    res.render("profileAddressList", { user, addresses: [], error: "Failed to load addresses", success: null });
   }
 };
 
 const getAddAddress = async (req, res) => {
-  res.render("profileAddAddress", { currentPage: "address" });
+  const error = req.session.error || null;
+  const success = req.session.success || null;
+  req.session.error = null;
+  req.session.success = null;
+
+  res.render("profileAddAddress", {
+    currentPage: "address",
+    user: req.session.user,
+    error,
+    success
+  });
 };
 
 const postAddress = async (req, res) => {
   const user = req.session.user;
 
-  const { address, district, state, city, pinCode } = req.body;
+  const { name, address, district, state, city, pinCode } = req.body;
 
   try {
-    await Address.create({
+    // Validate required fields
+    if (!name || !address || !district || !state || !city || !pinCode) {
+      console.error("Missing required fields:", { name, address, district, state, city, pinCode });
+      req.session.error = "All fields are required";
+      return res.redirect("/address/add");
+    }
+
+    // Validate pinCode format
+    if (!/^\d{6}$/.test(pinCode)) {
+      console.error("Invalid pinCode format:", pinCode);
+      req.session.error = "Pin code must be exactly 6 digits";
+      return res.redirect("/address/add");
+    }
+
+    console.log("Creating address with data:", { userId: user._id, name, address, district, state, city, pinCode });
+
+    const newAddress = await Address.create({
       userId: user._id,
-      fullName: user.fullName,
-      email: user.email,
+      name,
       address,
       district,
       state,
@@ -742,10 +772,13 @@ const postAddress = async (req, res) => {
       pinCode,
     });
 
+    console.log("Address created successfully:", newAddress._id);
+    req.session.success = "Address added successfully";
     res.redirect("/address");
   } catch (err) {
-    console.error("Failed to save address:", err.message);
-    res.redirect("/address");
+    console.error("Failed to save address:", err);
+    req.session.error = "Failed to save address. Please try again.";
+    res.redirect("/address/add");
   }
 };
 
@@ -759,7 +792,7 @@ const loadEdit = async (req, res) => {
     }
 
     res.status(200).json({
-      name: address.fullName,
+      name: address.name,
       mobile: address.mobile || "",
       address: address.address,
       city: address.city,
@@ -780,7 +813,7 @@ const putEditAddress = async (req, res) => {
     const { name, mobile, address, pincode, city, state, isDefault } = req.body;
 
     const updatedData = {
-      fullName: name,
+      name,
       mobile,
       address,
       pinCode: pincode,

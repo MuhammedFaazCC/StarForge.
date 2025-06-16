@@ -29,6 +29,18 @@
             <a href="/address/add" class="btn-primary">Add New Address</a>
           </div>
 
+          <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-error" style="background: #ffebee; color: #c62828; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
+              <%= error %>
+            </div>
+          <% } %>
+
+          <% if (typeof success !== 'undefined' && success) { %>
+            <div class="alert alert-success" style="background: #e8f5e8; color: #2e7d32; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
+              <%= success %>
+            </div>
+          <% } %>
+
           <% if (addresses.length === 0) { %>
             <div class="empty-state">
               <img src="/images/empty-address.svg" class="empty-icon" />
@@ -41,13 +53,12 @@
               <% addresses.forEach(address => { %>
                 <div class="info-card">
                   <div class="card-header">
-                    <span class="card-title"><%= address.fullName %></span>
+                    <span class="card-title"><%= address.name %></span>
                     <a href="#" class="card-action" onclick="openEditModal(event, '<%= address._id %>')">Edit</a>
                   </div>
                   <p>
                     <%= address.address %><br />
-                    <%= address.city %>, <%= address.district %>, <%= address.state %> - <%= address.pinCode %><br />
-                    <strong><%= address.email %></strong>
+                    <%= address.city %>, <%= address.district %>, <%= address.state %> - <%= address.pinCode %>
                   </p>
                 </div>
               <% }) %>

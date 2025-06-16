@@ -45,9 +45,21 @@ const addressSchema = new mongoose.Schema({
     type: String,
     required: true,
     placeholder: "eg: 689230",
-    pattern: /^\d{6}$/,
+    match: [/^\d{6}$/, 'Pin code must be exactly 6 digits'],
     maxLength: 6
+  },
+
+  mobile: {
+    type: String,
+    maxLength: 15
+  },
+
+  isDefault: {
+    type: Boolean,
+    default: false
   }
+}, {
+  timestamps: true
 });
 
 module.exports = mongoose.model("Address", addressSchema);

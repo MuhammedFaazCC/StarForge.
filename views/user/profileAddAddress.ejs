@@ -30,7 +30,24 @@
             </div>
           </div>
 
+          <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-error" style="background: #ffebee; color: #c62828; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
+              <%= error %>
+            </div>
+          <% } %>
+
+          <% if (typeof success !== 'undefined' && success) { %>
+            <div class="alert alert-success" style="background: #e8f5e8; color: #2e7d32; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
+              <%= success %>
+            </div>
+          <% } %>
+
           <form action="/address" method="POST">
+            <div class="detail-group">
+              <label class="detail-label" for="name">Full Name</label>
+              <input type="text" name="name" id="name" class="detail-value" placeholder="Enter your full name" required />
+            </div>
+
             <div class="detail-group">
               <label class="detail-label" for="address">Address</label>
               <textarea name="address" id="address" class="detail-value" placeholder="123 Main St, Apt 4B, Area Name" rows="3" required></textarea>
