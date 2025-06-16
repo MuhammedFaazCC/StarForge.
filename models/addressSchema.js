@@ -7,19 +7,10 @@ const addressSchema = new mongoose.Schema({
     required: true,
   },
   
-  fullName: {
+  name: {
     type: String,
     required: true,
-    placeholder: "Lastname",
     maxLength: 100
-  },
-  
-  email: {
-    type: String,
-    required: true, 
-    placeholder: "example@gmail.com",
-    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-    maxLength: 255
   },
 
   address: {

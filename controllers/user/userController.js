@@ -3,8 +3,8 @@ const nodemailer = require("nodemailer");
 const User = require("../../models/userSchema");
 const Address = require("../../models/addressSchema");
 const Order = require("../../models/orderSchema");
-const Wallet = require("../../models/walletSchema");
 const Wishlist = require("../../models/wishlistSchema");
+const Return = require("../../models/returnSchema");
 
 
 const transporter = nodemailer.createTransport({
@@ -806,16 +806,29 @@ const putEditAddress = async (req, res) => {
 };
 
 
+
 const getUserOrders = async (req, res) => {
   try {
     const userId = req.session.user._id;
 
-    const orders = await Order.find({ userId: userId }).sort({ createdAt: -1 });
+    const orders = await Order.find({ 
+      userId: userId,
+      total: { $exists: true, $ne: null }
+    }).sort({ createdAt: -1 });
 
-    res.render("profileOrders", { user: req.session.user, currentPage: "orders", orders });
+    console.log("Orders fetched:", orders);
+
+    res.render("profileOrders", {
+      user: req.session.user,
+      currentPage: "orders",
+      orders: orders.map(order => ({
+        ...order._doc,
+        total: order.total || 0
+      }))
+    });
   } catch (error) {
     console.error("Error fetching orders:", error);
-    res.status(500).send("Internal server error");
+    res.status(500).render("errorPage", { message: "Unable to load orders at the moment." });
   }
 };
 
@@ -824,20 +837,30 @@ const cancelOrder = async (req, res) => {
     const userId = req.session.user._id;
     const orderId = req.params.id;
 
-    const order = await Order.findOne({ _id: orderId, user: userId });
-
+    const order = await Order.findOne({ _id: orderId, userId: userId });
     if (!order) {
       return res.status(404).json({ error: "Order not found" });
     }
 
     if (!["Processing", "Confirmed"].includes(order.status)) {
-      return res
-        .status(400)
-        .json({ error: "Order cannot be canceled at this stage" });
+      return res.status(400).json({ error: "Order cannot be canceled at this stage" });
+    }
+
+    if (!order.total) {
+      return res.status(400).json({ error: "Order total is invalid" });
     }
 
     order.status = "Canceled";
     await order.save();
+
+    if (order.paymentMethod !== "COD") {
+      await updateWallet(
+        userId,
+        order.total,
+        `Refund for canceled order #${orderId}`,
+        "Credit"
+      );
+    }
 
     res.json({ message: "Order canceled successfully" });
   } catch (error) {
@@ -846,26 +869,92 @@ const cancelOrder = async (req, res) => {
   }
 };
 
-const getWallet = async (req, res) => {
+const requestReturn = async (req, res) => {
   try {
     const userId = req.session.user._id;
+    const orderId = req.params.id;
+    const { reason } = req.body;
 
-    const user = await User.findById(userId);
+    const order = await Order.findOne({ _id: orderId, userId: userId });
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
 
-    const walletHistory = await Wallet.find({ userId }).sort({ date: -1 });
+    if (order.status !== "Delivered") {
+      return res.status(400).json({ error: "Only delivered orders can be returned" });
+    }
 
-    res.render("profileWallet", {
-      user: {
-        fullName: user.fullName,
-        walletBalance: user.wallet.balance || 0,
-      },
-      walletHistory,
+    if (!order.total) {
+      return res.status(400).json({ error: "Order total is invalid" });
+    }
+
+    const existingReturn = await Return.findOne({ orderId });
+    if (existingReturn) {
+      return res.status(400).json({ error: "Return request already submitted" });
+    }
+
+    await Return.create({
+      orderId,
+      userId,
+      reason,
+      status: "Pending",
+      requestedAt: new Date(),
     });
+
+    order.status = "Return Requested";
+    await order.save();
+
+    res.json({ message: "Return request submitted successfully" });
   } catch (error) {
-    console.error("Error fetching wallet page:", error);
-    res
-      .status(500)
-      .render("errorPage", { message: "Unable to load wallet at the moment." });
+    console.error("Error requesting return:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const approveReturn = async (req, res) => {
+  try {
+    const { returnId } = req.params;
+    const { status } = req.body;
+
+    const returnRequest = await Return.findById(returnId).populate("orderId");
+    if (!returnRequest) {
+      return res.status(404).json({ error: "Return request not found" });
+    }
+
+    const order = returnRequest.orderId;
+    if (!order) {
+      return res.status(404).json({ error: "Associated order not found" });
+    }
+
+    if (!order.total) {
+      return res.status(400).json({ error: "Order total is invalid" });
+    }
+
+    returnRequest.status = status;
+    returnRequest.updatedAt = new Date();
+    await returnRequest.save();
+
+    if (status === "Approved") {
+      order.status = "Returned";
+      await order.save();
+
+      if (order.paymentMethod !== "COD") {
+        await updateWallet(
+          order.userId,
+          order.total,
+          `Refund for returned order #${order._id}`,
+          "Credit"
+        );
+      }
+    } else if (status === "Rejected") {
+      order.status = "Delivered";
+      await order.save();
+    }
+
+    res.json({ message: `Return request ${status.toLowerCase()} successfully` });
+  } catch (error) {
+    console.error("Error processing return:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -937,7 +1026,8 @@ module.exports = {
   putEditAddress,
   getUserOrders,
   cancelOrder,
-  getWallet,
   getChangePassword,
   postChangePassword,
+  requestReturn,
+  approveReturn,
 };

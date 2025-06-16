@@ -45,7 +45,7 @@
         <% } %>
         <% if (filters.minPrice > priceRange.min || filters.maxPrice < priceRange.max) { %>
           <div class="filter-badge">
-            Price: $<%= filters.minPrice %> - $<%= filters.maxPrice %>
+            Price: ₹<%= filters.minPrice %> - ₹<%= filters.maxPrice %>
             <span class="close" data-filter="price">×</span>
           </div>
         <% } %>
@@ -85,16 +85,16 @@
     <input type="range" id="maxPriceSlider" min="<%= priceRange.min %>" max="<%= priceRange.max %>" value="<%= filters.maxPrice || priceRange.max %>" step="10">
   </div>
   <div class="range-labels">
-    <span>$<%= priceRange.min %></span>
-    <span>$<%= priceRange.max %></span>
+    <span>₹<%= priceRange.min %></span>
+    <span>₹<%= priceRange.max %></span>
   </div>
   <div class="price-inputs">
     <div class="input-group input-group-sm">
-      <span class="input-group-text">$</span>
+      <span class="input-group-text">₹</span>
       <input type="number" class="form-control" id="minPrice" value="<%= filters.minPrice || priceRange.min %>" min="<%= priceRange.min %>" max="<%= priceRange.max %>">
     </div>
     <div class="input-group input-group-sm">
-      <span class="input-group-text">$</span>
+      <span class="input-group-text">₹</span>
       <input type="number" class="form-control" id="maxPrice" value="<%= filters.maxPrice || priceRange.max %>" min="<%= priceRange.min %>" max="<%= priceRange.max %>">
     </div>
   </div>
@@ -174,10 +174,10 @@
                     <div class="mt-auto">
                       <p class="card-text mb-2">
                         <% if (product.offer > 0) { %>
-                          <span class="product-price">$<%= product.salePrice %></span>
-                          <span class="product-original-price">$<%= product.regularPrice %></span>
+                          <span class="product-price">₹<%= product.salePrice %></span>
+                          <span class="product-original-price">₹<%= product.regularPrice %></span>
                         <% } else { %>
-                          <span class="product-price">$<%= product.regularPrice %></span>
+                          <span class="product-price">₹<%= product.regularPrice %></span>
                         <% } %>
                       </p>
                       <div class="d-grid">

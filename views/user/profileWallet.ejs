@@ -3,12 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>StarForge - Wallet</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="/css/user/userProfile.css">
+  <title>My Wallet - StarForge</title>
+  <link rel="stylesheet" href="css/user/userProfile.css">
 </head>
 <body>
-
   <nav class="top-navbar">
     <a href="/" class="navbar-brand">StarForge.</a>
     <div class="navbar-user">
@@ -16,50 +14,168 @@
     </div>
   </nav>
 
-    <%- include('../partials/user/profileSidebar', { currentPage: 'wallet' }) %>
+  <%- include('../partials/user/profileSidebar', { user, currentPage: 'wallet' }) %>
 
-    <main class="main-content">
-      <div class="content-wrapper">
-        <div class="profile-container">
-      <h1 class="pageTitle">My Wallet</h1>
+  <main class="main-content">
+    <div class="content-wrapper">
+      <div class="profile-container">
+        <header class="page-header">
+          <div>
+            <h1 class="page-title">My Wallet</h1>
+            <div class="breadcrumb">
+              <a href="/">Home</a> / My Wallet
+            </div>
+          </div>
+        </header>
+        
+        <div class="add-wallet-section">
+          <h3>Add Money to Wallet</h3>
+          <form id="wallet-form">
+            <input type="number" name="amount" id="amount" placeholder="Enter amount" required min="500" step="1">
+            <button type="submit" id="wallet-submit" class="btn-primary">Add Money</button>
 
-      <div style="margin-bottom: 30px;">
-        <h2 style="font-size: 22px; color: #333;">Current Balance: 
-          <span style="color: #2196f3;">₹<%= user.walletBalance.toFixed(2) %></span>
-        </h2>
-      </div>
+          </form>
+        </div>
 
-      <% if (walletHistory.length > 0) { %>
-        <table class="userTable">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Description</th>
-              <th>Type</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% walletHistory.forEach(tx => { %>
+        <div class="info-card">
+          <div class="card-header">
+            <h3 class="card-title">Current Balance</h3>
+          </div>
+          <p><strong>₹<%= user.walletBalance.toFixed(2) %></strong></p>
+        </div>
+
+        <div class="section-header">
+          <h2 class="section-title">Transaction History</h2>
+        </div>
+
+        <% if (walletHistory && walletHistory.length > 0) { %>
+          <table class="userTable orderTable">
+            <thead>
               <tr>
-                <td><%= new Date(tx.date).toLocaleDateString() %></td>
-                <td><%= tx.description %></td>
-                <td class="orderStatus <%= tx.type === 'credit' ? 'delivered' : 'cancelled' %>">
-                  <%= tx.type %>
-                </td>
-                <td style="color: <%= tx.type === 'credit' ? '#4caf50' : '#f44336' %>;">
-                  <%= tx.type === 'credit' ? '+' : '-' %>₹<%= tx.amount.toFixed(2) %>
-                </td>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Amount</th>
               </tr>
-            <% }) %>
-          </tbody>
-        </table>
-      <% } else { %>
-        <p class="noDataMessage">No wallet transactions yet.</p>
-      <% } %>
+            </thead>
+            <tbody>
+              <% walletHistory.forEach(transaction => { %>
+                <tr>
+                  <td><%= transaction.date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) %></td>
+                  <td><%= transaction.description %></td>
+                  <td>
+                    <span class="orderStatus <%= transaction.type.toLowerCase() %>">
+                      <%= transaction.type %>
+                    </span>
+                  </td>
+                  <td>₹<%= transaction.amount.toFixed(2) %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } else { %>
+          <div class="empty-state">
+            <img src="/images/empty-wallet.png" alt="No Transactions" class="empty-icon">
+            <h3 class="empty-title">No Transactions Yet</h3>
+            <p class="empty-description">Your wallet transaction history will appear here once you make transactions.</p>
+            <a href="/" class="btn-primary">Start Shopping</a>
+          </div>
+        <% } %>
+      </div>
     </div>
-    </div>
-    </main>
+  </main>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+  document.getElementById("wallet-form").addEventListener("submit", async function (e) {
+  e.preventDefault();
 
+  const submitButton = document.getElementById("wallet-submit");
+  const amountInput = document.getElementById("amount");
+  const amount = parseFloat(amountInput.value);
+
+  if (!amount || amount <= 0) return alert("Enter valid amount");
+
+  if (submitButton) {
+    submitButton.disabled = true;
+    submitButton.textContent = 'Processing...';
+  }
+
+  try {
+    const res = await fetch("/wallet/create-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount }),
+    });
+
+    const data = await res.json();
+    if (!data.success) {
+      alert(data.error || "Failed to initiate payment");
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = "Add Money";
+      }
+      return;
+    }
+
+    if (typeof Razorpay === 'undefined') {
+      alert("Payment system is not loaded. Please refresh the page and try again.");
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = "Add Money";
+      }
+      return;
+    }
+
+    const options = {
+      key: data.key || window.RAZORPAY_KEY,
+      amount: data.amount,
+      currency: "INR",
+      name: "StarForge Wallet",
+      description: "Wallet Top-up",
+      order_id: data.orderId,
+      handler: async function (response) {
+        await fetch("/wallet/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_signature: response.razorpay_signature,
+            amount,
+          }),
+        });
+
+        alert("Wallet credited successfully!");
+        window.location.reload();
+      },
+      prefill: {
+        name: window.USER_NAME || "Customer",
+        email: window.USER_EMAIL || "",
+      },
+      theme: { color: "#28a745" },
+      modal: {
+        ondismiss: function () {
+          if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = "Add Money";
+          }
+        }
+      }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+
+  } catch (error) {
+    console.error("Wallet Razorpay error:", error);
+    alert("Something went wrong while processing payment.");
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.textContent = "Add Money";
+    }
+  }
+});
+
+</script>
 </body>
 </html>

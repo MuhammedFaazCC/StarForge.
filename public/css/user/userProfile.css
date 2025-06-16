@@ -705,7 +705,15 @@ form button:hover {
   display: none;
 }
 
+.orderStatus.credit {
+    background-color: #d4edda;
+    color: #155724;
+}
 
+.orderStatus.debit {
+    background-color: #f8d7da;
+    color: #721c24;
+}
 
 
 

@@ -29,31 +29,35 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <% sales=sales || [ { id: 'SALE001' , date: '2025-05-01' , customer: 'John Doe' ,
-                                amount: '₹2,500' , status: 'Paid' }, { id: 'SALE002' , date: '2025-05-02' ,
-                                customer: 'Jane Smith' , amount: '₹1,800' , status: 'Pending' }, { id: 'SALE003' ,
-                                date: '2025-05-03' , customer: 'Sam Wilson' , amount: '₹3,200' , status: 'Paid' } ]; %>
-                                <% sales.forEach(sale=> { %>
-                                    <tr>
-                                        <td>
-                                            <%= sale.id %>
-                                        </td>
-                                        <td>
-                                            <%= sale.date %>
-                                        </td>
-                                        <td>
-                                            <%= sale.customer %>
-                                        </td>
-                                        <td>
-                                            <%= sale.amount %>
-                                        </td>
-                                        <td>
-                                            <%= sale.status %>
-                                        </td>
-                                    </tr>
-                                    <% }); %>
+                            <% sales.forEach(sale => { %>
+            <tr>
+              <td><%= sale.id %></td>
+              <td><%= sale.date %></td>
+              <td><%= sale.customer %></td>
+              <td><%= sale.amount %></td>
+              <td><%= sale.status %></td>
+            </tr>
+          <% }) %>
+          <% if (sales.length === 0) { %>
+            <tr>
+              <td colspan="5">No sales found</td>
+            </tr>
+          <% } %>
                         </tbody>
                     </table>
+                    <% if (totalPages > 1) { %>
+        <div class="pagination" style="margin-top: 20px; text-align: center;">
+          <% if (currentPage > 1) { %>
+            <a href="?page=<%= currentPage - 1 %>&search=<%= search %>&status=<%= status %>&sort=<%= sort %>" style="margin: 0 5px;">Previous</a>
+          <% } %>
+          <% for (let i = 1; i <= totalPages; i++) { %>
+            <a href="?page=<%= i %>&search=<%= search %>&status=<%= status %>&sort=<%= sort %>" style="margin: 0 5px; <%= currentPage === i ? 'font-weight: bold;' : '' %>"><%= i %></a>
+          <% } %>
+          <% if (currentPage < totalPages) { %>
+            <a href="?page=<%= currentPage + 1 %>&search=<%= search %>&status=<%= status %>&sort=<%= sort %>" style="margin: 0 5px;">Next</a>
+          <% } %>
+        </div>
+      <% } %>
                 </div>
             </div>
 

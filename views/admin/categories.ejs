@@ -48,6 +48,7 @@
                         <th>Name</th>
                         <th>Description</th>
                         <th>Sales</th>
+                        <th>Offer (%)</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -61,6 +62,7 @@
                                 <td><%= category.name %></td>
                                 <td><%= category.description %></td>
                                 <td><%= category.sales || 0 %></td>
+                                <td><%= category.offer || 0 %>%</td>
                                 <td>
                                     <button class="status-toggle <%= category.isActive ? 'active' : 'inactive' %>" 
                                             data-id="<%= category._id %>">

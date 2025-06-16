@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const User = require("../../models/userSchema");
 const Order = require("../../models/orderSchema");
-
+const Coupon = require("../../models/couponSchema");
 
 const loginPage = async (req, res) => {
   try {
@@ -85,8 +85,6 @@ const logout = async (req, res) => {
   }
 };
 
- 
-
 const dashboardPage = async (req, res) => {
   try {
     return res.render("dashboard");
@@ -152,34 +150,51 @@ const statusUpdate = async (req, res) => {
   }
 };
 
-
 const salesPage = async (req, res) => {
   try {
-    const sales = [
-      {
-        id: "SALE001",
-        date: "2025-05-01",
-        customer: "John Doe",
-        amount: "₹2,500",
-        status: "Paid",
-      },
-      {
-        id: "SALE002",
-        date: "2025-05-02",
-        customer: "Jane Smith",
-        amount: "₹1,800",
-        status: "Pending",
-      },
-      {
-        id: "SALE003",
-        date: "2025-05-03",
-        customer: "Sam Wilson",
-        amount: "₹3,200",
-        status: "Paid",
-      },
-    ];
+    const { page = 1, search = '', status = '', sort = 'desc' } = req.query;
+    const limit = 10;
+    const query = {};
 
-    res.render("sales", { sales });
+    if (search) {
+      const users = await User.find({
+        $or: [
+          { fullName: new RegExp(search, 'i') },
+          { email: new RegExp(search, 'i') }
+        ]
+      }).select('_id fullName');
+      query.userId = { $in: users.map(u => u._id) };
+    }
+
+    if (status) {
+      query.status = status;
+    }
+
+    const orders = await Order.find(query)
+      .populate('userId', 'fullName')
+      .sort({ orderDate: sort === 'asc' ? 1 : -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    const sales = orders.map(order => ({
+      id: order._id.toString(),
+      date: order.orderDate.toISOString().split('T')[0],
+      customer: order.userId?.fullName || 'Unknown',
+      amount: `₹${order.totalAmount.toLocaleString('en-IN')}`,
+      status: order.status
+    }));
+
+    const totalOrders = await Order.countDocuments(query);
+    const totalPages = Math.ceil(totalOrders / limit);
+
+    res.render("sales", {
+      sales,
+      currentPage: parseInt(page),
+      totalPages,
+      search,
+      status,
+      sort
+    });
   } catch (error) {
     console.error("Error loading sales page:", error);
     res.status(500).send("Server error");
@@ -188,31 +203,123 @@ const salesPage = async (req, res) => {
 
 const couponsPage = async (req, res) => {
   try {
-    const coupons = [
-      {
-        code: "SAVE10",
-        discount: "10%",
-        expiry: "2025-06-01",
-        status: "Active",
-      },
-      {
-        code: "FREESHIP",
-        discount: "Free Shipping",
-        expiry: "2025-06-15",
-        status: "Expired",
-      },
-      {
-        code: "WELCOME20",
-        discount: "20%",
-        expiry: "2025-07-01",
-        status: "Active",
-      },
-    ];
+    const { page = 1, search = '', status = '' } = req.query;
+    const limit = 10;
+    const query = {};
 
-    res.render("coupons", { coupons });
+    if (search) {
+      query.code = new RegExp(search, 'i');
+    }
+
+    if (status) {
+      query.status = status;
+    }
+
+    const coupons = await Coupon.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    const totalCoupons = await Coupon.countDocuments(query);
+    const totalPages = Math.ceil(totalCoupons / limit);
+
+    res.render("coupons", {
+      coupons: coupons.map(coupon => ({
+        id: coupon._id.toString(),
+        code: coupon.code,
+        discount: `${coupon.discount}%`,
+        expiry: coupon.expiryDate.toISOString().split('T')[0],
+        status: coupon.status
+      })),
+      currentPage: parseInt(page),
+      totalPages,
+      search,
+      status,
+      error: req.session.error || null,
+      success: req.session.success || null
+    });
+    req.session.error = null;
+    req.session.success = null;
   } catch (error) {
     console.error("Error loading coupons page:", error);
     res.status(500).send("Server error");
+  }
+};
+
+const getCreateCouponPage = async (req, res) => {
+  try {
+    res.render("createCoupon", {
+      admin: req.session.admin,
+      error: req.session.error || null,
+      success: req.session.success || null
+    });
+    req.session.error = null;
+    req.session.success = null;
+  } catch (error) {
+    console.error("Error loading create coupon page:", error);
+    res.status(500).send("Server error");
+  }
+};
+
+const postCreateCoupon = async (req, res) => {
+  try {
+    const { code, discount, expiryDate, usageLimit } = req.body;
+
+    if (!code || !discount || !expiryDate || !usageLimit) {
+      return res.json({ success: false, message: "All fields are required" });
+    }
+
+    if (await Coupon.findOne({ code: code.toUpperCase() })) {
+      return res.json({ success: false, message: "Coupon code already exists" });
+    }
+
+    if (isNaN(discount) || discount < 0 || discount > 100) {
+      return res.json({ success: false, message: "Discount must be between 0 and 100" });
+    }
+
+    if (new Date(expiryDate) <= new Date()) {
+      return res.json({ success: false, message: "Expiry date must be in the future" });
+    }
+
+    if (isNaN(usageLimit) || usageLimit < 1) {
+      return res.json({ success: false, message: "Usage limit must be a positive integer" });
+    }
+
+    const coupon = new Coupon({
+      code: code.toUpperCase(),
+      discount: parseFloat(discount),
+      expiryDate: new Date(expiryDate),
+      usageLimit: parseInt(usageLimit),
+      status: 'Active'
+    });
+
+    await coupon.save();
+    req.session.success = "Coupon created successfully";
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error creating coupon:", error);
+    res.json({ success: false, message: "Failed to create coupon" });
+  }
+};
+
+const deleteCoupon = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const coupon = await Coupon.findById(id);
+
+    if (!coupon) {
+      return res.json({ success: false, message: "Coupon not found" });
+    }
+
+    if (coupon.usedBy.length > 0) {
+      return res.json({ success: false, message: "Cannot delete coupon in use" });
+    }
+
+    await Coupon.findByIdAndDelete(id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting coupon:", error);
+    res.json({ success: false, message: "Failed to delete coupon" });
   }
 };
 
@@ -224,5 +331,8 @@ module.exports = {
   statusUpdate,
   salesPage,
   couponsPage,
+  getCreateCouponPage,
+  postCreateCoupon,
+  deleteCoupon,
   logout,
 };

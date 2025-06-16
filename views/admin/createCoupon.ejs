@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Coupon - Admin Dashboard</title>
+  <link rel="stylesheet" href="/css/admin/coupon.css">
+</head>
+<body>
+  <%- include('../partials/admin/navbar') %>
+
+  <div class="main-content">
+    <div class="customers-section">
+      <div class="section-header">
+        <h2>Create Coupon</h2>
+        <a href="/admin/coupons" class="btn-primary">Back to Coupons</a>
+      </div>
+
+      <% if (error) { %>
+        <div class="alert error"><%= error %></div>
+      <% } %>
+      <% if (success) { %>
+        <div class="alert success"><%= success %></div>
+      <% } %>
+
+      <form id="createCouponForm" action="/admin/coupons/create" method="POST">
+        <label for="code">Coupon Code</label>
+        <input type="text" id="code" name="code" required placeholder="e.g., SAVE10">
+        <label for="discount">Discount (%)</label>
+        <input type="number" id="discount" name="discount" min="0" max="100" required placeholder="0-100">
+        <label for="expiryDate">Expiry Date</label>
+        <input type="date" id="expiryDate" name="expiryDate" required>
+        <label for="usageLimit">Usage Limit</label>
+        <input type="number" id="usageLimit" name="usageLimit" min="1" required placeholder="e.g., 1">
+        <div class="modal-actions">
+          <a href="/admin/coupons" class="btn-action" style="background-color: #6b7280; color: white;">Cancel</a>
+          <button type="submit" class="btn-action">Create Coupon</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2025 Admin Dashboard. All rights reserved.</p>
+  </footer>
+
+  <script src="/js/coupon.js"></script>
+</body>
+</html>

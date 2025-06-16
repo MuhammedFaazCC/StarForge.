@@ -4,6 +4,8 @@ const userController = require("../controllers/user/userController");
 const productController = require("../controllers/user/productContrller");
 const cartController = require("../controllers/user/cartController");
 const checkoutController = require("../controllers/user/checkoutController");
+const walletController = require("../controllers/user/walletController");
+
 const noCache = require("../middlewares/noCache");
 const bcrypt = require("bcrypt");
 const passport = require("passport");
@@ -42,20 +44,30 @@ router.get('/account/addresses/edit/:addressId', userAuth, userController.loadEd
 router.put('/address/:id', userAuth, userController.putEditAddress);
 router.get('/orders', userAuth, userController.getUserOrders);
 router.post('/orders/:id/cancel', userAuth, userController.cancelOrder);
-router.get('/wallet', userAuth, userController.getWallet)
 router.get('/changePassword', userAuth, userController.getChangePassword);
 router.post('/changePassword', userAuth, userController.postChangePassword);
+router.post("/return/:id", userController.requestReturn);
+router.post("/admin/return/:returnId/approve", userController.approveReturn);
 
 router.get("/cart", userAuth, cartController.viewCart);
 router.post("/cart/add/:id", userAuth, cartController.addToCart);
 router.patch("/cart/update/:id",userAuth,cartController.updateCartQuantity)
 router.delete("/cart/remove/:id",userAuth, cartController.removeFromCart)
 
+router.get('/wallet', userAuth, walletController.getWallet)
+router.post("/wallet/create-order", walletController.createWalletOrder);
+router.post("/wallet/verify", walletController.verifyAndCreditWallet);
 
-router.get('/checkout',userAuth, checkoutController.getCheckoutPage);
-router.post('/checkout',userAuth, checkoutController.postCheckoutPage);
-router.post('/create-order', userAuth, checkoutController.postRazorpay);
-router.get('/order/success', userAuth, checkoutController.orderSuccess);
+router.get('/checkout', checkoutController.getCheckoutPage);
+router.post('/checkout', checkoutController.postCheckoutPage);
+router.post('/create-order', checkoutController.postRazorpay);
+router.get('/order/success', checkoutController.orderSuccess);
+router.post('/checkout/apply-coupon', checkoutController.applyCoupon);
+router.post('/checkout/remove-coupon', checkoutController.removeCoupon);
+router.post('/address/select', checkoutController.selectAddress);
+router.get('/address/:id', checkoutController.getAddress);
+router.post('/address/add', checkoutController.addAddress);
+router.post('/address/edit/:id', checkoutController.editAddress);
 
 
 module.exports = router;

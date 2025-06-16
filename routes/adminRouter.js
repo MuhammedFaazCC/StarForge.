@@ -35,8 +35,11 @@ router.post('/products/edit/:id', adminAuth, upload.fields([ { name: 'mainImage'
 router.delete("/products/delete/:id", adminAuth, productController.softDeleteProduct);
 
 router.get('/orders', adminAuth, adminController.getAdminOrdersPage);
-router.post('/admin/orders/:id/status', adminAuth, adminController.statusUpdate);
-
+router.post('/orders/:id/status', adminAuth, adminController.statusUpdate);
+router.get('/coupons', adminAuth, adminController.couponsPage);
+router.get('/coupons/create', adminAuth, adminController.getCreateCouponPage);
+router.post('/coupons/create', adminAuth, adminController.postCreateCoupon);
+router.delete('/coupons/delete/:id', adminAuth, adminController.deleteCoupon);
 
 router.get("/customers", adminAuth, customerController.customersPage);
 router.post('/customers/clear', adminAuth, customerController.customerClear);

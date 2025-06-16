@@ -1,14 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-  <!-- <link rel="stylesheet" href="/css/user/profileOrders.css" /> -->
-  <link rel="stylesheet" href="/css/user/userProfile.css" />
+  <title>My Orders - StarForge</title>
+  <link rel="stylesheet" href="/css/user/userProfile.css">
 </head>
-
 <body>
   <nav class="top-navbar">
     <a href="/" class="navbar-brand">StarForge.</a>
@@ -19,88 +16,150 @@
 
   <%- include('../partials/user/profileSidebar', { user, currentPage: 'orders' }) %>
 
-    <div class="userMainContainer">
+  <main class="main-content">
+    <div class="content-wrapper">
+      <div class="profile-container">
+        <header class="page-header">
+          <div>
+            <h1 class="page-title">My Orders</h1>
+            <div class="breadcrumb">
+              <a href="/">Home</a> / My Orders
+            </div>
+          </div>
+        </header>
 
+        <% if (!orders || orders.length === 0) { %>
+          <div class="empty-state">
+            <img src="/images/empty.png" alt="No Orders" class="empty-icon">
+            <h3 class="empty-title">You have no orders yet</h3>
+            <p class="empty-description">Explore our products and place your first order!</p>
+            <a href="/" class="btn-primary">Start Shopping</a>
+          </div>
+        <% } else { %>
+          <table class="userTable orderTable">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Placed On</th>
+                <th>Status</th>
+                <th>Total</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% orders.forEach(order => { %>
+                <tr>
+                  <td><%= order._id %></td>
+                  <td><%= order.createdAt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) %></td>
+                  <td>
+                    <span class="orderStatus <%= order.status.toLowerCase().replace(' ', '-') %>">
+                      <%= order.status %>
+                    </span>
+                  </td>
+                  <td>₹<%= (order.total || 0).toFixed(2) %></td>
+                  <td>
+                    <% if (order.status === "Processing" || order.status === "Confirmed") { %>
+                      <button class="cancelOrderBtn" data-order-id="<%= order._id %>">Cancel</button>
+                    <% } else if (order.status === "Delivered") { %>
+                      <button class="btn-info returnOrderBtn" data-order-id="<%= order._id %>">Request Return</button>
+                    <% } %>
+                    <a href="/order/<%= order._id %>" class="btn-info">View</a>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } %>
+      </div>
+    </div>
+  </main>
 
-      <main class="main-content">
-        <div class="content-wrapper">
-          <div class="profile-container">
-            <h1 class="pageTitle">My Orders</h1>
-
-            <% if (orders.length===0) { %>
-              <p class="noDataMessage">You have no orders yet.</p>
-            <% } else { %>
-                <table class="userTable orderTable">
-                  <thead>
-                    <tr>
-                      <th>Order ID</th>
-                      <th>Placed On</th>
-                      <th>Status</th>
-                      <th>Total</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% orders.forEach(order=> { %>
-                      <tr>
-                        <td>
-                          <%= order._id %>
-                        </td>
-                        <td>
-                          <%= order.createdAt.toLocaleDateString() %>
-                        </td>
-                        <td class="orderStatus <%= order.status.toLowerCase() %>">
-                          <%= order.status %>
-                        </td>
-                        <td>
-                          <% order.items.forEach(item => { %>
-                            <p><%= (item.salesPrice * item.quantity).toFixed(2) %></p>
-                          <% }) %>
-                        </td>
-                        <td>
-                          <a href="/user/orders/<%= order._id %>" class="btn btn-info">View</a>
-                          <% if (order.status==='Processing' || order.status==='Confirmed' ) { %>
-                            <button class="btn btn-danger cancelOrderBtn" data-id="<%= order._id %>">Cancel</button>
-                          <% } else { %>
-                              <span class="disabledBtn">No Actions</span>
-                          <% } %>
-                        </td>
-                      </tr>
-                      <% }) %>
-                  </tbody>
-                </table>
-            <% } %>
+  <!-- Return Request Modal -->
+  <div class="modal-overlay" id="returnModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Request Return</h5>
+        <button type="button" class="btn-close" onclick="closeReturnModal()"></button>
+      </div>
+      <form id="returnForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="returnReason">Reason for Return</label>
+            <textarea class="form-control" id="returnReason" name="reason" rows="4" required></textarea>
+            <div class="invalid-feedback">Please provide a reason for the return.</div>
           </div>
         </div>
-      </main>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeReturnModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="submitReturnBtn">Submit Return</button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.cancelOrderBtn').forEach(button => {
-          button.addEventListener('click', async () => {
-            const orderId = button.dataset.id;
-            if (confirm('Are you sure you want to cancel this order?')) {
-              try {
-                const response = await fetch(`/user/orders/${orderId}/cancel`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                });
-                const data = await response.json();
-                if (response.ok) {
-                  alert('Order canceled successfully');
-                  location.reload();
-                } else {
-                  alert(data.error || 'Failed to cancel order');
-                }
-              } catch {
-                alert('Error occurred. Try again later.');
-              }
+  <script>
+    document.querySelectorAll('.cancelOrderBtn').forEach(button => {
+      button.addEventListener('click', async () => {
+        const orderId = button.dataset.orderId;
+        if (confirm('Are you sure you want to cancel this order?')) {
+          try {
+            const response = await fetch(`/cancelOrder/${orderId}`, { method: 'POST' });
+            const result = await response.json();
+            if (result.message) {
+              alert(result.message);
+              location.reload();
+            } else {
+              alert(result.error || 'Error canceling order');
             }
-          });
-        });
+          } catch (error) {
+            alert('Error canceling order');
+          }
+        }
       });
-    </script>
-</body>
+    });
 
+    const returnModal = document.getElementById('returnModal');
+    let currentOrderId;
+
+    document.querySelectorAll('.returnOrderBtn').forEach(button => {
+      button.addEventListener('click', () => {
+        currentOrderId = button.dataset.orderId;
+        returnModal.classList.add('show');
+        returnModal.classList.remove('hidden');
+      });
+    });
+
+    function closeReturnModal() {
+      returnModal.classList.add('hidden');
+      returnModal.classList.remove('show');
+      document.getElementById('returnForm').reset();
+    }
+
+    document.getElementById('returnForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const reason = document.getElementById('returnReason').value.trim();
+      if (!reason) {
+        document.getElementById('returnReason').classList.add('is-invalid');
+        return;
+      }
+      try {
+        const response = await fetch(`/return/${currentOrderId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason }),
+        });
+        const result = await response.json();
+        if (result.message) {
+          alert(result.message);
+          closeReturnModal();
+          location.reload();
+        } else {
+          alert(result.error || 'Error submitting return request');
+        }
+      } catch (error) {
+        alert('Error submitting return request');
+      }
+    });
+  </script>
+</body>
 </html>

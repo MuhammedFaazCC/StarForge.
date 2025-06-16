@@ -1,58 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coupons - StarForge</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@600&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="/css/admin/coupon.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coupons - Admin Dashboard</title>
+  <link rel="stylesheet" href="/css/admin/coupon.css">
 </head>
-
 <body>
-    <%- include('../partials/admin/navbar') %>
+  <%- include('../partials/admin/navbar') %>
+    <%- include('../partials/admin/sidepanel', { active: 'coupons' }) %>
 
-        <%- include('../partials/admin/sidepanel', { active:'coupons' }) %>
+  <div class="main-content">
+    <div class="customers-section">
+      <div class="section-header">
+        <h2>Coupons</h2>
+        <a href="/admin/coupons/create" class="btn-primary">Create Coupon</a>
+      </div>
 
-            <div class="main-content" id="main-content">
-                <div class="coupons-section">
-                    <h2>Coupons</h2>
-                    <table class="coupons-table">
-                        <thead>
-                            <tr>
-                                <th>Coupon Code</th>
-                                <th>Discount</th>
-                                <th>Expiry Date</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% coupons.forEach(coupon=> { %>
-                                <tr>
-                                    <td>
-                                        <%= coupon.code %>
-                                    </td>
-                                    <td>
-                                        <%= coupon.discount %>
-                                    </td>
-                                    <td>
-                                        <%= coupon.expiry %>
-                                    </td>
-                                    <td>
-                                        <%= coupon.status %>
-                                    </td>
-                                </tr>
-                            <% }); %>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+      <% if (error) { %>
+        <div class="alert error"><%= error %></div>
+      <% } %>
+      <% if (success) { %>
+        <div class="alert success"><%= success %></div>
+      <% } %>
 
-        <%- include('../partials/admin/footer') %>
+      <div class="products-controls">
+        <form class="search-form" action="/admin/coupons" method="GET">
+          <input type="text" id="searchInput" name="search" placeholder="Search by code..." value="<%= search %>">
+          <select name="status" onchange="this.form.submit()">
+            <option value="">All Statuses</option>
+            <option value="Active" <%= status === 'Active' ? 'selected' : '' %>>Active</option>
+            <option value="Expired" <%= status === 'Expired' ? 'selected' : '' %>>Expired</option>
+            <option value="Inactive" <%= status === 'Inactive' ? 'selected' : '' %>>Inactive</option>
+          </select>
+          <% if (search || status) { %>
+            <a href="/admin/coupons" class="clear-search">Clear</a>
+          <% } %>
+        </form>
+      </div>
 
-    <script src="/js/admin/coupon.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+      <table class="customers-table">
+        <thead>
+          <tr>
+            <th>Coupon Code</th>
+            <th>Discount</th>
+            <th>Expiry Date</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% coupons.forEach(coupon => { %>
+            <tr>
+              <td><%= coupon.code %></td>
+              <td><%= coupon.discount %></td>
+              <td><%= coupon.expiry %></td>
+              <td><span class="status <%= coupon.status.toLowerCase() %>"><%= coupon.status %></span></td>
+              <td>
+                <button class="btn-action btn-block" onclick="deleteCoupon('<%= coupon.id %>')">Delete</button>
+              </td>
+            </tr>
+          <% }) %>
+          <% if (coupons.length === 0) { %>
+            <tr class="no-results">
+              <td colspan="5">No coupons found</td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+
+      <% if (totalPages > 1) { %>
+        <div class="pagination">
+          <% if (currentPage > 1) { %>
+            <button class="btn-arrow" onclick="window.location.href='?page=<%= currentPage - 1 %>&search=<%= search %>&status=<%= status %>'">Previous</button>
+          <% } %>
+          <% for (let i = 1; i <= totalPages; i++) { %>
+            <span class="<%= currentPage === i ? 'active' : '' %>">
+              <a href="?page=<%= i %>&search=<%= search %>&status=<%= status %>"><%= i %></a>
+            </span>
+          <% } %>
+          <% if (currentPage < totalPages) { %>
+            <button class="btn-arrow" onclick="window.location.href='?page=<%= currentPage + 1 %>&search=<%= search %>&status=<%= status %>'">Next</button>
+          <% } %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2025 Admin Dashboard. All rights reserved.</p>
+  </footer>
+
+  <script src="/js/coupon.js"></script>
 </body>
-
 </html>

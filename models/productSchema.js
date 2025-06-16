@@ -22,6 +22,12 @@ const productSchema = new mongoose.Schema({
     min: 0,
     max: 100,
   },
+    categoryOffer: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100,
+  },
   salesPrice: {
     type: Number,
     min: 0,
@@ -69,8 +75,14 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  isDeleted: {
+    type: Boolean,
+    default: false,
+  },
 }, {
   timestamps: true,
 });
+
+productSchema.index({ category: 1 });
 
 module.exports = mongoose.model('Product', productSchema);
