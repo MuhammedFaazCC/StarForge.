@@ -6,6 +6,7 @@
   <title>Cart | StarForge</title>
   <link rel="stylesheet" href="/css/user/cart.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -40,17 +41,14 @@
                     <div class="quantity-control">
                       <% if (product.stock> 0) { %>
 
-                        <button onclick="updateCartQuantity('<%= item._id %>', -1)" <% if (item.quantity <=1) { %>
-                          disabled title="Minimum quantity reached" <% } %>>
-                            −
+                        <button onclick="updateCartQuantity('<%= item._id %>', -1)" 
+                                <%= item.quantity === 1 ? 'disabled title="Minimum quantity reached"' : '' %>>
+                          −
                         </button>
-
-                        <input type="text" value="<%= item.quantity %>" readonly
-                          aria-label="Quantity for <%= product.name %>" />
-
-                        <button onclick="updateCartQuantity('<%= item._id %>', 1)" <% if (item.quantity>= product.stock)
-                          { %> disabled title="Stock limit reached" <% } %>>
-                            +
+                        <input type="text" value="<%= item.quantity %>" readonly>
+                        <button onclick="updateCartQuantity('<%= item._id %>', 1)" 
+                                <%= item.quantity >= item.productId.stock ? 'disabled title="Stock limit reached"' : '' %>>
+                          +
                         </button>
 
                         <% } else { %>

@@ -63,32 +63,34 @@ const addToCart = async (req, res) => {
   }
 };
 
-
-
-
 const updateCartQuantity = async (req, res) => {
   try {
     const { id: cartItemId } = req.params;
-    console.log('cart item',cartItemId)
     const { change } = req.body;
 
     const cart = await Cart.findOne({ userId: req.session.user._id }).populate('items.productId');
-;
-    const item = cart.items.id(cartItemId);
 
-    if (!item) return res.status(404).json({ error: 'Item not found' });
+    if (!cart) {
+      return res.status(404).json({ success: false, error: 'Cart not found' });
+    }
+
+    const item = cart.items.id(cartItemId);
+    if (!item) {
+      return res.status(404).json({ success: false, error: 'Item not found in cart' });
+    }
 
     const newQty = item.quantity + change;
     if (newQty < 1 || newQty > item.productId.stock) {
-      return res.status(400).json({ error: 'Invalid quantity' });
+      return res.status(400).json({ success: false, error: 'Invalid quantity (check stock)' });
     }
 
     item.quantity = newQty;
     await cart.save();
-    res.json({ success: true });
+    return res.json({ success: true });
+
   } catch (error) {
-    console.error('Error in updateCartQuantity:', error); 
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error in updateCartQuantity:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 };
 

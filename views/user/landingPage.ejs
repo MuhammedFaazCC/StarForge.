@@ -22,22 +22,52 @@
         <section class="new-launches" style="background-color: #ffffff; padding: 40px 20px; text-align: center;">
             <h2>New arrivals</h2>
             <div class="product-grid">
-                <% if (products && products.length> 0) { %>
-                    <% products.forEach(product=> { %>
+                <% if (products && products.length > 0) { %>
+                    <% products.forEach(product => { %>
                         <div class="product-card">
-                            <img src="<%= product.image %>" alt="<%= product.name %>"
-                                style="width: 100%; height: auto;">
-                            <h3>
-                                <%= product.name %>
-                            </h3>
-                            <p>₹<%= product.price.toFixed(2) %>
-                            </p>
-                            <button class="buy-now">Buy Now</button>
-                        </div>
-                        <% }) %>
+                            <% if (product.mainImage) { %>
+                                <img src="<%= product.mainImage %>" alt="<%= product.name %>" style="width: 100%; height: auto;">
                             <% } else { %>
-                                <p>No new launches available.</p>
+                                <img src="/images/default-product.jpg" alt="<%= product.name %>" style="width: 100%; height: auto;">
+                            <% } %>
+                            
+                            <h3><%= product.name %></h3>
+                            
+                            <% if (product.brand) { %>
+                                <p class="brand"><%= product.brand %></p>
+                            <% } %>
+                            
+                            <div class="price-container">
+                                <% if (product.hasOffer) { %>
+                                    <span class="final-price">₹<%= product.finalPrice.toFixed(2) %></span>
+                                    <span class="original-price" style="text-decoration: line-through; color: #999; margin-left: 10px;">₹<%= product.price.toFixed(2) %></span>
+                                    <span class="offer-badge" style="background: #ff4444; color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px; margin-left: 5px;">
+                                        <%= product.offerPercentage %>% OFF
+                                    </span>
+                                <% } else { %>
+                                    <span class="final-price">₹<%= product.finalPrice.toFixed(2) %></span>
                                 <% } %>
+                            </div>
+                            
+                            <% if (product.stock > 0) { %>
+                                <p class="stock-status" style="color: green; font-size: 12px;">In Stock (<%= product.stock %> available)</p>
+                            <% } else { %>
+                                <p class="stock-status" style="color: red; font-size: 12px;">Out of Stock</p>
+                            <% } %>
+                            
+                            <% if (product.stock > 0) { %>
+                                <a href="/product/<%= product._id %>" class="buy-now">View Details</a>
+                            <% } else { %>
+                                <button class="buy-now" disabled style="background: #ccc; cursor: not-allowed;">Out of Stock</button>
+                            <% } %>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="no-products">
+                        <p>No new arrivals available at the moment.</p>
+                        <p>Check back soon for exciting new products!</p>
+                    </div>
+                <% } %>
             </div>
         </section>
 
@@ -66,7 +96,6 @@
                 <button class="shop-now">View</button>
             </div>
         </section>
-
 
         <section class="sports-promo" style="background-image: url('/images/sports-car.jpg');">
             <div class="overlay-content">

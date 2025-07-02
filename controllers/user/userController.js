@@ -5,6 +5,7 @@ const Address = require("../../models/addressSchema");
 const Order = require("../../models/orderSchema");
 const Wishlist = require("../../models/wishlistSchema");
 const Return = require("../../models/returnSchema");
+const Product = require("../../models/productSchema")
 
 
 const transporter = nodemailer.createTransport({
@@ -39,23 +40,50 @@ const pageNotFound = async (req, res) => {
 const loadHomepage = async (req, res) => {
   try {
     const user = res.locals.userData;
+    const products = await Product.find({
+      isListed: true,
+      isDeleted: false,
+      stock: { $gt: 0 }
+    })
+    .populate('category')
+    .sort({ createdAt: -1 })
+    .limit(6) 
+    .select('name price offer categoryOffer salesPrice mainImage stock brand');
 
-    const products = [
-      { name: "StarForge Classic", price: 5000, image: "/images/wheel1.jpg" },
-      { name: "StarForge Omega", price: 6500, image: "/images/wheel2.jpg" },
-      { name: "StarForge Rage", price: 7200, image: "/images/wheel3.jpg" },
-      { name: "StarForge Titan", price: 8000, image: "/images/wheel4.jpg" },
-      { name: "StarForge Nitro", price: 9000, image: "/images/wheel5.jpg" },
-      { name: "StarForge Phantom", price: 7800, image: "/images/wheel6.jpg" },
-    ];
+    const productsWithFinalPrice = products.map(product => {
+      let finalPrice = product.price;
+      
+      const productOffer = product.offer || 0;
+      const categoryOffer = product.categoryOffer || 0;
+      const bestOffer = Math.max(productOffer, categoryOffer);
+      
+      if (bestOffer > 0) {
+        finalPrice = product.price - (product.price * bestOffer / 100);
+      }
+      
+      if (product.salesPrice && product.salesPrice < finalPrice) {
+        finalPrice = product.salesPrice;
+      }
+      
+      return {
+        ...product.toObject(),
+        finalPrice: Math.round(finalPrice * 100) / 100,
+        hasOffer: bestOffer > 0,
+        offerPercentage: bestOffer
+      };
+    });
 
     return res.render("landingPage", {
-      products,
+      products: productsWithFinalPrice,
       user,
     });
   } catch (error) {
     console.log("Homepage not found", error);
-    res.status(500).send("Server error");
+    
+    return res.render("landingPage", {
+      products: [],
+      user: res.locals.userData,
+    });
   }
 };
 
@@ -746,14 +774,12 @@ const postAddress = async (req, res) => {
   const { name, address, district, state, city, pinCode } = req.body;
 
   try {
-    // Validate required fields
     if (!name || !address || !district || !state || !city || !pinCode) {
       console.error("Missing required fields:", { name, address, district, state, city, pinCode });
       req.session.error = "All fields are required";
       return res.redirect("/address/add");
     }
 
-    // Validate pinCode format
     if (!/^\d{6}$/.test(pinCode)) {
       console.error("Invalid pinCode format:", pinCode);
       req.session.error = "Pin code must be exactly 6 digits";

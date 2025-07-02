@@ -213,10 +213,13 @@ const Wishlist = require('../../models/wishlistSchema')
     });
 
     pipeline.push({
-      $unwind: {
-        path: '$category',
-        preserveNullAndEmptyArrays: true
+      $match: {
+        'category.0': { $exists: true }
       }
+    });
+
+    pipeline.push({
+      $unwind: '$category'
     });
 
     const [products, totalProducts, categories, wishlist] = await Promise.all([
