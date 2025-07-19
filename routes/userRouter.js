@@ -43,9 +43,12 @@ router.post('/address', userAuth, userController.postAddress);
 router.get('/account/addresses/edit/:addressId', userAuth, userController.loadEdit);
 router.put('/address/:id', userAuth, userController.putEditAddress);
 router.get('/orders', userAuth, userController.getUserOrders);
+router.post('/cancelItem/:orderId/:productId', userAuth, userController.cancelSingleItem);
 router.post('/orders/:id/cancel', userAuth, userController.cancelOrder);
+router.get("/order/:id", userAuth, userController.viewOrderDetails);
 router.get('/changePassword', userAuth, userController.getChangePassword);
 router.post('/changePassword', userAuth, userController.postChangePassword);
+router.post('/returnItem/:orderId/:productId', userAuth, userController.requestReturnItem)
 router.post("/return/:id", userController.requestReturn);
 router.post("/admin/return/:returnId/approve", userController.approveReturn);
 
@@ -60,6 +63,7 @@ router.post("/wallet/verify", walletController.verifyAndCreditWallet);
 
 router.get('/checkout', checkoutController.getCheckoutPage);
 router.post('/checkout', checkoutController.postCheckoutPage);
+router.get('/order/placed', checkoutController.codSuccess);
 router.post('/create-order', checkoutController.postRazorpay);
 router.get('/order/success', checkoutController.orderSuccess);
 router.post('/checkout/apply-coupon', checkoutController.applyCoupon);

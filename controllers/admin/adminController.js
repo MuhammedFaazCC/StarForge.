@@ -137,6 +137,23 @@ const getAdminOrdersPage = async (req, res) => {
   }
 };
 
+const getOrderDetails = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+
+    const order = await Order.findById(orderId)
+      .populate('userId')
+      .populate('items.productId');
+
+    if (!order) return res.status(404).send('Order not found');
+
+    res.render('viewOrder', { order });
+  } catch (error) {
+    console.error('Error fetching order details:', error);
+    res.status(500).send('Server error');
+  }
+};
+
 const statusUpdate = async (req, res) => {
   const { status } = req.body;
   const { id } = req.params;
@@ -328,6 +345,7 @@ module.exports = {
   login,
   dashboardPage,
   getAdminOrdersPage,
+  getOrderDetails,
   statusUpdate,
   salesPage,
   couponsPage,

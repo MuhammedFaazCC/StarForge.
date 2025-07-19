@@ -596,6 +596,8 @@ form button:hover {
   border-collapse: separate;
   border-spacing: 0 10px;
   font-family: "Segoe UI", sans-serif;
+  table-layout: fixed;
+  background-color: transparent;
 }
 
 .userTable.orderTable thead {
@@ -610,6 +612,16 @@ form button:hover {
   border-bottom: 1px solid #e0e0e0;
   font-size: 14px;
   vertical-align: middle;
+  word-wrap: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userTable.orderTable thead th {
+  font-weight: 600;
+  color: #1e293b;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .userTable.orderTable tbody tr {
@@ -618,13 +630,153 @@ form button:hover {
   transition: transform 0.2s ease;
 }
 
-.userTable.orderTable .orderStatus {
-  font-weight: 600;
-  text-transform: capitalize;
-  padding: 6px 12px;
-  border-radius: 20px;
+.userTable.orderTable tbody tr:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.userTable.orderTable th:nth-child(1),
+.userTable.orderTable td:nth-child(1) {
+  width: 30%;
+}
+
+.userTable.orderTable th:nth-child(2),
+.userTable.orderTable td:nth-child(2) {
+  width: 15%;
+}
+
+.userTable.orderTable th:nth-child(3),
+.userTable.orderTable td:nth-child(3) {
+  width: 15%;
+}
+
+.userTable.orderTable th:nth-child(4),
+.userTable.orderTable td:nth-child(4) {
+  width: 15%;
+}
+
+.userTable.orderTable th:nth-child(5),
+.userTable.orderTable td:nth-child(5) {
+  width: 10%;
+}
+
+.userTable.orderTable th:nth-child(6),
+.userTable.orderTable td:nth-child(6) {
+  width: 15%;
+}
+
+.userTable.orderTable td .product-item {
+  margin-bottom: 0.5rem;
+  white-space: normal;
+}
+
+.userTable.orderTable .cancelOrderBtn,
+.userTable.orderTable .btn-info,
+.userTable.orderTable .disabledBtn {
+  margin-right: 8px;
   display: inline-block;
-  font-size: 13px;
+  vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+  .userTable.orderTable {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .userTable.orderTable thead {
+    display: none;
+  }
+
+  .userTable.orderTable tbody,
+  .userTable.orderTable tr,
+  .userTable.orderTable td {
+    display: block;
+    width: 100%;
+  }
+
+  .userTable.orderTable tbody tr {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .userTable.orderTable tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-bottom: none;
+    text-align: right;
+    position: relative;
+    min-height: 40px;
+  }
+
+  .userTable.orderTable tbody td:nth-child(1)::before {
+    content: "Products";
+    font-weight: 600;
+    color: #1e293b;
+    text-transform: uppercase;
+    width: 40%;
+  }
+
+  .userTable.orderTable tbody td:nth-child(2)::before {
+    content: "Order ID";
+    font-weight: 600;
+    color: #1e293b;
+    text-transform: uppercase;
+    width: 40%;
+  }
+
+  .userTable.orderTable tbody td:nth-child(3)::before {
+    content: "Placed On";
+    font-weight: 600;
+    color: #1e293b;
+    text-transform: uppercase;
+    width: 40%;
+  }
+
+  .userTable.orderTable tbody td:nth-child(4)::before {
+    content: "Status";
+    font-weight: 600;
+    color: #1e293b;
+    text-transform: uppercase;
+    width: 40%;
+  }
+
+  .userTable.orderTable tbody td:nth-child(5)::before {
+    content: "Total";
+    font-weight: 600;
+    color: #1e293b;
+    text-transform: uppercase;
+    width: 40%;
+  }
+
+  .userTable.orderTable tbody td:nth-child(6)::before {
+    content: "Actions";
+    font-weight: 600;
+    color: #1e293b;
+    text-transform: uppercase;
+    width: 40%;
+  }
+
+  .userTable.orderTable td:nth-child(6) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+
+  .userTable.orderTable .cancelOrderBtn,
+  .userTable.orderTable .btn-info,
+  .userTable.orderTable .disabledBtn {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
 }
 
 .orderStatus.processing {

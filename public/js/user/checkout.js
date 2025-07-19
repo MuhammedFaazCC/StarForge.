@@ -3,6 +3,7 @@ function selectAddress(addressId) {
   const selectedCard = document.querySelector(`[data-address-id="${addressId}"]`);
   const hiddenInput = document.getElementById('selectedAddressId');
   const errorElement = document.getElementById('addressError');
+  
 
     if (previousSelected) {
     previousSelected.classList.remove('selected');
@@ -97,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('checkoutForm');
   const submitButton = document.querySelector('.checkout-btn');
   const paymentMethodSelect = document.getElementById('paymentMethod');
+  const selectedAddressInput = document.getElementById('selectedAddressId');
 
   document.querySelectorAll('[data-select-address]').forEach(button => {
     button.addEventListener('click', () => {
@@ -120,6 +122,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  const toggleBtn = document.getElementById('toggleCouponListBtn');
+const couponSection = document.getElementById('availableCouponsSection');
+if (toggleBtn && couponSection) {
+  toggleBtn.addEventListener('click', () => {
+    const visible = couponSection.style.display === 'block';
+    couponSection.style.display = visible ? 'none' : 'block';
+    toggleBtn.textContent = visible ? 'View Available Coupons' : 'Hide Coupons';
+  });
+}
+
+document.querySelectorAll('.btn-apply-coupon').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const code = btn.dataset.couponCode;
+    const input = document.getElementById('couponCode');
+    if (input) {
+      input.value = code;
+      document.getElementById('applyCouponBtn').click();
+    }
+  });
+});
+
   document.querySelectorAll('[data-close-modal]').forEach(button => {
     button.addEventListener('click', closeModal);
   });
@@ -128,126 +151,156 @@ document.addEventListener('DOMContentLoaded', () => {
 
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
-    
-    const selectedAddressId = document.getElementById('selectedAddressId').value;
-    const paymentMethod = paymentMethodSelect.value;
-    const hasAddresses = document.querySelectorAll('.info-card').length > 0;
+    console.log('Form submission triggered');
 
-    if (hasAddresses && !selectedAddressId) {
-      const errorElement = document.getElementById('addressError');
-      if (errorElement) {
-        errorElement.style.display = 'block';
-        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      return false;
+  const selectedAddressId = selectedAddressInput.value;
+  const paymentMethod = paymentMethodSelect.value;
+  const hasAddresses = document.querySelectorAll('.info-card').length > 0;
+
+  console.log('Selected Address ID:', selectedAddressId);
+  console.log('Payment Method:', paymentMethod);
+  console.log('Has Addresses:', hasAddresses);
+
+  if (hasAddresses && !selectedAddressId) {
+    const errorElement = document.getElementById('addressError');
+    if (errorElement) {
+      errorElement.style.display = 'block';
+      errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      console.log('Error: No address selected');
+    }
+    return;
+  }
+
+  if (!paymentMethod) {
+    alert('Please select a payment method.');
+    console.log('Error: No payment method selected');
+    return;
+  }
+
+  form.querySelector('input[name="paymentMethod"]').value = paymentMethod;
+
+  if (paymentMethod === 'Online') {
+    const totalAmountElement = document.querySelector('.sales-table tr:last-child td:last-child');
+    if (!totalAmountElement) {
+      alert('Unable to process payment. Please refresh and try again.');
+      console.error('Total amount element not found'); // Debug
+      return;
     }
 
-    if (!paymentMethod) {
-      alert('Please select a payment method.');
-      return false;
+    const totalAmount = parseFloat(totalAmountElement.textContent.replace('₹', '').replace(/,/g, ''));
+    console.log('Total Amount:', totalAmount); // Debug
+
+    if (isNaN(totalAmount) || totalAmount <= 0) {
+      alert('Invalid total amount. Please refresh and try again.');
+      console.error('Invalid total amount:', totalAmount); // Debug
+      return;
     }
 
-    form.querySelector('input[name="paymentMethod"]').value = paymentMethod;
-
-    if (paymentMethod === 'Online') {
-      const totalAmountElement = document.querySelector('.sales-table tr:last-child td:last-child');
-      if (!totalAmountElement) {
-        alert('Unable to process payment. Please refresh and try again.');
-        return false;
-      }
-
-      const totalAmount = parseFloat(
-        totalAmountElement.textContent.replace('₹', '').replace(/,/g, '')
-      );
-
-      if (isNaN(totalAmount) || totalAmount <= 0) {
-        alert('Invalid total amount. Please refresh and try again.');
-        return false;
-      }
-
-      try {
-        if (submitButton) {
-          submitButton.disabled = true;
-          submitButton.textContent = 'Processing...';
-        }
-
-        const response = await fetch('/create-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            amount: totalAmount, 
-            addressId: selectedAddressId 
-          })
-        });
-
-        const data = await response.json();
-        
-        if (!data.success) {
-          alert(data.error || 'Failed to initiate payment');
-          if (submitButton) {
-            submitButton.disabled = false;
-            submitButton.textContent = 'Place Order';
-          }
-          return;
-        }
-
-        if (typeof Razorpay === 'undefined') {
-          alert('Payment system is not loaded. Please refresh the page and try again.');
-          if (submitButton) {
-            submitButton.disabled = false;
-            submitButton.textContent = 'Place Order';
-          }
-          return;
-        }
-
-        const options = {
-          key: data.order.key_id || window.RAZORPAY_KEY,
-          amount: data.order.amount,
-          currency: data.order.currency,
-          order_id: data.order.id,
-          handler: function (response) {
-            window.location.href = `/order/success?payment_id=${response.razorpay_payment_id}&order_id=${data.order.id}`;
-          },
-          prefill: {
-            name: window.USER_NAME || 'Customer',
-            email: window.USER_EMAIL || ''
-          },
-          theme: { 
-            color: "#28a745" 
-          },
-          modal: {
-            ondismiss: function() {
-              if (submitButton) {
-                submitButton.disabled = false;
-                submitButton.textContent = 'Place Order';
-              }
-            }
-          }
-        };
-
-        const rzp = new Razorpay(options);
-        rzp.open();
-        
-      } catch (err) {
-        console.error('Razorpay error:', err);
-        alert('Payment initiation failed. Please try again.');
-        
-        if (submitButton) {
-          submitButton.disabled = false;
-          submitButton.textContent = 'Place Order';
-        }
-      }
-
-      return false;
-    }
-
-    if (submitButton) {
+    try {
       submitButton.disabled = true;
       submitButton.textContent = 'Processing...';
+      console.log('Initiating Razorpay payment, fetching /create-order'); // Debug
+
+      const response = await fetch('/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add CSRF token if required
+          // 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({ amount: totalAmount, addressId: selectedAddressId }),
+      });
+
+      console.log('Create Order Response Status:', response.status); // Debug
+      const data = await response.json();
+      console.log('Create Order Response:', data); // Debug
+
+      if (!response.ok || !data.success) {
+        alert(data.error || 'Failed to initiate payment');
+        submitButton.disabled = false;
+        submitButton.textContent = 'Place Order';
+        console.error('Create order failed:', data.error); // Debug
+        return;
+      }
+
+      if (typeof Razorpay === 'undefined') {
+        alert('Payment system is not loaded. Please refresh the page and try again.');
+        submitButton.disabled = false;
+        submitButton.textContent = 'Place Order';
+        console.error('Razorpay SDK not loaded'); // Debug
+        return;
+      }
+
+      const options = {
+        key: window.RAZORPAY_KEY || data.order.key_id,
+        amount: data.order.amount,
+        currency: data.order.currency,
+        order_id: data.order.id,
+        handler: function (response) {
+          console.log('Razorpay Payment Response:', response); // Debug
+          window.location.href = `/order/success?payment_id=${response.razorpay_payment_id}&order_id=${response.razorpay_order_id}`;
+        },
+        prefill: {
+          name: window.USER_NAME || 'Customer',
+          email: window.USER_EMAIL || '',
+        },
+        theme: { color: '#28a745' },
+        modal: {
+          ondismiss: function () {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Place Order';
+            console.log('Razorpay modal dismissed'); // Debug
+          },
+        },
+      };
+
+      console.log('Opening Razorpay with options:', options); // Debug
+      const rzp = new Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error('Razorpay fetch error:', err);
+      alert('Payment initiation failed. Please try again.');
+      submitButton.disabled = false;
+      submitButton.textContent = 'Place Order';
     }
-    
-    form.submit();
-  });
+  } else {
+    try {
+      submitButton.disabled = true;
+      submitButton.textContent = 'Processing...';
+      console.log('Submitting COD order to /checkout');
+
+      const response = await fetch('/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          addressId: selectedAddressId,
+          paymentMethod,
+        }),
+      });
+
+      console.log('Response Status:', response.status);
+      const data = await response.json();
+      console.log('Checkout Response:', data);
+
+      if (response.ok && data.success) {
+        console.log('COD order successful, redirecting to /order/success');
+        window.location.href = '/order/placed';
+      } else {
+        console.error('Checkout failed:', data.error);
+        alert(data.error || 'Failed to place order. Please try again.');
+        submitButton.disabled = false;
+        submitButton.textContent = 'Place Order';
+      }
+    } catch (err) {
+      console.error('Checkout fetch error:', err);
+      alert('Failed to place order. Please try again.');
+      submitButton.disabled = false;
+      submitButton.textContent = 'Place Order';
+    }
+  }
+});
 
   const applyCouponBtn = document.getElementById('applyCouponBtn');
   if (applyCouponBtn) {

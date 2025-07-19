@@ -864,31 +864,61 @@ const putEditAddress = async (req, res) => {
   }
 };
 
-
-
 const getUserOrders = async (req, res) => {
   try {
     const userId = req.session.user._id;
 
-    const orders = await Order.find({ 
+    const orders = await Order.find({
       userId: userId,
-      total: { $exists: true, $ne: null }
-    }).sort({ createdAt: -1 });
+      totalAmount: { $exists: true, $ne: null }
+    })
+      .sort({ createdAt: -1 })
+      .populate('items.productId');
 
-    console.log("Orders fetched:", orders);
+    orders.forEach(order => {
+      order.items = order.items.filter(item => {
+        if (!item.productId) {
+          console.warn(`Null productId in order ${order._id}, item:`, item);
+          return false;
+        }
+        if (!item.status) {
+          console.warn(`Missing status for item in order ${order._id}, productId: ${item.productId._id}`);
+          item.status = 'Unknown';
+        }
+        return true;
+      });
+    });
 
     res.render("profileOrders", {
       user: req.session.user,
       currentPage: "orders",
-      orders: orders.map(order => ({
-        ...order._doc,
-        total: order.total || 0
-      }))
+      orders: orders
     });
   } catch (error) {
     console.error("Error fetching orders:", error);
     res.status(500).render("errorPage", { message: "Unable to load orders at the moment." });
   }
+};
+
+const cancelSingleItem = async (req, res) => {
+  const { orderId, productId } = req.params;
+  const userId = req.session.user._id;
+
+  const order = await Order.findOne({ _id: orderId, userId: userId }).populate('items.productId');
+  if (!order) return res.status(404).json({ error: "Order not found" });
+
+  const item = order.items.find(i => i.productId._id.toString() === productId);
+  if (!item || item.status !== 'Ordered') return res.status(400).json({ error: "Item not eligible for cancellation" });
+
+  item.status = 'Cancelled';
+
+  if (order.paymentMethod !== 'COD') {
+    const refundAmount = item.productId.price * item.quantity;
+    await updateWallet(userId, refundAmount, `Refund for cancelled item ${item.productId.name}`, "Credit");
+  }
+
+  await order.save();
+  res.json({ message: "Item cancelled successfully" });
 };
 
 const cancelOrder = async (req, res) => {
@@ -905,7 +935,7 @@ const cancelOrder = async (req, res) => {
       return res.status(400).json({ error: "Order cannot be canceled at this stage" });
     }
 
-    if (!order.total) {
+    if (order.totalAmount == null || isNaN(order.totalAmount)) {
       return res.status(400).json({ error: "Order total is invalid" });
     }
 
@@ -914,11 +944,11 @@ const cancelOrder = async (req, res) => {
 
     if (order.paymentMethod !== "COD") {
       await updateWallet(
-        userId,
-        order.total,
-        `Refund for canceled order #${orderId}`,
-        "Credit"
-      );
+      userId,
+      order.totalAmount,
+      `Refund for canceled order #${orderId}`,
+      "Credit"
+    );
     }
 
     res.json({ message: "Order canceled successfully" });
@@ -926,6 +956,24 @@ const cancelOrder = async (req, res) => {
     console.error("Error canceling order:", error);
     res.status(500).json({ error: "Internal server error" });
   }
+};
+
+const requestReturnItem = async (req, res) => {
+  const { orderId, productId } = req.params;
+  const { reason } = req.body;
+  const userId = req.session.user._id;
+
+  const order = await Order.findOne({ _id: orderId, userId: userId }).populate('items.productId');
+  if (!order) return res.status(404).json({ error: "Order not found" });
+
+  const item = order.items.find(i => i.productId._id.toString() === productId);
+  if (!item || item.status !== 'Delivered') return res.status(400).json({ error: "Item not eligible for return" });
+
+  item.status = 'Return Requested';
+  item.returnReason = reason;
+
+  await order.save();
+  res.json({ message: "Return request submitted for item" });
 };
 
 const requestReturn = async (req, res) => {
@@ -943,7 +991,7 @@ const requestReturn = async (req, res) => {
       return res.status(400).json({ error: "Only delivered orders can be returned" });
     }
 
-    if (!order.total) {
+    if (order.totalAmount == null || isNaN(order.totalAmount)) {
       return res.status(400).json({ error: "Order total is invalid" });
     }
 
@@ -1000,7 +1048,7 @@ const approveReturn = async (req, res) => {
       if (order.paymentMethod !== "COD") {
         await updateWallet(
           order.userId,
-          order.total,
+          order.totalAmount,
           `Refund for returned order #${order._id}`,
           "Credit"
         );
@@ -1014,6 +1062,28 @@ const approveReturn = async (req, res) => {
   } catch (error) {
     console.error("Error processing return:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const viewOrderDetails = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const userId = req.session.user._id;
+
+    const order = await Order.findOne({ _id: orderId, userId })
+      .populate('items.productId');
+
+    if (!order) {
+      return res.status(404).render("errorPage", { message: "Order not found" });
+    }
+
+    res.render("viewOrder", {
+      user: req.session.user,
+      order
+    });
+  } catch (err) {
+    console.error("Error loading order details:", err);
+    res.status(500).render("errorPage", { message: "Unable to load order details." });
   }
 };
 
@@ -1084,9 +1154,12 @@ module.exports = {
   postAddress,
   putEditAddress,
   getUserOrders,
+  cancelSingleItem,
   cancelOrder,
+  viewOrderDetails,
   getChangePassword,
   postChangePassword,
+  requestReturnItem,
   requestReturn,
   approveReturn,
 };

@@ -33,8 +33,10 @@ router.get("/products/view/:id", adminAuth, productController.viewProduct);
 router.get("/products/edit/:id", adminAuth, productController.editProduct);
 router.post('/products/edit/:id', adminAuth, upload.fields([ { name: 'mainImage', maxCount: 1 }, { name: 'additionalImages', maxCount: 5 } ]), productController.productEdit);
 router.delete("/products/delete/:id", adminAuth, productController.softDeleteProduct);
+router.patch('/products/toggle-listing/:id', adminAuth, productController.toggleListing);
 
 router.get('/orders', adminAuth, adminController.getAdminOrdersPage);
+router.get('/orders/:id', adminAuth, adminController.getOrderDetails);
 router.post('/orders/:id/status', adminAuth, adminController.statusUpdate);
 router.get('/coupons', adminAuth, adminController.couponsPage);
 router.get('/coupons/create', adminAuth, adminController.getCreateCouponPage);

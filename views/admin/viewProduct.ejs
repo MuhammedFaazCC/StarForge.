@@ -13,7 +13,7 @@
     <div class="main-image-container">
       <div class="main-image">
         <% if (product.mainImage) { %>
-          <img src="/images/<%= product.mainImage %>" alt="Main Image" />
+          <img src="<%= product.mainImage %>" alt="Main Image" />
         <% } else { %>
           <p>No main image</p>
         <% } %>
@@ -39,7 +39,7 @@
       <div class="info-block"><strong>Category:</strong> <%= product.category?.name || product.category %></div>
       <div class="info-block"><strong>Sizes:</strong> <%= product.sizes?.join(", ") %></div>
       <div class="info-block"><strong>Rim Material:</strong> <%= product.rimMaterial %></div>
-      <div class="info-block"><strong>Finish:</strong> <%= product.finish %></div>
+      <div class="info-block"><strong>Color:</strong> <%= product.color %></div>
     </div>
   </div>
 
@@ -48,15 +48,6 @@
     <p><%= product.description %></p>
   </div>
 
-  <fieldset>
-    <legend>Specifications</legend>
-    <div class="info-block"><strong>Bolt Pattern:</strong> <%= product.specifications?.boltPattern %></div>
-    <div class="info-block"><strong>Hub Bore:</strong> <%= product.specifications?.hubBore %></div>
-    <div class="info-block"><strong>Offset:</strong> <%= product.specifications?.offset %></div>
-    <div class="info-block"><strong>Color:</strong> <%= product.specifications?.color %></div>
-    <div class="info-block"><strong>Load Rating:</strong> <%= product.specifications?.loadRating %></div>
-    <div class="info-block"><strong>Additional Info:</strong> <%= product.specifications?.additionalInfo?.join(", ") %></div>
-  </fieldset>
 </section>
 <%- include('../partials/admin/footer') %>
 

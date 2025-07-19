@@ -28,17 +28,11 @@
           </div>
         </header>
 
-        <% if (!orders || orders.length === 0) { %>
-          <div class="empty-state">
-            <img src="/images/empty.png" alt="No Orders" class="empty-icon">
-            <h3 class="empty-title">You have no orders yet</h3>
-            <p class="empty-description">Explore our products and place your first order!</p>
-            <a href="/" class="btn-primary">Start Shopping</a>
-          </div>
-        <% } else { %>
-          <table class="userTable orderTable">
+        <% if (orders && orders.length > 0) { %>
+          <table class="table table-bordered">
             <thead>
               <tr>
+                <th>Products</th>
                 <th>Order ID</th>
                 <th>Placed On</th>
                 <th>Status</th>
@@ -49,32 +43,56 @@
             <tbody>
               <% orders.forEach(order => { %>
                 <tr>
+                  <td>
+                    <ul>
+                      <% order.items.forEach(item => { %>
+                        <li>
+                          <%= item.productId?.name || 'Not Available' %> × <%= item.quantity %>
+                          <span class="orderStatus <%= item.status ? item.status.toLowerCase().replace(' ', '-') : 'unknown' %>">
+                            <%= item.status || 'Unknown' %>
+                          </span>
+                          <% if (item.status === "Ordered") { %>
+                            <button class="btn btn-sm btn-danger cancel-item" data-order-id="<%= order._id %>" data-product-id="<%= item.productId?._id || '' %>">Cancel</button>
+                          <% } %>
+                          <% if (item.status === "Delivered") { %>
+                            <button class="btn btn-sm btn-warning request-return-item" data-order-id="<%= order._id %>" data-product-id="<%= item.productId?._id || '' %>">Request Return</button>
+                          <% } %>
+                        </li>
+                      <% }); %>
+                    </ul>
+                  </td>
                   <td><%= order._id %></td>
                   <td><%= order.createdAt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) %></td>
                   <td>
-                    <span class="orderStatus <%= order.status.toLowerCase().replace(' ', '-') %>">
-                      <%= order.status %>
+                    <span class="orderStatus <%= order.status ? order.status.toLowerCase().replace(' ', '-') : 'unknown' %>">
+                      <%= order.status || 'Unknown' %>
                     </span>
                   </td>
-                  <td>₹<%= (order.total || 0).toFixed(2) %></td>
+                  <td>₹<%= order.totalAmount || 'N/A' %></td>
                   <td>
                     <% if (order.status === "Processing" || order.status === "Confirmed") { %>
-                      <button class="cancelOrderBtn" data-order-id="<%= order._id %>">Cancel</button>
-                    <% } else if (order.status === "Delivered") { %>
-                      <button class="btn-info returnOrderBtn" data-order-id="<%= order._id %>">Request Return</button>
+                      <button class="btn btn-sm btn-danger cancel-order" data-order-id="<%= order._id %>">Cancel</button>
                     <% } %>
-                    <a href="/order/<%= order._id %>" class="btn-info">View</a>
+                    <% if (order.status === "Delivered") { %>
+                      <button class="btn btn-sm btn-warning request-return" data-order-id="<%= order._id %>">Request Return</button>
+                    <% } %>
+                    <a href="/order/<%= order._id %>" class="btn btn-sm btn-primary">View</a>
                   </td>
                 </tr>
-              <% }) %>
+              <% }); %>
             </tbody>
           </table>
+        <% } else { %>
+          <div class="no-orders">
+            <h3>You have no orders yet</h3>
+            <p>Explore our products and place your first order!</p>
+            <a href="/products" class="btn btn-primary">Start Shopping</a>
+          </div>
         <% } %>
       </div>
     </div>
   </main>
 
-  <!-- Return Request Modal -->
   <div class="modal-overlay" id="returnModal">
     <div class="modal-content">
       <div class="modal-header">
@@ -98,24 +116,48 @@
   </div>
 
   <script>
-    document.querySelectorAll('.cancelOrderBtn').forEach(button => {
+  document.addEventListener("DOMContentLoaded", () => {
+
+    document.querySelectorAll('.cancelItemBtn').forEach(button => {
       button.addEventListener('click', async () => {
         const orderId = button.dataset.orderId;
-        if (confirm('Are you sure you want to cancel this order?')) {
-          try {
-            const response = await fetch(`/cancelOrder/${orderId}`, { method: 'POST' });
-            const result = await response.json();
-            if (result.message) {
-              alert(result.message);
-              location.reload();
-            } else {
-              alert(result.error || 'Error canceling order');
-            }
-          } catch (error) {
-            alert('Error canceling order');
-          }
+        const productId = button.dataset.productId;
+        if (confirm('Cancel this item?')) {
+          const res = await fetch(`/cancelItem/${orderId}/${productId}`, { method: 'POST' });
+          const result = await res.json();
+          alert(result.message || result.error);
+          location.reload();
         }
       });
+    });
+
+    let currentOrderId, currentProductId;
+    document.querySelectorAll('.returnItemBtn').forEach(button => {
+      button.addEventListener('click', () => {
+        currentOrderId = button.dataset.orderId;
+        currentProductId = button.dataset.productId;
+        returnModal.classList.add('show');
+        returnModal.classList.remove('hidden');
+      });
+    });
+
+    document.getElementById('returnForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const reason = document.getElementById('returnReason').value.trim();
+      if (!reason) {
+        document.getElementById('returnReason').classList.add('is-invalid');
+        return;
+      }
+
+      const res = await fetch(`/returnItem/${currentOrderId}/${currentProductId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason })
+      });
+      const result = await res.json();
+      alert(result.message || result.error);
+      closeReturnModal();
+      location.reload();
     });
 
     const returnModal = document.getElementById('returnModal');
@@ -129,10 +171,11 @@
       });
     });
 
-    function closeReturnModal() {
+    window.closeReturnModal = function () {
       returnModal.classList.add('hidden');
       returnModal.classList.remove('show');
       document.getElementById('returnForm').reset();
+      document.getElementById('returnReason').classList.remove('is-invalid');
     }
 
     document.getElementById('returnForm').addEventListener('submit', async (e) => {
@@ -142,6 +185,7 @@
         document.getElementById('returnReason').classList.add('is-invalid');
         return;
       }
+
       try {
         const response = await fetch(`/return/${currentOrderId}`, {
           method: 'POST',
@@ -160,6 +204,8 @@
         alert('Error submitting return request');
       }
     });
+
+  });
   </script>
 </body>
 </html>

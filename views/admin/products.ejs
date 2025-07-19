@@ -35,6 +35,7 @@
                         <th>Category</th>
                         <th>Price</th>
                         <th>Stock</th>
+                        <th>List</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -50,6 +51,12 @@
                                     <span class="stock-badge <%= product.stock > 10 ? 'stock-high' : product.stock > 0 ? 'stock-low' : 'stock-out' %>">
                                         <%= product.stock %>
                                     </span>
+                                </td>
+                                <td>
+                                    <label class="switch">
+                                        <input type="checkbox" <%= product.isListed ? "checked" : "" %> onchange="toggleProductListing('<%= product._id %>', this)">
+                                        <span class="slider round"></span>
+                                    </label>
                                 </td>
                                 <td>
                                     <button class="view-btn" onclick="handleViewProduct('<%= product._id %>')">View</button>

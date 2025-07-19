@@ -77,6 +77,44 @@ function deleteProduct(productId) {
   });
 }
 
+function toggleProductListing(productId, checkbox) {
+  const isChecked = checkbox.checked;
+
+  fetch(`/admin/products/toggle-listing/${productId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ isListed: isChecked }),
+  })
+    .then((res) => {
+      if (!res.ok) {
+        throw new Error('Failed to toggle listing status');
+      }
+      return res.json();
+    })
+    .then((data) => {
+      Swal.fire({
+        icon: 'success',
+        title: 'Updated!',
+        text: `Product has been ${isChecked ? 'listed' : 'unlisted'}.`,
+        toast: true,
+        position: 'top-end',
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    })
+    .catch((err) => {
+      console.error(err);
+      checkbox.checked = !isChecked;
+      Swal.fire({
+        icon: 'error',
+        title: 'Error!',
+        text: err.message || 'Something went wrong while updating listing status.',
+      });
+    });
+}
+
 function filterTable() {
   const input = document.getElementById("searchInput");
   const filter = input.value.toLowerCase();

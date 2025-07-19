@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Order Details</title>
+  <link rel="stylesheet" href="/css/admin/profileOrders.css">
+</head>
+<body>
+  <%- include('../partials/admin/navbar') %>
+  <div class="view-order-container">
+    <div class="view-order-container">
+      <h2 class="view-order-title">Order Details - <%= order._id %></h2>
+      
+      <div class="view-order-info">
+        <p><strong>Customer:</strong> <%= order.userId.fullName || order.userId.email %></p>
+        <p><strong>Date:</strong> <%= order.createdAt.toDateString() %></p>
+        <p><strong>Status:</strong> <%= order.status %></p>
+        <p><strong>Total:</strong> ₹<%= order.totalAmount.toFixed(2) %></p>
+      </div>
+
+      <h3>Items:</h3>
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Image</th>
+            <th>Quantity</th>
+            <th>Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% order.items.forEach(item => { %>
+            <tr>
+              <td><%= item.productId?.name || 'Deleted Product' %></td>
+              <td>
+                <% if (item.productId?.images?.[0]) { %>
+                  <img src="<%= item.productId.mainImage[0] %>" alt="Product" width="60">
+                <% } else { %>
+                  <em>No image</em>
+                <% } %>
+              </td>
+              <td><%= item.quantity %></td>
+              <td>₹<%= item.price %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+
+      <a href="/admin/orders" class="back-btn" style="margin-top: 20px;">Back to Orders</a>
+    </div>
+  </div>
+</body>
+</html

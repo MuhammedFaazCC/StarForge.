@@ -41,7 +41,19 @@ const getCheckoutPage = async (req, res) => {
 
     const selectedAddressId = req.session.selectedAddressId || null;
 
-    res.render("checkout", { 
+      const currentDate = new Date();
+    const allCoupons = await Coupon.find({
+      status: 'Active',
+      expiryDate: { $gt: new Date() }
+    }).sort({ createdAt: -1 });
+
+    const availableCoupons = allCoupons.filter(coupon => {
+      const usedEntry = coupon.usedBy.find(u => u.userId.toString() === userId.toString());
+      const usedCount = usedEntry ? usedEntry.usedCount : 0;
+      return usedCount < coupon.usageLimit;
+    });
+
+    res.render("checkout", {
       user: req.session.user,
       cartItems,
       subtotal: subtotal.toLocaleString('en-IN'),
@@ -51,9 +63,9 @@ const getCheckoutPage = async (req, res) => {
       razorpayKey: process.env.RAZORPAY_KEY_ID,
       coupon,
       error: null,
-      selectedAddressId
+      selectedAddressId,
+      availableCoupons,
     });
-
   } catch (error) {
     console.error("Checkout page error:", error);
     res.status(500).render("checkout", {
@@ -65,7 +77,8 @@ const getCheckoutPage = async (req, res) => {
       addresses: [],
       coupon: null,
       error: "Unable to load checkout page",
-      selectedAddressId: null
+      selectedAddressId: null,
+      availableCoupons: []
     });
   }
 };
@@ -192,37 +205,39 @@ const postCheckoutPage = async (req, res) => {
       return res.status(400).json({ error: "Please select a shipping address" });
     }
 
-    if (!paymentMethod) {
-      return res.status(400).json({ error: "Please select a payment method" });
+    if (!paymentMethod || !['COD', 'Online', 'Wallet'].includes(paymentMethod)) {
+      return res.status(400).json({ error: "Invalid payment method selected" });
     }
 
     const cart = await Cart.findOne({ userId }).populate('items.productId');
     if (!cart || cart.items.length === 0) {
-      return res.redirect("/cart");
+      return res.status(400).json({ error: "Cart is empty" });
     }
 
     const selectedAddress = await Address.findById(addressId);
-    if (!selectedAddress) {
+    if (!selectedAddress || selectedAddress.userId.toString() !== userId.toString()) {
       return res.status(400).json({ error: "Invalid address selected" });
     }
 
     for (const item of cart.items) {
+      if (!item.productId) {
+        return res.status(400).json({ error: `Invalid product in cart: ${item._id}` });
+      }
       if (item.productId.stock < item.quantity) {
-        return res.status(400).json({ 
-          error: `Insufficient stock for ${item.productId.name}. Available: ${item.productId.stock}, Requested: ${item.quantity}` 
+        return res.status(400).json({
+          error: `Insufficient stock for ${item.productId.name}. Available: ${item.productId.stock}, Requested: ${item.quantity}`,
         });
       }
     }
 
     let totalAmount = cart.items.reduce((total, item) => total + (item.quantity * item.productId.salesPrice), 0);
-    
     let couponData = null;
     if (req.session.coupon) {
       const discountAmount = req.session.coupon.discountAmount || 0;
       totalAmount -= discountAmount;
       couponData = {
         code: req.session.coupon.code,
-        discountAmount: discountAmount
+        discountAmount: discountAmount,
       };
     }
 
@@ -232,7 +247,7 @@ const postCheckoutPage = async (req, res) => {
         productId: item.productId._id,
         name: item.productId.name,
         quantity: item.quantity,
-        salesPrice: item.productId.salesPrice
+        salesPrice: item.productId.salesPrice,
       })),
       address: `${selectedAddress.name}, ${selectedAddress.address}, ${selectedAddress.city}, ${selectedAddress.district}, ${selectedAddress.state} - ${selectedAddress.pinCode}`,
       paymentMethod,
@@ -240,6 +255,7 @@ const postCheckoutPage = async (req, res) => {
       coupon: couponData,
       status: "Processing",
       createdAt: new Date(),
+      offeredPrice: totalAmount,
     });
 
     await newOrder.save();
@@ -263,18 +279,30 @@ const postCheckoutPage = async (req, res) => {
         await coupon.save();
       }
     }
-    
+
     await Cart.deleteOne({ userId });
     req.session.coupon = null;
     req.session.selectedAddressId = null;
-    
-    res.render("orderPlaced", { user: req.session.user });
 
+    res.json({ success: true, redirect: '/order/success' });
   } catch (error) {
     console.error("Checkout error:", error);
-    res.status(500).send("Checkout failed");
+    res.status(500).json({ error: `Checkout failed: ${error.message}` });
   }
 };
+
+const codSuccess = (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login?redirect=/order/placed');
+  }
+
+  res.render('orderPlaced', {
+    user: req.session.user,
+    paymentId: 'COD',
+    orderId: 'COD_' + Date.now(),
+  });
+};
+
 
 const postRazorpay = async (req, res) => {
   try {
@@ -286,6 +314,26 @@ const postRazorpay = async (req, res) => {
 
     if (!amount || !addressId) {
       return res.status(400).json({ success: false, error: "Amount and address are required" });
+    }
+
+    const userId = req.session.user._id;
+    const cart = await Cart.findOne({ userId }).populate('items.productId');
+    if (!cart || cart.items.length === 0) {
+      return res.status(400).json({ success: false, error: "Cart is empty" });
+    }
+
+    const selectedAddress = await Address.findById(addressId);
+    if (!selectedAddress || selectedAddress.userId.toString() !== userId.toString()) {
+      return res.status(400).json({ success: false, error: "Invalid address selected" });
+    }
+
+    for (const item of cart.items) {
+      if (item.productId.stock < item.quantity) {
+        return res.status(400).json({
+          success: false,
+          error: `Insufficient stock for ${item.productId.name}. Available: ${item.productId.stock}, Requested: ${item.quantity}`,
+        });
+      }
     }
 
     const razorpayInstance = new Razorpay({
@@ -300,11 +348,12 @@ const postRazorpay = async (req, res) => {
     };
 
     const order = await razorpayInstance.orders.create(options);
-    
+
     req.session.pendingOrder = {
       razorpayOrderId: order.id,
       amount: amount,
-      addressId: addressId
+      addressId: addressId,
+      cartId: cart._id,
     };
     req.session.selectedAddressId = addressId.toString();
 
@@ -322,57 +371,65 @@ const orderSuccess = async (req, res) => {
     }
 
     const { payment_id, order_id } = req.query;
-    const user = req.session.user;
+    const userId = req.session.user._id;
 
-    if (!payment_id || !order_id) {
+    console.log('Order Success Query:', { payment_id, order_id }); // Debug
+
+    if (!payment_id || !order_id || !req.session.pendingOrder) {
+      console.error('Missing payment_id, order_id, or pendingOrder'); // Debug
       return res.redirect("/cart");
     }
 
-    const cart = await Cart.findOne({ user: user._id }).populate('items.productId');
+    const { razorpayOrderId, amount, addressId, cartId } = req.session.pendingOrder;
+
+    if (razorpayOrderId !== order_id) {
+      console.error('Order ID mismatch:', { razorpayOrderId, order_id }); // Debug
+      return res.redirect("/cart");
+    }
+
+    const cart = await Cart.findOne({ _id: cartId, userId }).populate('items.productId');
     if (!cart || cart.items.length === 0) {
+      console.error('Cart not found or empty:', cartId); // Debug
       return res.redirect("/cart");
     }
 
-    let selectedAddress;
-    if (req.session.pendingOrder && req.session.pendingOrder.addressId) {
-      selectedAddress = await Address.findById(req.session.pendingOrder.addressId);
-    } else {
-      selectedAddress = await Address.findOne({ user: user._id }).sort({ createdAt: -1 });
-    }
-
-    if (!selectedAddress) {
+    const selectedAddress = await Address.findById(addressId);
+    if (!selectedAddress || selectedAddress.userId.toString() !== userId.toString()) {
+      console.error('Invalid address:', addressId); // Debug
       return res.redirect("/checkout");
     }
 
     let totalAmount = cart.items.reduce((total, item) => total + (item.quantity * item.productId.salesPrice), 0);
-    
-    let couponData = null;
     if (req.session.coupon) {
-      const discountAmount = req.session.coupon.discountAmount || 0;
-      totalAmount -= discountAmount;
-      couponData = {
-        code: req.session.coupon.code,
-        discountAmount: discountAmount
-      };
+      totalAmount -= req.session.coupon.discountAmount || 0;
+    }
+    if (Math.round(totalAmount * 100) !== Math.round(amount * 100)) {
+      console.error("Amount mismatch:", { totalAmount, providedAmount: amount }); // Debug
+      return res.redirect("/checkout");
     }
 
     const newOrder = new Order({
-      user: user._id,
+      userId,
       items: cart.items.map(item => ({
         productId: item.productId._id,
         name: item.productId.name,
         quantity: item.quantity,
-        salesPrice: item.productId.salesPrice
+        salesPrice: item.productId.salesPrice,
       })),
       address: `${selectedAddress.name}, ${selectedAddress.address}, ${selectedAddress.city}, ${selectedAddress.district}, ${selectedAddress.state} - ${selectedAddress.pinCode}`,
       paymentMethod: 'Online',
       totalAmount,
-      coupon: couponData,
+      coupon: req.session.coupon ? {
+        code: req.session.coupon.code,
+        discountAmount: req.session.coupon.discountAmount || 0,
+      } : null,
       status: "Processing",
       createdAt: new Date(),
+      offeredPrice: totalAmount,
     });
 
     await newOrder.save();
+    console.log('Order created:', newOrder._id); // Debug
 
     for (const item of cart.items) {
       await Product.updateOne(
@@ -384,30 +441,30 @@ const orderSuccess = async (req, res) => {
     if (req.session.coupon) {
       const coupon = await Coupon.findOne({ code: req.session.coupon.code });
       if (coupon) {
-        const userCouponIndex = coupon.usedBy.findIndex(u => u.userId.toString() === user._id.toString());
+        const userCouponIndex = coupon.usedBy.findIndex(u => u.userId.toString() === userId.toString());
         if (userCouponIndex !== -1) {
           coupon.usedBy[userCouponIndex].usedCount += 1;
         } else {
-          coupon.usedBy.push({ userId: user._id, usedCount: 1 });
+          coupon.usedBy.push({ userId, usedCount: 1 });
         }
         await coupon.save();
       }
     }
 
-    await Cart.deleteOne({ user: user._id });
+    await Cart.deleteOne({ _id: cartId, userId });
     req.session.coupon = null;
     req.session.pendingOrder = null;
     req.session.selectedAddressId = null;
 
+    console.log('Order success, rendering orderPlaced'); // Debug
     res.render("orderPlaced", {
-      user,
+      user: req.session.user,
       paymentId: payment_id,
-      orderId: order_id
+      orderId: order_id,
     });
-
   } catch (error) {
     console.error("Order success error:", error);
-    res.status(500).send("Something went wrong while processing your order.");
+    res.status(500).render('error', { message: `Order processing failed: ${error.message}` });
   }
 };
 
@@ -494,6 +551,7 @@ module.exports = {
   applyCoupon,
   removeCoupon,
   postCheckoutPage,
+  codSuccess,
   postRazorpay,
   orderSuccess,
   addAddress,

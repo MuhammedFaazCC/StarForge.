@@ -70,13 +70,34 @@
 
         <div>
           <h3>Coupon</h3>
+
           <% if (coupon) { %>
             <p>Applied Coupon: <%= coupon.code %> (<%= coupon.discount %>% off)
               <button id="removeCouponBtn" class="btn-secondary">Remove</button>
             </p>
           <% } else { %>
-            <input type="text" id="couponCode" placeholder="Enter coupon code">
-            <button id="applyCouponBtn" class="btn-secondary">Apply Coupon</button>
+            <div class="coupon-box">
+              <input type="text" id="couponCode" placeholder="Enter coupon code">
+              <button id="applyCouponBtn" class="btn-secondary">Apply</button>
+            </div>
+
+            <button id="toggleCouponListBtn" class="btn-secondary" style="margin-top: 10px;">View Available Coupons</button>
+
+            <div id="availableCouponsSection" style="display: none; margin-top: 1rem;">
+              <% if (availableCoupons && availableCoupons.length > 0) { %>
+                <% availableCoupons.forEach(coupon => { %>
+                  <div class="coupon-card">
+                    <div>
+                      <strong><%= coupon.code %></strong> — <%= coupon.discount %>% off
+                      <div style="font-size: 0.85rem; color: #666;">Valid till <%= new Date(coupon.expiryDate).toLocaleDateString('en-IN') %></div>
+                    </div>
+                    <button class="btn-apply-coupon" data-coupon-code="<%= coupon.code %>">Apply</button>
+                  </div>
+                <% }) %>
+              <% } else { %>
+                <p>No active coupons available right now.</p>
+              <% } %>
+            </div>
           <% } %>
         </div>
 

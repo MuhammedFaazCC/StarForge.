@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Order Details - StarForge</title>
+  <link rel="stylesheet" href="/css/user/userProfile.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .main-content {
+      max-width: 960px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    h1 {
+      margin-bottom: 1.5rem;
+      font-size: 1.8rem;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.5rem;
+    }
+
+    .order-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .order-summary p {
+      margin: 0.3rem 0;
+    }
+
+    .label {
+      color: #555;
+      font-weight: 500;
+    }
+
+    .value {
+      font-weight: 600;
+      color: #111;
+    }
+
+    .products-section {
+      margin-top: 2rem;
+    }
+
+    .product-item {
+      display: flex;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .product-item:last-child {
+      border-bottom: none;
+    }
+
+    .product-image {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-right: 1rem;
+      border: 1px solid #ddd;
+    }
+
+    .product-info {
+      flex-grow: 1;
+    }
+
+    .product-name {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+      color: #222;
+    }
+
+    .product-details {
+      font-size: 0.9rem;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <nav class="top-navbar">
+    <a href="/" class="navbar-brand">StarForge.</a>
+    <div class="navbar-user">Hello, <%= user.fullName %></div>
+  </nav>
+
+  <main class="main-content">
+    <h1>Order Details</h1>
+
+    <div class="order-summary">
+      <p><span class="label">Order ID:</span> <span class="value"><%= order._id %></span></p>
+      <p><span class="label">Status:</span> <span class="value"><%= order.status %></span></p>
+      <p><span class="label">Placed On:</span> <span class="value"><%= order.createdAt.toLocaleDateString('en-GB') %></span></p>
+      <p><span class="label">Payment Method:</span> <span class="value"><%= order.paymentMethod %></span></p>
+      <p><span class="label">Total:</span> <span class="value">₹<%= order.totalAmount.toFixed(2) %></span></p>
+      <p><span class="label">Delivery Address:</span> <span class="value"><%= order.address %></span></p>
+    </div>
+
+    <div class="products-section">
+      <h3>Products</h3>
+      <% order.items.forEach(item => { %>
+        <div class="product-item">
+          <img class="product-image" src="<%= item.productId?.mainImage || '/images/no-image.png' %>" alt="<%= item.productId?.name || 'Product' %>">
+          <div class="product-info">
+            <div class="product-name"><%= item.productId?.name || 'Unknown Product' %></div>
+            <div class="product-details">
+              Quantity: <%= item.quantity %> × ₹<%= item.salesPrice.toFixed(2) %> = ₹<%= (item.salesPrice * item.quantity).toFixed(2) %>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </main>
+</body>
+</html>

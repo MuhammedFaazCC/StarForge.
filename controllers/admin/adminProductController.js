@@ -334,6 +334,36 @@ const productEdit = async (req, res) => {
   }
 };
 
+const toggleListing = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isListed } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid product ID' });
+    }
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      id,
+      { isListed: !!isListed },
+      { new: true }
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    res.json({
+      message: `Product is now ${updatedProduct.isListed ? 'listed' : 'unlisted'}`,
+      isListed: updatedProduct.isListed,
+    });
+
+  } catch (err) {
+    console.error("Error toggling product listing:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 const softDeleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -390,5 +420,6 @@ module.exports = {
   viewProduct,
   editProduct,
   productEdit,
+  toggleListing,
   softDeleteProduct,
 };
