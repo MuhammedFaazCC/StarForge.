@@ -1,6 +1,6 @@
 const Wallet = require("../../models/walletSchema");
 const User = require("../../models/userSchema");
-const razorpay = require('razorpay');
+const Razorpay = require('razorpay');
 const crypto = require("crypto");
 
 const getWallet = async (req, res) => {

@@ -57,6 +57,7 @@
           <option value="" disabled selected>Select Payment Method</option>
           <option value="COD">Cash on Delivery</option>
           <option value="Online">Online Payment</option>
+          <option value="Wallet">Pay using Wallet</option>
         </select>
       </div>
 
@@ -120,6 +121,9 @@
           <input type="hidden" id="selectedAddressId" name="addressId" value="<%= selectedAddressId || '' %>">
           <input type="hidden" name="paymentMethod" value="">
           <button type="submit" class="checkout-btn">Place Order</button>
+          <p style="margin-top: 5px; font-size: 0.9rem; color: #555;">
+            Wallet Balance: ₹<%= user?.wallet?.toLocaleString('en-IN') || 0 %>
+          </p>
         </form>
       </div>
     </div>

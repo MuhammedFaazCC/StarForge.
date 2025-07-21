@@ -5,8 +5,7 @@ const Address = require("../../models/addressSchema");
 const Order = require("../../models/orderSchema");
 const Wishlist = require("../../models/wishlistSchema");
 const Return = require("../../models/returnSchema");
-const Product = require("../../models/productSchema")
-
+const Product = require("../../models/productSchema");
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -900,7 +899,32 @@ const getUserOrders = async (req, res) => {
   }
 };
 
+const refundToWallet = async (order, reason = "Refund") => {
+const { updateWallet } = require("../../controllers/user/walletController");
+  try {
+    const eligibleForRefund = 
+      order.paymentMethod === "Wallet" ||
+      order.paymentMethod === "Online" ||
+      (order.paymentMethod === "COD" && order.status === "Returned");
+
+    if (!eligibleForRefund) return;
+
+    const refundAmount = order.totalAmount;
+    if (!refundAmount || refundAmount <= 0) return;
+
+    await updateWallet(
+      order.userId,
+      refundAmount,
+      `${reason} - Order #${order._id}`,
+      "Credit"
+    );
+  } catch (err) {
+    console.error("Refund to wallet failed:", err);
+  }
+};
+
 const cancelSingleItem = async (req, res) => {
+  
   const { orderId, productId } = req.params;
   const userId = req.session.user._id;
 
@@ -942,14 +966,7 @@ const cancelOrder = async (req, res) => {
     order.status = "Canceled";
     await order.save();
 
-    if (order.paymentMethod !== "COD") {
-      await updateWallet(
-      userId,
-      order.totalAmount,
-      `Refund for canceled order #${orderId}`,
-      "Credit"
-    );
-    }
+    await refundToWallet(order, "Refund for cancelled order");
 
     res.json({ message: "Order canceled successfully" });
   } catch (error) {
@@ -1045,14 +1062,8 @@ const approveReturn = async (req, res) => {
       order.status = "Returned";
       await order.save();
 
-      if (order.paymentMethod !== "COD") {
-        await updateWallet(
-          order.userId,
-          order.totalAmount,
-          `Refund for returned order #${order._id}`,
-          "Credit"
-        );
-      }
+      await refundToWallet(order, "Refund for returned order");
+
     } else if (status === "Rejected") {
       order.status = "Delivered";
       await order.save();
@@ -1154,6 +1165,7 @@ module.exports = {
   postAddress,
   putEditAddress,
   getUserOrders,
+  refundToWallet,
   cancelSingleItem,
   cancelOrder,
   viewOrderDetails,
