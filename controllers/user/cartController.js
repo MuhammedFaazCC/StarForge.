@@ -16,14 +16,23 @@ const addToCart = async (req, res) => {
     const userId = req.session.user._id;
     const quantity = parseInt(req.body.quantity) || 1;
     const source = req.body.source;
+    
     if (!req.session || !req.session.user || !req.session.user._id) {
-      return res.status(401).json({ message: 'User not logged in' });
+      return res.status(401).json({ success: false, message: 'User not logged in' });
     }
 
     const product = await Product.findById(productId).populate('category');
-
-    if (!product || !product.isListed || !product.category?.isActive || product.stock === 0) {
-      return res.status(400).send('Product not available');
+    
+    if (!product || !product.isListed || !product.category?.isActive) {
+      return res.status(400).json({ success: false, message: 'Product not available' });
+    }
+    
+    if (product.stock === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'This product is currently out of stock',
+        outOfStock: true 
+      });
     }
 
     let cart = await Cart.findOne({ userId: userId });
@@ -38,11 +47,19 @@ const addToCart = async (req, res) => {
       if (cart.items[itemIndex].quantity + quantity <= product.stock) {
         cart.items[itemIndex].quantity += quantity;
       } else {
-        return res.status(400).json({ error: 'Cannot exceed stock quantity' });
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Cannot exceed available stock quantity',
+          outOfStock: true 
+        });
       }
     } else {
       if (quantity > product.stock) {
-        return res.status(400).json({ error: 'Not enough stock' });
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Not enough stock available',
+          outOfStock: true 
+        });
       }
 
       cart.items.push({ productId: productId, quantity: quantity });
@@ -56,9 +73,19 @@ const addToCart = async (req, res) => {
     }
 
     await cart.save();
+    
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.json({ success: true, message: 'Product added to cart successfully' });
+    }
+    
     res.redirect('/cart');
   } catch (error) {
     console.error('Error in addToCart:', error);
+    
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+    
     res.status(500).send('Internal server error');
   }
 };

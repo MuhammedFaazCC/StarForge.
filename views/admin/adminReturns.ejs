@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Return Requests - Admin Panel</title>
+  <link rel="stylesheet" href="/css/admin/profileOrders.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #eee;
+    }
+
+    .page-title {
+      font-size: 1.8rem;
+      color: #333;
+      margin: 0;
+    }
+
+    .search-controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .search-input {
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .btn-success {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .btn-danger {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .table th,
+    .table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    .table th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      color: #555;
+    }
+
+    .table tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    .status-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .status-return-requested {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .return-reason {
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 2rem;
+    }
+
+    .pagination a {
+      padding: 0.5rem 1rem;
+      text-decoration: none;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      color: #007bff;
+    }
+
+    .pagination a.active {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .no-returns {
+      text-align: center;
+      padding: 3rem;
+      color: #666;
+    }
+
+    .back-link {
+      color: #007bff;
+      text-decoration: none;
+      margin-bottom: 1rem;
+      display: inline-block;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <%- include('../partials/admin/navbar') %>
+
+  <div class="container">
+    <a href="/admin/orders" class="back-link">← Back to Orders</a>
+    
+    <div class="page-header">
+      <h1 class="page-title">Return Requests</h1>
+      <div class="search-controls">
+        <form method="GET" style="display: flex; gap: 1rem;">
+          <input 
+            type="text" 
+            name="search" 
+            placeholder="Search by customer name or email..." 
+            value="<%= search %>" 
+            class="search-input"
+          >
+          <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+      </div>
+    </div>
+
+    <% if (orders && orders.length > 0) { %>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Total Amount</th>
+            <th>Payment Method</th>
+            <th>Return Type</th>
+            <th>Return Reason</th>
+            <th>Requested Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% orders.forEach(order => { %>
+            <% if (order.hasFullOrderReturn) { %>
+              <tr>
+                <td>
+                  <strong><%= order._id.toString().slice(-8) %></strong>
+                </td>
+                <td>
+                  <div>
+                    <strong><%= order.userId?.fullName || 'Unknown' %></strong><br>
+                    <small><%= order.userId?.email || 'No email' %></small>
+                  </div>
+                </td>
+                <td>
+                  <strong>₹<%= order.totalAmount.toFixed(2) %></strong>
+                </td>
+                <td>
+                  <% if (order.paymentMethod === 'Online') { %>
+                    Razorpay
+                  <% } else if (order.paymentMethod === 'COD') { %>
+                    Cash on Delivery
+                  <% } else if (order.paymentMethod === 'Wallet') { %>
+                    Wallet
+                  <% } else { %>
+                    <%= order.paymentMethod %>
+                  <% } %>
+                </td>
+                <td>
+                  <span class="status-badge" style="background-color: #e3f2fd; color: #1976d2;">
+                    Full Order
+                  </span>
+                </td>
+                <td>
+                  <div class="return-reason" title="<%= order.returnReason %>">
+                    <%= order.returnReason %>
+                  </div>
+                </td>
+                <td>
+                  <%= order.returnRequestedAt.toLocaleDateString('en-GB', { 
+                    day: '2-digit', 
+                    month: 'short', 
+                    year: 'numeric' 
+                  }) %>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button 
+                      class="btn btn-success" 
+                      onclick="acceptReturn('<%= order._id %>')"
+                      title="Accept Full Order Return"
+                    >
+                      Accept
+                    </button>
+                    <button 
+                      class="btn btn-danger" 
+                      onclick="declineReturn('<%= order._id %>')"
+                      title="Decline Full Order Return"
+                    >
+                      Decline
+                    </button>
+                    <a 
+                      href="/admin/orders/<%= order._id %>" 
+                      class="btn btn-primary"
+                      title="View Order Details"
+                    >
+                      View
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            <% } %>
+
+            <% if (order.hasItemReturns) { %>
+              <% order.itemReturns.forEach(item => { %>
+                <tr>
+                  <td>
+                    <strong><%= order._id.toString().slice(-8) %></strong>
+                  </td>
+                  <td>
+                    <div>
+                      <strong><%= order.userId?.fullName || 'Unknown' %></strong><br>
+                      <small><%= order.userId?.email || 'No email' %></small>
+                    </div>
+                  </td>
+                  <td>
+                    <strong>₹<%= (item.salesPrice * item.quantity).toFixed(2) %></strong>
+                    <br><small>Item Total</small>
+                  </td>
+                  <td>
+                    <% if (order.paymentMethod === 'Online') { %>
+                      Razorpay
+                    <% } else if (order.paymentMethod === 'COD') { %>
+                      Cash on Delivery
+                    <% } else if (order.paymentMethod === 'Wallet') { %>
+                      Wallet
+                    <% } else { %>
+                      <%= order.paymentMethod %>
+                    <% } %>
+                  </td>
+                  <td>
+                    <span class="status-badge" style="background-color: #fff3e0; color: #f57c00;">
+                      Single Item
+                    </span>
+                    <br>
+                    <small><strong><%= item.productId?.name || 'Unknown Product' %></strong></small>
+                    <br>
+                    <small>Qty: <%= item.quantity %></small>
+                  </td>
+                  <td>
+                    <div class="return-reason" title="<%= item.returnReason || 'No reason provided' %>">
+                      <%= item.returnReason || 'No reason provided' %>
+                    </div>
+                  </td>
+                  <td>
+                    <%= (item.returnRequestedAt || order.updatedAt).toLocaleDateString('en-GB', { 
+                      day: '2-digit', 
+                      month: 'short', 
+                      year: 'numeric' 
+                    }) %>
+                  </td>
+                  <td>
+                    <div class="action-buttons">
+                      <button 
+                        class="btn btn-success" 
+                        onclick="acceptItemReturn('<%= order._id %>', '<%= item.productId._id %>')"
+                        title="Accept Item Return"
+                      >
+                        Accept
+                      </button>
+                      <button 
+                        class="btn btn-danger" 
+                        onclick="declineItemReturn('<%= order._id %>', '<%= item.productId._id %>')"
+                        title="Decline Item Return"
+                      >
+                        Decline
+                      </button>
+                      <a 
+                        href="/admin/orders/<%= order._id %>" 
+                        class="btn btn-primary"
+                        title="View Order Details"
+                      >
+                        View
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              <% }); %>
+            <% } %>
+          <% }); %>
+        </tbody>
+      </table>
+
+      <% if (totalPages > 1) { %>
+        <div class="pagination">
+          <% if (currentPage > 1) { %>
+            <a href="?page=<%= currentPage - 1 %>&search=<%= search %>&sort=<%= sort %>">Previous</a>
+          <% } %>
+          
+          <% for (let i = 1; i <= totalPages; i++) { %>
+            <a 
+              href="?page=<%= i %>&search=<%= search %>&sort=<%= sort %>" 
+              class="<%= i === currentPage ? 'active' : '' %>"
+            >
+              <%= i %>
+            </a>
+          <% } %>
+          
+          <% if (currentPage < totalPages) { %>
+            <a href="?page=<%= currentPage + 1 %>&search=<%= search %>&sort=<%= sort %>">Next</a>
+          <% } %>
+        </div>
+      <% } %>
+
+    <% } else { %>
+      <div class="no-returns">
+        <h3>No Return Requests Found</h3>
+        <p>There are currently no pending return requests.</p>
+        <a href="/admin/orders" class="btn btn-primary">View All Orders</a>
+      </div>
+    <% } %>
+  </div>
+
+  <script>
+    async function acceptReturn(orderId) {
+      const result = await Swal.fire({
+        title: 'Accept Return Request?',
+        text: 'This will approve the return and process the refund if applicable.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, Accept Return',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const response = await fetch(`/admin/order/return/accept/${orderId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            await Swal.fire({
+              title: 'Return Accepted!',
+              text: data.message,
+              icon: 'success',
+              confirmButtonColor: '#28a745'
+            });
+            window.location.reload();
+          } else {
+            throw new Error(data.message || 'Failed to accept return');
+          }
+        } catch (error) {
+          await Swal.fire({
+            title: 'Error!',
+            text: error.message || 'Something went wrong while accepting the return.',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+          });
+        }
+      }
+    }
+
+    async function declineReturn(orderId) {
+      const result = await Swal.fire({
+        title: 'Decline Return Request?',
+        text: 'This will reject the return request. The customer will be notified.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, Decline Return',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const response = await fetch(`/admin/order/return/decline/${orderId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            await Swal.fire({
+              title: 'Return Declined!',
+              text: data.message,
+              icon: 'success',
+              confirmButtonColor: '#28a745'
+            });
+            window.location.reload();
+          } else {
+            throw new Error(data.message || 'Failed to decline return');
+          }
+        } catch (error) {
+          await Swal.fire({
+            title: 'Error!',
+            text: error.message || 'Something went wrong while declining the return.',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+          });
+        }
+      }
+    }
+    async function acceptItemReturn(orderId, productId) {
+      const result = await Swal.fire({
+        title: 'Accept Item Return?',
+        text: 'This will approve the item return and process the refund if applicable.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, Accept Item Return',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const response = await fetch(`/admin/order/${orderId}/item/${productId}/return/accept`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            await Swal.fire({
+              title: 'Item Return Accepted!',
+              text: data.message,
+              icon: 'success',
+              confirmButtonColor: '#28a745'
+            });
+            window.location.reload();
+          } else {
+            throw new Error(data.message || 'Failed to accept item return');
+          }
+        } catch (error) {
+          await Swal.fire({
+            title: 'Error!',
+            text: error.message || 'Something went wrong while accepting the item return.',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+          });
+        }
+      }
+    }
+
+    async function declineItemReturn(orderId, productId) {
+      const result = await Swal.fire({
+        title: 'Decline Item Return?',
+        text: 'This will reject the item return request. The customer will be notified.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, Decline Item Return',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const response = await fetch(`/admin/order/${orderId}/item/${productId}/return/decline`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            await Swal.fire({
+              title: 'Item Return Declined!',
+              text: data.message,
+              icon: 'success',
+              confirmButtonColor: '#28a745'
+            });
+            window.location.reload();
+          } else {
+            throw new Error(data.message || 'Failed to decline item return');
+          }
+        } catch (error) {
+          await Swal.fire({
+            title: 'Error!',
+            text: error.message || 'Something went wrong while declining the item return.',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+          });
+        }
+      }
+    }
+  </script>
+</body>
+</html>

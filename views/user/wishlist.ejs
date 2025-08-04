@@ -4,60 +4,520 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>StarForge - Wishlist</title>
+  <link rel="stylesheet" href="/css/user/profileDashboard.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="/css/user/userProfile.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .wishlist-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .wishlist-count {
+      background: linear-gradient(135deg, #fca120 0%, #e8940f 100%);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(252, 161, 32, 0.3);
+    }
+
+    .wishlist-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .product-card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e5e7eb;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    }
+
+    .wishlist-icon-container {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      z-index: 10;
+    }
+
+    .wishlist-icon-btn {
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .wishlist-icon-btn:hover {
+      transform: scale(1.1);
+      background: rgba(255, 255, 255, 1);
+    }
+
+    .wishlist-icon-btn.active {
+      background: #ef4444;
+      color: white;
+    }
+
+    .wishlist-icon-btn.active:hover {
+      background: #dc2626;
+    }
+
+    .offer-badge {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+      padding: 0.375rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      z-index: 5;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    }
+
+    .product-image-container {
+      position: relative;
+      height: 220px;
+      overflow: hidden;
+      background: #f9fafb;
+    }
+
+    .product-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .product-card:hover .product-image {
+      transform: scale(1.05);
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    .product-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #222;
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .product-brand {
+      color: #6b7280;
+      font-size: 0.85rem;
+      margin-bottom: 0.75rem;
+      font-weight: 500;
+    }
+
+    .stock-status {
+      margin-bottom: 1rem;
+    }
+
+    .stock-status .badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.375rem 0.75rem;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+
+    .badge.bg-success {
+      background: #dcfce7 !important;
+      color: #166534 !important;
+      border: 1px solid #bbf7d0;
+    }
+
+    .badge.bg-warning {
+      background: #fef3c7 !important;
+      color: #92400e !important;
+      border: 1px solid #fde68a;
+    }
+
+    .badge.bg-danger {
+      background: #fee2e2 !important;
+      color: #991b1b !important;
+      border: 1px solid #fecaca;
+    }
+
+    .price-container {
+      margin-bottom: 1.5rem;
+    }
+
+    .current-price {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #222;
+    }
+
+    .original-price {
+      font-size: 1rem;
+      color: #9ca3af;
+      text-decoration: line-through;
+      margin-left: 0.5rem;
+    }
+
+    .btn {
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      padding: 0.75rem 1rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #fca120 0%, #e8940f 100%);
+      border: none;
+      color: white;
+      box-shadow: 0 2px 8px rgba(252, 161, 32, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(252, 161, 32, 0.4);
+      color: white;
+    }
+
+    .btn-outline-danger {
+      background: transparent;
+      color: #ef4444;
+      border: 2px solid #ef4444;
+    }
+
+    .btn-outline-danger:hover {
+      background: #ef4444;
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: #6b7280;
+      border: none;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #4b5563;
+      transform: translateY(-1px);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .empty-wishlist {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 2px dashed #e5e7eb;
+    }
+
+    .empty-wishlist-icon {
+      margin-bottom: 2rem;
+    }
+
+    .empty-wishlist-icon i {
+      font-size: 4rem;
+      color: #d1d5db;
+    }
+
+    .empty-wishlist h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #374151;
+    }
+
+    .empty-wishlist p {
+      color: #6b7280;
+      margin-bottom: 2rem;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .empty-wishlist .btn-primary {
+      background: linear-gradient(135deg, #fca120 0%, #e8940f 100%);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1rem;
+      box-shadow: 0 4px 16px rgba(252, 161, 32, 0.3);
+    }
+
+    .empty-wishlist .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(252, 161, 32, 0.4);
+      color: white;
+      text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+      .wishlist-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+      }
+
+      .product-image-container {
+        height: 200px;
+      }
+
+      .card-body {
+        padding: 1rem;
+      }
+
+      .product-name {
+        font-size: 1rem;
+      }
+
+      .current-price {
+        font-size: 1.1rem;
+      }
+
+      .wishlist-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .wishlist-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .empty-wishlist {
+        padding: 3rem 1.5rem;
+      }
+
+      .empty-wishlist-icon i {
+        font-size: 3rem;
+      }
+
+      .empty-wishlist h3 {
+        font-size: 1.25rem;
+      }
+    }
+
+    .btn-loading {
+      position: relative;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .btn-loading::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      margin: auto;
+      border: 2px solid transparent;
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .product-card {
+      animation: fadeInUp 0.5s ease forwards;
+    }
+
+    .product-card:nth-child(2) {
+      animation-delay: 0.1s;
+    }
+
+    .product-card:nth-child(3) {
+      animation-delay: 0.2s;
+    }
+
+    .product-card:nth-child(4) {
+      animation-delay: 0.3s;
+    }
+  </style>
 </head>
 <body>
-  <nav class="top-navbar">
-    <a href="/" class="navbar-brand">StarForge.</a>
-    <div class="navbar-user">
-      <span>Welcome back, <%= user.fullName %></span>
-    </div>
-  </nav>
+  <%- include('../partials/user/profileNavbar', { user, cartCount: cartCount || 0 }) %>
 
-  <%- include('../partials/user/profileSidebar', { currentPage: 'wishlist' }) %>
+  <%- include('../partials/user/profileSidebar', { user, currentPage: 'wishlist' }) %>
 
   <main class="main-content">
     <div class="content-wrapper">
       <div class="profile-container">
-      <h1 class="pageTitle">My Wishlist</h1>
-
-      <div class="wishlist-items">
-        <div class="userTable">
-  <% if (wishlistItems.length > 0) { %>
-    <% wishlistItems.forEach(item => { %>
-      <div class="product-card">
-        <div class="image-wrapper">
-          <img src="<%= item.mainImage %>" alt="<%= item.name %>">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h1 class="pageTitle">My Wishlist</h1>
+          <% if (wishlistItems.length > 0) { %>
+            <span class="badge bg-primary fs-6"><%= wishlistItems.length %> item<%= wishlistItems.length !== 1 ? 's' : '' %></span>
+          <% } %>
         </div>
 
-        <div class="product-card-content">
-          <h3><%= item.name %></h3>
-          <p class="price">$<%= item.salesPrice %></p>
+        <div class="wishlist-container">
+          <% if (wishlistItems.length > 0) { %>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+              <% wishlistItems.forEach(item => { %>
+                <div class="col">
+                  <div class="card product-card h-100 position-relative">
+                    <div class="wishlist-icon-container">
+                      <button class="wishlist-icon-btn active" data-product-id="<%= item._id %>" title="Remove from wishlist">
+                        <i class="bi bi-heart-fill text-danger"></i>
+                      </button>
+                    </div>
 
-          <form action="/cart/add/<%= item._id %>" method="POST">
-  <input type="hidden" name="quantity" value="1">
-  <input type="hidden" name="source" value="wishlist">
-  <button type="submit" class="add-to-cart">Add to Cart</button>
-</form>
+                    <% 
+                      const productOffer = item.offer || 0;
+                      const categoryOffer = item.categoryOffer || 0;
+                      const bestOffer = Math.max(productOffer, categoryOffer);
+                    %>
+                    <% if (bestOffer > 0) { %>
+                      <div class="offer-badge">-<%= bestOffer %>% OFF</div>
+                    <% } %>
 
-          <form action="/wishlist/remove" method="POST">
-            <input type="hidden" name="productId" value="<%= item._id %>">
-            <button class="remove-from-wishlist" type="submit">Remove</button>
-          </form>
+                    <div class="product-image-container">
+                      <img src="<%= item.mainImage || '/images/placeholder.jpg' %>" 
+                           alt="<%= item.name %>" 
+                           class="card-img-top product-image"
+                           onerror="this.src='/images/placeholder.jpg'">
+                    </div>
+
+                    <div class="card-body d-flex flex-column">
+                      <h5 class="card-title product-name" title="<%= item.name %>"><%= item.name %></h5>
+                      
+                      <% if (item.brand) { %>
+                        <p class="product-brand mb-2">Brand: <%= item.brand %></p>
+                      <% } %>
+
+                      <div class="stock-status mb-2">
+                        <% if (item.stock > 10) { %>
+                          <span class="badge bg-success"><i class="bi bi-check-circle"></i> In Stock</span>
+                        <% } else if (item.stock > 0) { %>
+                          <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-circle"></i> Low Stock (<%= item.stock %> left)</span>
+                        <% } else { %>
+                          <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Out of Stock</span>
+                        <% } %>
+                      </div>
+
+                      <div class="price-container mb-3">
+                        <% 
+                          let finalPrice = item.salesPrice || item.price;
+                          if (bestOffer > 0) {
+                            finalPrice = item.price - (item.price * bestOffer / 100);
+                          }
+                        %>
+                        <% if (bestOffer > 0) { %>
+                          <span class="current-price">₹<%= Math.round(finalPrice) %></span>
+                          <span class="original-price">₹<%= item.price %></span>
+                        <% } else { %>
+                          <span class="current-price">₹<%= finalPrice %></span>
+                        <% } %>
+                      </div>
+
+                      <div class="mt-auto">
+                        <div class="d-grid gap-2">
+                          <% if (item.stock > 0) { %>
+                            <button class="btn btn-primary move-to-cart-btn" 
+                                    data-product-id="<%= item._id %>"
+                                    data-product-name="<%= item.name %>">
+                              <i class="bi bi-cart-plus"></i> Move to Cart
+                            </button>
+                          <% } else { %>
+                            <button class="btn btn-secondary" disabled>
+                              <i class="bi bi-x-circle"></i> Out of Stock
+                            </button>
+                          <% } %>
+                          
+                          <button class="btn btn-outline-danger remove-from-wishlist-btn" 
+                                  data-product-id="<%= item._id %>"
+                                  data-product-name="<%= item.name %>">
+                            <i class="bi bi-trash"></i> Remove
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          <% } else { %>
+            <div class="empty-wishlist text-center py-5">
+              <div class="empty-wishlist-icon mb-4">
+                <i class="bi bi-heart display-1 text-muted"></i>
+              </div>
+              <h3 class="text-muted mb-3">Your wishlist is empty</h3>
+              <p class="text-muted mb-4">Save items you love to your wishlist and shop them later!</p>
+              <a href="/products" class="btn btn-primary btn-lg">
+                <i class="bi bi-shop"></i> Continue Shopping
+              </a>
+            </div>
+          <% } %>
         </div>
       </div>
-    <% }); %>
-  <% } else { %>
-    <p>Your wishlist is empty.</p>
-  <% } %>
-</div>
-</div>
-
-    </div>
     </div>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/user/wishlist.js"></script>
 </body>
 </html>

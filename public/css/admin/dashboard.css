@@ -12,7 +12,6 @@ body {
     background-color: #f8fafc;
 }
 
-/* Navbar */
 .navbar {
     display: flex;
     justify-content: space-between;
@@ -64,7 +63,6 @@ body {
     display: none;
 }
 
-/* Side Panel */
 .side-panel {
     width: 220px;
     background-color: #808080;
@@ -118,7 +116,6 @@ body {
     font-weight: 600;
 }
 
-/* Main Content */
 .main-content {
     margin-left: 220px;
     margin-top: 50px;
@@ -133,7 +130,6 @@ body {
     margin-left: 0;
 }
 
-/* Metrics Section */
 .metrics-section {
     background: #e5e7eb;
     padding: 20px;
@@ -177,7 +173,6 @@ body {
     color: #1f2937;
 }
 
-/* Chart Section */
 .chart-section {
     background: #e5e7eb;
     padding: 20px;
@@ -210,7 +205,6 @@ body {
     height: 100%;
 }
 
-/* Footer */
 footer p {
     width: 100%;
     padding: 10px;
@@ -222,7 +216,6 @@ footer p {
     font-size: 0.8rem;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
     .side-panel {
         width: 180px;

@@ -1,19 +1,18 @@
-const toggleBtn = document.querySelector(".toggle-btn");
-const sidePanel = document.querySelector(".side-panel");
-const mainContent = document.querySelector(".main-content");
-
-toggleBtn.addEventListener("click", () => {
-  sidePanel.classList.toggle("visible");
-  sidePanel.classList.toggle("hidden");
-  mainContent.classList.toggle("expanded");
+document.addEventListener('DOMContentLoaded', function() {
+    initializeDashboard();
 });
 
-document.querySelectorAll(".side-panel a").forEach((link) => {
-  link.addEventListener("click", (e) => {
-    e.preventDefault();
-    document
-      .querySelectorAll(".side-panel a")
-      .forEach((l) => l.classList.remove("active"));
-    link.classList.add("active");
-  });
-});
+function initializeDashboard() {
+    console.log('Dashboard initialized');
+    
+    const metricCards = document.querySelectorAll('.metric-card');
+    metricCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+}

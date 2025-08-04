@@ -1,0 +1,134 @@
+<nav class="profile-navbar">
+  <div class="navbar-container">
+    <button class="mobile-menu-btn" onclick="toggleSidebar()" style="display: none;">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <a href="/" class="navbar-brand">
+      <span class="brand-text">StarForge</span>
+    </a>
+
+    <div class="user-greeting">
+      <span class="greeting-text">Welcome, <%= user.fullName %></span>
+    </div>
+  </div>
+</nav>
+
+<script>
+  function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+      sidebar.classList.toggle('show');
+    }
+  }
+
+  function checkMobileView() {
+    const mobileBtn = document.querySelector('.mobile-menu-btn');
+    if (window.innerWidth <= 768) {
+      mobileBtn.style.display = 'block';
+    } else {
+      mobileBtn.style.display = 'none';
+      const sidebar = document.querySelector('.sidebar');
+      if (sidebar) {
+        sidebar.classList.remove('show');
+      }
+    }
+  }
+
+  window.addEventListener('load', checkMobileView);
+  window.addEventListener('resize', checkMobileView);
+</script>
+
+<style>
+  .profile-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: #000000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    border-bottom: 1px solid #333;
+    height: 70px;
+  }
+
+  .navbar-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    height: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .navbar-brand {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+  }
+
+  .brand-text {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #fca120;
+    transition: color 0.3s ease;
+  }
+
+  .navbar-brand:hover .brand-text {
+    color: #e8940f;
+    text-decoration: none;
+  }
+
+  .user-greeting {
+    display: flex;
+    align-items: center;
+  }
+
+  .greeting-text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fca120;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, rgba(252, 161, 32, 0.1) 0%, rgba(232, 148, 15, 0.1) 100%);
+    border-radius: 25px;
+    border: 1px solid rgba(252, 161, 32, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .greeting-text:hover {
+    background: linear-gradient(135deg, rgba(252, 161, 32, 0.2) 0%, rgba(232, 148, 15, 0.2) 100%);
+    border-color: rgba(252, 161, 32, 0.5);
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 768px) {
+    .navbar-container {
+      padding: 0 1rem;
+    }
+
+    .brand-text {
+      font-size: 1.5rem;
+    }
+
+    .greeting-text {
+      font-size: 0.9rem;
+      padding: 0.4rem 0.8rem;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .navbar-container {
+      padding: 0 0.75rem;
+    }
+
+    .brand-text {
+      font-size: 1.25rem;
+    }
+
+    .greeting-text {
+      font-size: 0.8rem;
+      padding: 0.3rem 0.6rem;
+    }
+  }
+</style>

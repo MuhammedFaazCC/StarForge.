@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offer Management - StarForge Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 0.75rem 1rem;
+            margin: 0.25rem 0;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+        .main-content {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 0.5rem 1.5rem;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .offer-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .offer-active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .offer-inactive {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .offer-expired {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <div class="text-center mb-4">
+                        <h4 class="text-white">StarForge Admin</h4>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/dashboard">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/products">
+                                <i class="fas fa-box me-2"></i>Products
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/categories">
+                                <i class="fas fa-tags me-2"></i>Categories
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/admin/offers">
+                                <i class="fas fa-percent me-2"></i>Offers
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/coupons">
+                                <i class="fas fa-ticket-alt me-2"></i>Coupons
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/orders">
+                                <i class="fas fa-shopping-cart me-2"></i>Orders
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/customers">
+                                <i class="fas fa-users me-2"></i>Customers
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/sales">
+                                <i class="fas fa-chart-line me-2"></i>Sales Report
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Offer Management</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <a href="/admin/offers/add" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add New Offer
+                        </a>
+                    </div>
+                </div>
+
+                <% if (typeof error !== 'undefined' && error) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <%= error %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Type</th>
+                                        <th>Discount</th>
+                                        <th>Valid Period</th>
+                                        <th>Status</th>
+                                        <th>Usage</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (offers && offers.length > 0) { %>
+                                        <% offers.forEach(offer => { %>
+                                            <% 
+                                                const now = new Date();
+                                                const isExpired = offer.endDate < now;
+                                                const isActive = offer.isActive && !isExpired;
+                                                const statusClass = isExpired ? 'offer-expired' : (isActive ? 'offer-active' : 'offer-inactive');
+                                                const statusText = isExpired ? 'Expired' : (isActive ? 'Active' : 'Inactive');
+                                            %>
+                                            <tr>
+                                                <td>
+                                                    <strong><%= offer.title %></strong>
+                                                    <% if (offer.description) { %>
+                                                        <br><small class="text-muted"><%= offer.description %></small>
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-secondary">
+                                                        <%= offer.type.charAt(0).toUpperCase() + offer.type.slice(1) %>
+                                                    </span>
+                                                </td>
+                                                <td><%= offer.discountPercentage %>%</td>
+                                                <td>
+                                                    <small>
+                                                        <%= new Date(offer.startDate).toLocaleDateString() %><br>
+                                                        to <%= new Date(offer.endDate).toLocaleDateString() %>
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <span class="offer-badge <%= statusClass %>">
+                                                        <%= statusText %>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <% if (offer.usageLimit) { %>
+                                                        <%= offer.usedCount %>/<%= offer.usageLimit %>
+                                                    <% } else { %>
+                                                        <%= offer.usedCount %>/∞
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <a href="/admin/offers/edit/<%= offer._id %>" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <% if (!isExpired) { %>
+                                                            <button class="btn btn-sm btn-outline-warning toggle-offer" data-id="<%= offer._id %>">
+                                                                <i class="fas fa-<%= offer.isActive ? 'pause' : 'play' %>"></i>
+                                                            </button>
+                                                        <% } %>
+                                                        <button class="btn btn-sm btn-outline-danger delete-offer" data-id="<%= offer._id %>">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4">
+                                                <i class="fas fa-percent fa-3x text-muted mb-3"></i>
+                                                <h5 class="text-muted">No offers found</h5>
+                                                <p class="text-muted">Create your first offer to get started</p>
+                                            </td>
+                                        </tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+                            <nav aria-label="Offers pagination">
+                                <ul class="pagination justify-content-center">
+                                    <% if (hasPrevPage) { %>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=<%= prevPage %>">Previous</a>
+                                        </li>
+                                    <% } %>
+                                    
+                                    <% for (let i = 1; i <= totalPages; i++) { %>
+                                        <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                            <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                                        </li>
+                                    <% } %>
+                                    
+                                    <% if (hasNextPage) { %>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=<%= nextPage %>">Next</a>
+                                        </li>
+                                    <% } %>
+                                </ul>
+                            </nav>
+                        <% } %>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.querySelectorAll('.toggle-offer').forEach(button => {
+            button.addEventListener('click', async function() {
+                const offerId = this.dataset.id;
+                try {
+                    const response = await fetch(`/admin/offers/toggle/${offerId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    alert('Error toggling offer status');
+                }
+            });
+        });
+
+        document.querySelectorAll('.delete-offer').forEach(button => {
+            button.addEventListener('click', async function() {
+                if (!confirm('Are you sure you want to delete this offer?')) return;
+                
+                const offerId = this.dataset.id;
+                try {
+                    const response = await fetch(`/admin/offers/delete/${offerId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    alert('Error deleting offer');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

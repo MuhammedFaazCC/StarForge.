@@ -101,7 +101,6 @@ button:active {
     text-decoration: none;
 }
 
-/* Error message styling */
 .error-message {
     color: #ff4444;
     font-size: 14px;
@@ -113,17 +112,14 @@ button:active {
     transition: opacity 0.3s ease;
 }
 
-/* Different styling for JavaScript errors */
 .js-error-message {
     animation: slideDown 0.3s ease;
 }
 
-/* Server error styling */
 .server-error {
     background-color: rgba(255, 68, 68, 0.15);
 }
 
-/* Animation for error messages */
 @keyframes slideDown {
     from {
         opacity: 0;
@@ -135,7 +131,6 @@ button:active {
     }
 }
 
-/* Input validation states */
 input.error {
     border-color: #ff4444 !important;
     background-color: #fff5f5 !important;
@@ -146,7 +141,6 @@ input.success {
     background-color: #f8fff8 !important;
 }
 
-/* Loading state for form submission */
 .form-loading {
     pointer-events: none;
     opacity: 0.7;

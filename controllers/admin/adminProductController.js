@@ -399,20 +399,6 @@ const softDeleteProduct = async (req, res) => {
   }
 };
 
-// const handleDatabaseError = (err) => {
-//   if (err.code === 11000) {
-//     return "Duplicate entry found. Please use different values.";
-//   }
-//   if (err.name === 'ValidationError') {
-//     const errors = Object.values(err.errors).map(e => e.message);
-//     return `Validation failed: ${errors.join(', ')}`;
-//   }
-//   if (err.name === 'CastError') {
-//     return "Invalid data format provided.";
-//   }
-//   return "An unexpected error occurred. Please try again.";
-// };
-
 module.exports = {
   productsPage,
   addProduct,

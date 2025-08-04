@@ -21,6 +21,10 @@ const userSchema = new mongoose.Schema({
         unique: true,
         sparse: true,
     },
+    profileImage: {
+        type: String,
+        default: null
+    },
 
     password: {
         type: String,
@@ -37,10 +41,31 @@ const userSchema = new mongoose.Schema({
         unique: true,
         sparse: true
     },
+    referralToken: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
     referralPoints: {
         type: Number,
         default: 0
     },
+    referredBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
+    },
+    referralRewards: [{
+        couponCode: String,
+        issuedAt: {
+            type: Date,
+            default: Date.now
+        },
+        isUsed: {
+            type: Boolean,
+            default: false
+        }
+    }],
     role: {
         type: String,
         enum: ['admin', 'customer'],

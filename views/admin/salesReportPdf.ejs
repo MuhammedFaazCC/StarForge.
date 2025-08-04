@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .header p {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        .summary-section {
+            margin-bottom: 30px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-card {
+            text-align: center;
+            padding: 10px;
+            background-color: white;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .summary-card h3 {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .summary-card p {
+            margin: 0;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .filter-info {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+        
+        .filter-info h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+        
+        .filter-info p {
+            margin: 0;
+            font-size: 12px;
+        }
+        
+        .table-container {
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            font-size: 10px;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .status-delivered { color: #28a745; }
+        .status-shipped { color: #17a2b8; }
+        .status-processing { color: #ffc107; }
+        .status-pending { color: #6c757d; }
+        .status-placed { color: #007bff; }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>StarForge - Sales Report</h1>
+        <p>Generated on: <%= generatedAt %></p>
+        <% if (dateFilter) { %>
+            <p>Period: 
+                <% if (dateFilter === 'today') { %>Today<% } %>
+                <% if (dateFilter === 'week') { %>This Week<% } %>
+                <% if (dateFilter === 'month') { %>This Month<% } %>
+                <% if (dateFilter === 'custom' && startDate && endDate) { %>
+                    <%= startDate %> to <%= endDate %>
+                <% } %>
+            </p>
+        <% } %>
+    </div>
+
+    <div class="summary-section">
+        <h2>Sales Summary</h2>
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h3>Total Orders</h3>
+                <p><%= analytics.totalOrders %></p>
+            </div>
+            <div class="summary-card">
+                <h3>Total Sales</h3>
+                <p>₹<%= analytics.totalSalesAmount.toLocaleString('en-IN') %></p>
+            </div>
+            <div class="summary-card">
+                <h3>Total Discounts</h3>
+                <p>₹<%= analytics.totalDiscounts.toLocaleString('en-IN') %></p>
+            </div>
+            <div class="summary-card">
+                <h3>Net Revenue</h3>
+                <p>₹<%= analytics.netRevenue.toLocaleString('en-IN') %></p>
+            </div>
+            <% if (analytics.returnedOrders !== undefined) { %>
+            <div class="summary-card">
+                <h3>Returned Orders</h3>
+                <p><%= analytics.returnedOrders %></p>
+            </div>
+            <div class="summary-card">
+                <h3>Average Order Value</h3>
+                <p>₹<%= analytics.averageOrderValue.toLocaleString('en-IN') %></p>
+            </div>
+            <% } %>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <h2>Sales Details</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Payment Method</th>
+                    <th>Subtotal</th>
+                    <th>Discount</th>
+                    <th>Coupon</th>
+                    <th>Total Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% sales.forEach(sale => { %>
+                <tr>
+                    <td><%= sale.id %></td>
+                    <td><%= sale.date %></td>
+                    <td><%= sale.customer %></td>
+                    <td><%= sale.paymentMethod %></td>
+                    <td>₹<%= sale.subtotal.toLocaleString('en-IN') %></td>
+                    <td>₹<%= sale.discount.toLocaleString('en-IN') %></td>
+                    <td><%= sale.couponCode %></td>
+                    <td>₹<%= sale.totalAmount.toLocaleString('en-IN') %></td>
+                    <td class="status-<%= sale.status.toLowerCase().replace(' ', '-') %>"><%= sale.status %></td>
+                </tr>
+                <% }) %>
+                <% if (sales.length === 0) { %>
+                <tr>
+                    <td colspan="9" style="text-align: center; font-style: italic;">No sales found for the selected criteria</td>
+                </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        <p>This report was generated automatically by StarForge Sales Management System</p>
+        <p>© <%= new Date().getFullYear() %> StarForge. All rights reserved.</p>
+    </div>
+</body>
+</html>

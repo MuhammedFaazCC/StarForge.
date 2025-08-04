@@ -4,67 +4,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales - StarForge</title>
+    <title>Sales Records - StarForge</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@600&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin/common.css">
     <link rel="stylesheet" href="/css/admin/sales.css">
 </head>
 
 <body>
     <%- include('../partials/admin/navbar') %>
 
-        <%- include('../partials/admin/sidepanel', { active:'sales' }) %>
+    <%- include('../partials/admin/sidepanel', { active:'sales' }) %>
 
-            <div class="main-content" id="main-content">
-                <div class="sales-section">
-                    <h2>Sales</h2>
+    <div class="main-content" id="main-content">
+        <div class="sales-section">
+            <div class="header-section">
+                <h2>Sales Records</h2>
+            </div>
+
+            <div class="filters-section">
+                <form id="filterForm" method="GET" action="/admin/sales">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="dateFilter">Date Filter:</label>
+                            <select name="dateFilter" id="dateFilter" onchange="toggleCustomDates()">
+                                <option value="" <%= dateFilter === '' ? 'selected' : '' %>>All Time</option>
+                                <option value="today" <%= dateFilter === 'today' ? 'selected' : '' %>>Today</option>
+                                <option value="week" <%= dateFilter === 'week' ? 'selected' : '' %>>This Week</option>
+                                <option value="month" <%= dateFilter === 'month' ? 'selected' : '' %>>This Month</option>
+                                <option value="custom" <%= dateFilter === 'custom' ? 'selected' : '' %>>Custom Range</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group custom-dates" id="customDates" style="<%= dateFilter === 'custom' ? 'display: flex;' : 'display: none;' %>">
+                            <div class="date-input">
+                                <label for="startDate">From:</label>
+                                <input type="date" name="startDate" id="startDate" value="<%= startDate %>">
+                            </div>
+                            <div class="date-input">
+                                <label for="endDate">To:</label>
+                                <input type="date" name="endDate" id="endDate" value="<%= endDate %>">
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="status">Status:</label>
+                            <select name="status" id="status">
+                                <option value="" <%= status === '' ? 'selected' : '' %>>All Status</option>
+                                <option value="Pending" <%= status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                                <option value="Processing" <%= status === 'Processing' ? 'selected' : '' %>>Processing</option>
+                                <option value="Shipped" <%= status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                                <option value="Delivered" <%= status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                                <option value="Placed" <%= status === 'Placed' ? 'selected' : '' %>>Placed</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="search">Search:</label>
+                            <input type="text" name="search" id="search" placeholder="Product name, customer, order ID, or date" value="<%= search %>">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="paymentMethod">Payment Method:</label>
+                            <select name="paymentMethod" id="paymentMethod">
+                                <option value="" <%= paymentMethod === '' ? 'selected' : '' %>>All Methods</option>
+                                <option value="COD" <%= paymentMethod === 'COD' ? 'selected' : '' %>>Cash on Delivery</option>
+                                <option value="Razorpay" <%= paymentMethod === 'Razorpay' ? 'selected' : '' %>>Razorpay</option>
+                                <option value="Wallet" <%= paymentMethod === 'Wallet' ? 'selected' : '' %>>Wallet</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="sort">Sort By:</label>
+                            <select name="sort" id="sort">
+                                <option value="date_desc" <%= sort === 'date_desc' ? 'selected' : '' %>>Date (Newest First)</option>
+                                <option value="date_asc" <%= sort === 'date_asc' ? 'selected' : '' %>>Date (Oldest First)</option>
+                                <option value="revenue_desc" <%= sort === 'revenue_desc' ? 'selected' : '' %>>Revenue (High to Low)</option>
+                                <option value="revenue_asc" <%= sort === 'revenue_asc' ? 'selected' : '' %>>Revenue (Low to High)</option>
+                                <option value="quantity_desc" <%= sort === 'quantity_desc' ? 'selected' : '' %>>Quantity (High to Low)</option>
+                                <option value="quantity_asc" <%= sort === 'quantity_asc' ? 'selected' : '' %>>Quantity (Low to High)</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <button type="submit" class="filter-btn">Apply Filters</button>
+                            <button type="button" class="clear-btn" onclick="clearFilters()">Clear</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-section">
+                <h3>Sales Details</h3>
+                <div class="table-container">
                     <table class="sales-table">
                         <thead>
                             <tr>
-                                <th>Sale ID</th>
+                                <th>Order ID</th>
                                 <th>Date</th>
                                 <th>Customer</th>
-                                <th>Amount</th>
-                                <th>Payment Status</th>
+                                <th>Payment Method</th>
+                                <th>Subtotal</th>
+                                <th>Discount</th>
+                                <th>Coupon</th>
+                                <th>Total Amount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <% sales.forEach(sale => { %>
-            <tr>
-              <td><%= sale.id %></td>
-              <td><%= sale.date %></td>
-              <td><%= sale.customer %></td>
-              <td><%= sale.amount %></td>
-              <td><%= sale.status %></td>
-            </tr>
-          <% }) %>
-          <% if (sales.length === 0) { %>
-            <tr>
-              <td colspan="5">No sales found</td>
-            </tr>
-          <% } %>
+                            <% sales.forEach((sale, index) => { %>
+                            <tr class="order-row" data-order-id="<%= sale.id %>">
+                                <td>
+                                    <div class="order-id-container">
+                                        <button class="expand-btn" onclick="toggleOrderItems('<%= index %>')">
+                                            <i class="fas fa-chevron-right" id="chevron-<%= index %>"></i>
+                                        </button>
+                                        <%= sale.id %>
+                                    </div>
+                                </td>
+                                <td><%= sale.date %></td>
+                                <td><%= sale.customer %></td>
+                                <td><%= sale.paymentMethod %></td>
+                                <td>₹<%= sale.subtotal.toLocaleString('en-IN') %></td>
+                                <td>₹<%= sale.discount.toLocaleString('en-IN') %></td>
+                                <td><%= sale.couponCode %></td>
+                                <td>₹<%= sale.totalAmount.toLocaleString('en-IN') %></td>
+                                <td><span class="status-badge <%= sale.status.toLowerCase().replace(' ', '-') %>"><%= sale.status %></span></td>
+                                <td>
+                                    <button class="view-btn" onclick="viewOrderDetails('<%= sale.id %>')" title="View Full Order Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="items-row" id="items-<%= index %>" style="display: none;">
+                                <td colspan="10">
+                                    <div class="items-container">
+                                        <h4>Order Items:</h4>
+                                        <div class="items-grid">
+                                            <% sale.items.forEach(item => { %>
+                                            <div class="item-card">
+                                                <div class="item-info">
+                                                    <strong><%= item.name %></strong>
+                                                    <span class="item-details">
+                                                        Qty: <%= item.quantity %> × ₹<%= item.price.toLocaleString('en-IN') %>
+                                                    </span>
+                                                    <span class="item-total">
+                                                        Total: ₹<%= (item.quantity * item.price).toLocaleString('en-IN') %>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <% }) %>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <% }) %>
+                            <% if (sales.length === 0) { %>
+                            <tr>
+                                <td colspan="10" class="no-data">No sales found for the selected criteria</td>
+                            </tr>
+                            <% } %>
                         </tbody>
                     </table>
-                    <% if (totalPages > 1) { %>
-        <div class="pagination" style="margin-top: 20px; text-align: center;">
-          <% if (currentPage > 1) { %>
-            <a href="?page=<%= currentPage - 1 %>&search=<%= search %>&status=<%= status %>&sort=<%= sort %>" style="margin: 0 5px;">Previous</a>
-          <% } %>
-          <% for (let i = 1; i <= totalPages; i++) { %>
-            <a href="?page=<%= i %>&search=<%= search %>&status=<%= status %>&sort=<%= sort %>" style="margin: 0 5px; <%= currentPage === i ? 'font-weight: bold;' : '' %>"><%= i %></a>
-          <% } %>
-          <% if (currentPage < totalPages) { %>
-            <a href="?page=<%= currentPage + 1 %>&search=<%= search %>&status=<%= status %>&sort=<%= sort %>" style="margin: 0 5px;">Next</a>
-          <% } %>
-        </div>
-      <% } %>
                 </div>
             </div>
 
-            <%- include('../partials/admin/footer') %>
+            <% if (totalPages > 1) { %>
+            <div class="pagination">
+                <% if (currentPage > 1) { %>
+                <a href="?page=<%= currentPage - 1 %>&search=<%= search %>&status=<%= status %>&paymentMethod=<%= paymentMethod %>&sort=<%= sort %>&dateFilter=<%= dateFilter %>&startDate=<%= startDate %>&endDate=<%= endDate %>" class="page-btn">Previous</a>
+                <% } %>
+                
+                <% for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) { %>
+                <a href="?page=<%= i %>&search=<%= search %>&status=<%= status %>&paymentMethod=<%= paymentMethod %>&sort=<%= sort %>&dateFilter=<%= dateFilter %>&startDate=<%= startDate %>&endDate=<%= endDate %>" 
+                   class="page-btn <%= currentPage === i ? 'active' : '' %>"><%= i %></a>
+                <% } %>
+                
+                <% if (currentPage < totalPages) { %>
+                <a href="?page=<%= currentPage + 1 %>&search=<%= search %>&status=<%= status %>&paymentMethod=<%= paymentMethod %>&sort=<%= sort %>&dateFilter=<%= dateFilter %>&startDate=<%= startDate %>&endDate=<%= endDate %>" class="page-btn">Next</a>
+                <% } %>
+            </div>
+            <% } %>
+        </div>
+    </div>
 
-            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-                <script src="/js/admin/sales.js"></script>
+    <%- include('../partials/admin/footer') %>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/admin/common.js"></script>
+    <script src="/js/admin/sales.js"></script>
+
+    <script>
+        function toggleCustomDates() {
+            const dateFilter = document.getElementById('dateFilter').value;
+            const customDates = document.getElementById('customDates');
+            
+            if (dateFilter === 'custom') {
+                customDates.style.display = 'flex';
+            } else {
+                customDates.style.display = 'none';
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('filterForm').reset();
+            window.location.href = '/admin/sales';
+        }
+
+        function viewOrderDetails(orderId) {
+            window.open(`/admin/orders/${orderId}`, '_blank');
+        }
+
+        function toggleOrderItems(index) {
+            const itemsRow = document.getElementById(`items-${index}`);
+            const chevron = document.getElementById(`chevron-${index}`);
+            
+            if (itemsRow.style.display === 'none') {
+                itemsRow.style.display = 'table-row';
+                chevron.classList.remove('fa-chevron-right');
+                chevron.classList.add('fa-chevron-down');
+            } else {
+                itemsRow.style.display = 'none';
+                chevron.classList.remove('fa-chevron-down');
+                chevron.classList.add('fa-chevron-right');
+            }
+        }
+
+        let searchTimeout;
+        document.getElementById('search').addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                document.getElementById('filterForm').submit();
+            }, 500);
+        });
+    </script>
 </body>
 
 </html>

@@ -12,7 +12,6 @@ body {
     background-color: #f8fafc;
 }
 
-/* Navbar */
 .navbar {
     display: flex;
     justify-content: space-between;
@@ -64,7 +63,6 @@ body {
     display: none;
 }
 
-/* Side Panel */
 .side-panel {
     width: 220px;
     background-color: #808080;
@@ -118,8 +116,6 @@ body {
     font-weight: 600;
 }
 
-
-/* Main Content */
 .main-content {
     margin-left: 220px;
     margin-top: 50px;
@@ -179,7 +175,6 @@ body {
     background-color: #dc2626;
 }
 
-/* Alert */
 .alert {
     padding: 10px 15px;
     margin-bottom: 15px;
@@ -193,7 +188,6 @@ body {
     border: 1px solid #b91c1c;
 }
 
-/* Table */
 .customers-table {
     width: 100%;
     border-collapse: collapse;

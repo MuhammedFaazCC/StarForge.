@@ -24,20 +24,35 @@
           <a href="#" class="btn-primary" data-add-address>Add Address</a>
         </div>
 
-        <div id="addressError" style="display: <%= error ? 'block' : 'none' %>; color: red; margin-bottom: 1rem;">
+        <div id="addressError" style="display: none; color: red; margin-bottom: 1rem;">
           Please select a shipping address to continue.
         </div>
+
+        <% if (error) { %>
+          <div class="error-message" style="display: block; color: red; margin-bottom: 1rem; padding: 10px; background-color: #ffe6e6; border: 1px solid #ff9999; border-radius: 5px;">
+            <%= error %>
+          </div>
+        <% } %>
 
         <% if (addresses && addresses.length > 0) { %>
           <div class="card-grid">
             <% addresses.forEach(address => { %>
               <div class="info-card <%= selectedAddressId && selectedAddressId === address._id.toString() ? 'selected' : '' %>" data-address-id="<%= address._id %>">
                 <div class="card-header">
-                  <span class="card-title"><%= address.name %></span>
+                  <span class="card-title">
+                    <label class="address-selector">
+                      <input type="radio" name="selectedAddress" value="<%= address._id %>" 
+                             <%= selectedAddressId && selectedAddressId === address._id.toString() ? 'checked' : '' %>
+                             class="address-radio" data-address-id="<%= address._id %>">
+                      <%= address.name %>
+                      <% if (address.isDefault) { %>
+                        <span class="default-badge">Default</span>
+                      <% } %>
+                    </label>
+                  </span>
                   <a href="#" class="card-action" data-edit-address="<%= address._id %>">Edit</a>
                 </div>
                 <p><%= address.address %>, <%= address.city %>, <%= address.district %>, <%= address.state %> - <%= address.pinCode %></p>
-                <button class="btn-secondary" data-select-address="<%= address._id %>">Select</button>
               </div>
             <% })  %>
           </div>
@@ -91,6 +106,9 @@
                     <div>
                       <strong><%= coupon.code %></strong> — <%= coupon.discount %>% off
                       <div style="font-size: 0.85rem; color: #666;">Valid till <%= new Date(coupon.expiryDate).toLocaleDateString('en-IN') %></div>
+                      <% if (coupon.minimumAmount && coupon.minimumAmount > 0) { %>
+                        <div style="font-size: 0.8rem; color: #e67e22;">Min. order: ₹<%= coupon.minimumAmount.toLocaleString('en-IN') %></div>
+                      <% } %>
                     </div>
                     <button class="btn-apply-coupon" data-coupon-code="<%= coupon.code %>">Apply</button>
                   </div>
@@ -122,7 +140,7 @@
           <input type="hidden" name="paymentMethod" value="">
           <button type="submit" class="checkout-btn">Place Order</button>
           <p style="margin-top: 5px; font-size: 0.9rem; color: #555;">
-            Wallet Balance: ₹<%= user?.wallet?.toLocaleString('en-IN') || 0 %>
+            Wallet Balance: ₹<%= user?.walletBalance?.toLocaleString('en-IN') || 0 %>
           </p>
         </form>
       </div>

@@ -109,44 +109,42 @@ i {
 
 .sidebar-nav ul li {
   margin: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Subtle separator */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-nav ul li a {
   text-decoration: none;
-  color: #ffffff; /* Changed from #333 to white for visibility on black background */
+  color: #ffffff;
   display: block;
-  padding: 15px 20px; /* More padding for better click area */
+  padding: 15px 20px;
   transition: all 0.3s ease;
   font-weight: 500;
   position: relative;
 }
 
 .sidebar-nav ul li a:hover {
-  background-color: rgba(252, 161, 32, 0.1); /* Light orange background on hover */
-  color: #fca120; /* Orange text color on hover */
-  padding-left: 25px; /* Slight indent on hover */
+  background-color: rgba(252, 161, 32, 0.1);
+  color: #fca120;
+  padding-left: 25px;
 }
 
-/* Active state */
 .sidebar-nav ul li a:active {
   background-color: rgba(252, 161, 32, 0.2);
 }
 
-/* Sub-menu styling */
 .sidebar-nav ul ul {
-  background-color: rgba(0, 0, 0, 0.3); /* Darker background for sub-items */
-  border-left: 3px solid #fca120; /* Orange left border for sub-menu */
+  background-color: rgba(0, 0, 0, 0.3);
+  border-left: 3px solid #fca120;
 }
 
 .sidebar-nav ul ul li {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Lighter separator for sub-items */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .sidebar-nav ul ul li a {
-  padding: 12px 20px 12px 40px; /* More left padding for sub-items */
+  padding: 12px 20px 12px 40px;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.8); /* Slightly faded for sub-items */
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .sidebar-nav ul ul li a:hover {
@@ -155,7 +153,6 @@ i {
   padding-left: 45px;
 }
 
-/* Add icons before main menu items */
 .sidebar-nav ul li a::before {
   content: "▶";
   margin-right: 10px;
@@ -168,31 +165,27 @@ i {
   transform: translateX(3px);
 }
 
-/* Remove icons from sub-menu items */
 .sidebar-nav ul ul li a::before {
   content: "•";
   font-size: 16px;
   color: rgba(252, 161, 32, 0.6);
 }
 
-/* Fix sidebar header - restore yellow background */
 .sidebar-header h1 {
   padding: 15.5px;
   margin: 0;
   font-size: 26px;
   font-style: italic;
-  background-color: #f59e0b; /* Yellow background restored */
-  color: #000000; /* Black text on yellow background */
+  background-color: #f59e0b;
+  color: #000000;
 }
 
-/* Fix sidebar header text color */
 .sidebar-nav h2 {
   padding: 0 20px;
   font-size: 18px;
-  color: #ffffff; /* Make sure sidebar headings are visible */
+  color: #ffffff;
 }
 
-/* Ensure sidebar is properly positioned */
 .sidebar {
   position: fixed;
   top: 0px;
@@ -201,14 +194,13 @@ i {
   height: 100%;
   background: #000000;
   transition: left 0.3s ease;
-  z-index: 1002; /* Higher z-index to ensure it appears above other content */
+  z-index: 1002;
 }
 
 .sidebar.open {
-  left: 0; /* Changed from -5px to 0 for proper alignment */
+  left: 0;
 }
 
-/* Fix profile dropdown positioning */
 .profile-dropdown {
   display: none;
   position: absolute;
@@ -220,10 +212,9 @@ i {
   width: 150px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   flex-direction: column;
-  z-index: 1003; /* Ensure dropdown appears above sidebar */
+  z-index: 1003;
 }
 
-/* Add overlay when sidebar is open to prevent conflicts */
 .sidebar-overlay {
   position: fixed;
   top: 0;
@@ -239,7 +230,6 @@ i {
   display: block;
 }
 
-/* Fix profile dropdown positioning */
 .profile-dropdown {
   display: none;
   position: absolute;
@@ -251,10 +241,9 @@ i {
   width: 150px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   flex-direction: column;
-  z-index: 1003; /* Ensure dropdown appears above sidebar */
+  z-index: 1003;
 }
 
-/* Add overlay when sidebar is open to prevent conflicts */
 .sidebar-overlay {
   position: fixed;
   top: 0;

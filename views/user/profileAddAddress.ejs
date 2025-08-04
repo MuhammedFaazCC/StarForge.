@@ -3,87 +3,615 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Add Address</title>
+  <title>Add New Address</title>
   <link rel="stylesheet" href="/css/user/userProfile.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
 </head>
 <body>
   <nav class="top-navbar">
     <a href="/" class="navbar-brand">StarForge.</a>
     <div class="navbar-user">
-      <span>Welcome back, <%= user.fullName %></span>
+      <span>Welcome, <%= user.fullName %></span>
     </div>
   </nav>
 
   <div class="main-content">
     <div class="content-wrapper">
-      <!-- <div class="profile-grid"> -->
+      <%- include('../partials/user/profileSidebar', { currentPage: 'address' }) %>
 
-        <%- include('../partials/user/profileSidebar', { currentPage: 'address' }) %>
-
-        <div class="profile-container">
-          <div class="page-header">
-            <div>
-              <h1 class="page-title">Add New Address</h1>
-              <div class="breadcrumb">
-                <a href="/loadProfile">Profile</a> / <a href="/address">My Address</a> / Add Address
-              </div>
+      <div class="profile-container">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Add New Address</h1>
+            <div class="breadcrumb">
+              <a href="/LoadProfile">My Profile</a> / 
+              <a href="/address">My Addresses</a> / 
+              Add New Address
             </div>
           </div>
+          <a href="/address" class="btn-secondary">
+            <i class="fas fa-arrow-left"></i>
+            Back to Addresses
+          </a>
+        </div>
 
-          <% if (typeof error !== 'undefined' && error) { %>
-            <div class="alert alert-error" style="background: #ffebee; color: #c62828; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
-              <%= error %>
+        <% if (typeof error !== 'undefined' && error) { %>
+          <div class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i>
+            <%= error %>
+          </div>
+        <% } %>
+
+        <% if (typeof success !== 'undefined' && success) { %>
+          <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            <%= success %>
+          </div>
+        <% } %>
+
+        <div class="address-form-container">
+          <form id="addAddressForm" action="/address" method="POST" novalidate>
+            <div class="form-section">
+              <h3 class="section-title">
+                <i class="fas fa-user"></i>
+                Contact Information
+              </h3>
+              
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="name" class="form-label">
+                    <i class="fas fa-user"></i>
+                    Full Name *
+                  </label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    id="name" 
+                    name="name" 
+                    required
+                    maxlength="100"
+                    placeholder="Enter your full name"
+                  >
+                  <div class="invalid-feedback"></div>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <label for="mobile" class="form-label">
+                    <i class="fas fa-phone"></i>
+                    Mobile Number
+                  </label>
+                  <input 
+                    type="tel" 
+                    class="form-control" 
+                    id="mobile" 
+                    name="mobile" 
+                    pattern="[0-9]{10}" 
+                    maxlength="10"
+                    placeholder="Enter 10-digit mobile number"
+                  >
+                  <div class="invalid-feedback"></div>
+                </div>
+              </div>
             </div>
-          <% } %>
 
-          <% if (typeof success !== 'undefined' && success) { %>
-            <div class="alert alert-success" style="background: #e8f5e8; color: #2e7d32; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
-              <%= success %>
+            <div class="form-section">
+              <h3 class="section-title">
+                <i class="fas fa-map-marker-alt"></i>
+                Address Details
+              </h3>
+              
+              <div class="mb-3">
+                <label for="address" class="form-label">
+                  <i class="fas fa-home"></i>
+                  Address (House No, Building, Street, Area) *
+                </label>
+                <textarea 
+                  class="form-control" 
+                  id="address" 
+                  name="address" 
+                  rows="3" 
+                  required
+                  maxlength="255"
+                  placeholder="Enter complete address including house number, building name, street, and area"
+                ></textarea>
+                <div class="invalid-feedback"></div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-4 mb-3">
+                  <label for="pinCode" class="form-label">
+                    <i class="fas fa-map-pin"></i>
+                    Pincode *
+                  </label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    id="pinCode" 
+                    name="pinCode" 
+                    pattern="[0-9]{6}" 
+                    maxlength="6" 
+                    required
+                    placeholder="Enter 6-digit pincode"
+                  >
+                  <div class="invalid-feedback"></div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                  <label for="city" class="form-label">
+                    <i class="fas fa-city"></i>
+                    City *
+                  </label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    id="city" 
+                    name="city" 
+                    required
+                    maxlength="100"
+                    placeholder="Enter city name"
+                  >
+                  <div class="invalid-feedback"></div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                  <label for="district" class="form-label">
+                    <i class="fas fa-map"></i>
+                    District *
+                  </label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    id="district" 
+                    name="district" 
+                    required
+                    maxlength="100"
+                    placeholder="Enter district name"
+                  >
+                  <div class="invalid-feedback"></div>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <label for="state" class="form-label">
+                  <i class="fas fa-flag"></i>
+                  State *
+                </label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="state" 
+                  name="state" 
+                  required
+                  maxlength="100"
+                  placeholder="Enter state name"
+                >
+                <div class="invalid-feedback"></div>
+              </div>
             </div>
-          <% } %>
 
-          <form action="/address" method="POST">
-            <div class="detail-group">
-              <label class="detail-label" for="name">Full Name</label>
-              <input type="text" name="name" id="name" class="detail-value" placeholder="Enter your full name" required />
+            <div class="form-section">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="isDefault" name="isDefault">
+                <label class="form-check-label" for="isDefault">
+                  <i class="fas fa-star"></i>
+                  Make this my default address
+                </label>
+              </div>
             </div>
 
-            <div class="detail-group">
-              <label class="detail-label" for="address">Address</label>
-              <textarea name="address" id="address" class="detail-value" placeholder="123 Main St, Apt 4B, Area Name" rows="3" required></textarea>
-            </div>
-
-            <div class="detail-group">
-              <label class="detail-label" for="district">District</label>
-              <input type="text" name="district" id="district" class="detail-value" placeholder="e.g. Ernakulam" required />
-            </div>
-
-            <div class="detail-group">
-              <label class="detail-label" for="state">State</label>
-              <input type="text" name="state" id="state" class="detail-value" placeholder="e.g. Kerala" required />
-            </div>
-
-            <div class="detail-group">
-              <label class="detail-label" for="city">City</label>
-              <input type="text" name="city" id="city" class="detail-value" placeholder="e.g. Kochi" required />
-            </div>
-
-            <div class="detail-group">
-              <label class="detail-label" for="pinCode">Pin Code</label>
-              <input type="text" name="pinCode" id="pinCode" class="detail-value" pattern="\d{6}" maxlength="6" placeholder="e.g. 682001" required />
-            </div>
-
-            <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
-              <a href="javascript:history.back()" class="btn-primary" style="background: #c62828;">Cancel</a>
-              <button type="submit" class="btn-primary">Add Address</button>
+            <div class="form-actions">
+              <a href="/address" class="btn btn-secondary">
+                <i class="fas fa-times"></i>
+                Cancel
+              </a>
+              <button type="submit" class="btn btn-primary" id="submitBtn">
+                <i class="fas fa-save"></i>
+                Save Address
+              </button>
             </div>
           </form>
         </div>
-
-      <!-- </div> -->
+      </div>
     </div>
   </div>
 
-  <script src="/js/user/userProfile.js"></script>
+  <style>
+    .address-form-container {
+      background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
+      padding: 2rem;
+      border: 1px solid rgba(255,255,255,0.3);
+      box-shadow: 
+        0 10px 25px rgba(0,0,0,0.08),
+        0 4px 10px rgba(0,0,0,0.06);
+      margin-bottom: 2rem;
+    }
+
+    .form-section {
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+    }
+
+    .form-section:last-of-type {
+      border-bottom: none;
+      margin-bottom: 1rem;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .section-title i {
+      color: #fca120;
+      width: 20px;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .form-label i {
+      color: #fca120;
+      width: 16px;
+    }
+
+    .form-control {
+      border-radius: 8px;
+      border: 2px solid #e5e7eb;
+      padding: 0.75rem;
+      transition: all 0.3s ease;
+      font-size: 0.95rem;
+    }
+
+    .form-control:focus {
+      border-color: #fca120;
+      box-shadow: 0 0 0 0.2rem rgba(252, 161, 32, 0.25);
+      outline: none;
+    }
+
+    .form-control.is-invalid {
+      border-color: #ef4444;
+    }
+
+    .form-control.is-valid {
+      border-color: #10b981;
+    }
+
+    .invalid-feedback {
+      display: block;
+      color: #ef4444;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+      font-weight: 500;
+    }
+
+    .valid-feedback {
+      display: block;
+      color: #10b981;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+      font-weight: 500;
+    }
+
+    .form-check {
+      padding: 1rem;
+      background: rgba(252, 161, 32, 0.05);
+      border-radius: 8px;
+      border: 1px solid rgba(252, 161, 32, 0.2);
+    }
+
+    .form-check-input:checked {
+      background-color: #fca120;
+      border-color: #fca120;
+    }
+
+    .form-check-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+      color: #374151;
+    }
+
+    .form-check-label i {
+      color: #fca120;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(226, 232, 240, 0.5);
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #fca120 0%, #ff8c42 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(252, 161, 32, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(252, 161, 32, 0.4);
+      background: linear-gradient(135deg, #ff8c42 0%, #fca120 100%);
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+      box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
+      color: white;
+      text-decoration: none;
+    }
+
+    .btn-loading {
+      position: relative;
+      pointer-events: none;
+    }
+
+    .btn-loading::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      margin: auto;
+      border: 2px solid transparent;
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .alert {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border: none;
+      font-weight: 500;
+    }
+
+    .alert-error {
+      background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+      color: #c62828;
+      border-left: 4px solid #c62828;
+    }
+
+    .alert-success {
+      background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+      color: #2e7d32;
+      border-left: 4px solid #2e7d32;
+    }
+
+    @media (max-width: 768px) {
+      .address-form-container {
+        padding: 1.5rem;
+      }
+
+      .form-actions {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+
+      .content-wrapper {
+        padding: 1rem;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .section-title {
+        font-size: 1.1rem;
+      }
+
+      .form-control {
+        padding: 0.6rem;
+      }
+
+      .btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function validateForm() {
+      let isValid = true;
+      const form = document.getElementById('addAddressForm');
+      const requiredFields = form.querySelectorAll('[required]');
+      
+      requiredFields.forEach(field => {
+        const value = field.value.trim();
+        
+        field.classList.remove('is-invalid', 'is-valid');
+        const feedback = field.nextElementSibling;
+        if (feedback && feedback.classList.contains('invalid-feedback')) {
+          feedback.textContent = '';
+        }
+        
+        if (!value) {
+          showFieldError(field, 'This field is required');
+          isValid = false;
+        } else if (field.name === 'name' && value.length < 2) {
+          showFieldError(field, 'Name must be at least 2 characters long');
+          isValid = false;
+        } else if (field.name === 'address' && value.length < 10) {
+          showFieldError(field, 'Please enter a complete address');
+          isValid = false;
+        } else if (field.name === 'pinCode' && !/^[0-9]{6}$/.test(value)) {
+          showFieldError(field, 'Please enter a valid 6-digit pincode');
+          isValid = false;
+        } else {
+          showFieldSuccess(field);
+        }
+      });
+
+      const mobileField = document.getElementById('mobile');
+      const mobileValue = mobileField.value.trim();
+      if (mobileValue && !/^[0-9]{10}$/.test(mobileValue)) {
+        showFieldError(mobileField, 'Please enter a valid 10-digit mobile number');
+        isValid = false;
+      } else if (mobileValue) {
+        showFieldSuccess(mobileField);
+      }
+      
+      return isValid;
+    }
+    
+    function showFieldError(field, message) {
+      field.classList.add('is-invalid');
+      field.classList.remove('is-valid');
+      const feedback = field.nextElementSibling;
+      if (feedback && feedback.classList.contains('invalid-feedback')) {
+        feedback.textContent = message;
+      }
+    }
+
+    function showFieldSuccess(field) {
+      field.classList.add('is-valid');
+      field.classList.remove('is-invalid');
+      const feedback = field.nextElementSibling;
+      if (feedback && feedback.classList.contains('invalid-feedback')) {
+        feedback.textContent = '';
+      }
+    }
+
+    function setButtonLoading(loading = true) {
+      const submitBtn = document.getElementById('submitBtn');
+      if (loading) {
+        submitBtn.classList.add('btn-loading');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>Saving...</span>';
+      } else {
+        submitBtn.classList.remove('btn-loading');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Address';
+      }
+    }
+
+    document.getElementById('addAddressForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      if (!validateForm()) {
+        return;
+      }
+      
+      setButtonLoading(true);
+      
+      this.submit();
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('addAddressForm');
+      const inputs = form.querySelectorAll('input, textarea');
+      
+      inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+          if (this.hasAttribute('required') || this.value.trim()) {
+            validateSingleField(this);
+          }
+        });
+        
+        input.addEventListener('input', function() {
+          if (this.classList.contains('is-invalid')) {
+            validateSingleField(this);
+          }
+        });
+      });
+    });
+
+    function validateSingleField(field) {
+      const value = field.value.trim();
+      field.classList.remove('is-invalid', 'is-valid');
+      
+      const feedback = field.nextElementSibling;
+      if (feedback && feedback.classList.contains('invalid-feedback')) {
+        feedback.textContent = '';
+      }
+      
+      if (field.hasAttribute('required') && !value) {
+        showFieldError(field, 'This field is required');
+        return false;
+      }
+      
+      if (field.name === 'mobile' && value && !/^[0-9]{10}$/.test(value)) {
+        showFieldError(field, 'Please enter a valid 10-digit mobile number');
+        return false;
+      }
+      
+      if (field.name === 'pinCode' && value && !/^[0-9]{6}$/.test(value)) {
+        showFieldError(field, 'Please enter a valid 6-digit pincode');
+        return false;
+      }
+      
+      if (field.name === 'name' && value && value.length < 2) {
+        showFieldError(field, 'Name must be at least 2 characters long');
+        return false;
+      }
+      
+      if (field.name === 'address' && value && value.length < 10) {
+        showFieldError(field, 'Please enter a complete address');
+        return false;
+      }
+      
+      if (value) {
+        showFieldSuccess(field);
+      }
+      
+      return true;
+    }
+  </script>
 </body>
 </html>

@@ -44,6 +44,7 @@
           <tr>
             <th>Coupon Code</th>
             <th>Discount</th>
+            <th>Min. Amount</th>
             <th>Expiry Date</th>
             <th>Status</th>
             <th>Action</th>
@@ -54,6 +55,13 @@
             <tr>
               <td><%= coupon.code %></td>
               <td><%= coupon.discount %></td>
+              <td>
+                <% if (coupon.minimumAmount > 0) { %>
+                  ₹<%= coupon.minimumAmount.toLocaleString('en-IN') %>
+                <% } else { %>
+                  <span style="color: #666;">No minimum</span>
+                <% } %>
+              </td>
               <td><%= coupon.expiry %></td>
               <td><span class="status <%= coupon.status.toLowerCase() %>"><%= coupon.status %></span></td>
               <td>
@@ -63,7 +71,7 @@
           <% }) %>
           <% if (coupons.length === 0) { %>
             <tr class="no-results">
-              <td colspan="5">No coupons found</td>
+              <td colspan="6">No coupons found</td>
             </tr>
           <% } %>
         </tbody>
@@ -91,6 +99,6 @@
     <p>© 2025 Admin Dashboard. All rights reserved.</p>
   </footer>
 
-  <script src="/js/coupon.js"></script>
+  <script src="/js/admin/coupon.js"></script>
 </body>
 </html>

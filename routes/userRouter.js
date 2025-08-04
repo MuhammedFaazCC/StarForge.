@@ -1,15 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/user/userController");
-const productController = require("../controllers/user/productContrller");
+const productController = require("../controllers/user/productController");
 const cartController = require("../controllers/user/cartController");
 const checkoutController = require("../controllers/user/checkoutController");
 const walletController = require("../controllers/user/walletController");
+const referralController = require("../controllers/user/referralController");
 
 const noCache = require("../middlewares/noCache");
-const bcrypt = require("bcrypt");
 const passport = require("passport");
-const User = require("../models/userSchema");
 const { userAuth } = require("../middlewares/auth");
 
 router.get("/login", noCache, userController.loginPage);
@@ -31,26 +30,28 @@ router.get("/products", userAuth, productController.getAllProduct);
 router.get("/product/:id", userAuth, productController.getProductDetails);
 router.post('/product/:id/review', productController.postReview);
 router.get("/wishlist", userAuth, userController.wishlistPage);
-router.get('/wishlist', userController.wishlistPage);
 router.post('/wishlist/add/:id', userController.addToWishlist);
 router.post('/wishlist/remove', userController.removeFromWishlist);
 router.get("/logout", userAuth, userController.logout);
 router.get("/LoadProfile", userAuth, userController.userDetails);
-router.post("/editProfile", userAuth, userController.postEditProfile);
+router.post("/user/updateProfile", userAuth, userController.upload.single('profileImage'), userController.postEditProfile);
+router.post("/profile/upload-image", userAuth, userController.upload.single('profileImage'), userController.uploadProfileImage);
+router.post("/profile/remove-image", userAuth, userController.removeProfileImage);
 router.get('/address', userAuth, userController.getAddressList);
 router.get("/address/add", userAuth, userController.getAddAddress);
 router.post('/address', userAuth, userController.postAddress);
 router.get('/account/addresses/edit/:addressId', userAuth, userController.loadEdit);
 router.put('/address/:id', userAuth, userController.putEditAddress);
+router.delete('/address/:id', userAuth, userController.deleteAddress);
 router.get('/orders', userAuth, userController.getUserOrders);
 router.post('/cancelItem/:orderId/:productId', userAuth, userController.cancelSingleItem);
-router.post('/orders/:id/cancel', userAuth, userController.cancelOrder);
-router.get("/order/:id", userAuth, userController.viewOrderDetails);
+router.post('/order/cancel/:id', userAuth, userController.cancelOrderNew);
+router.post('/order/return/:id', userAuth, userController.returnOrder);
+router.get("/orders/:id", userAuth, userController.viewOrderDetails);
 router.get('/changePassword', userAuth, userController.getChangePassword);
 router.post('/changePassword', userAuth, userController.postChangePassword);
 router.post('/returnItem/:orderId/:productId', userAuth, userController.requestReturnItem)
-router.post("/return/:id", userController.requestReturn);
-router.post("/admin/return/:returnId/approve", userController.approveReturn);
+router.post("/return/:id", userAuth, userController.requestReturn);
 
 router.get("/cart", userAuth, cartController.viewCart);
 router.post("/cart/add/:id", userAuth, cartController.addToCart);
@@ -66,6 +67,9 @@ router.post('/checkout', checkoutController.postCheckoutPage);
 router.get('/order/placed', checkoutController.codSuccess);
 router.post('/create-order', checkoutController.postRazorpay);
 router.get('/order/success', checkoutController.orderSuccess);
+router.get('/order/failure', checkoutController.orderFailure);
+router.post('/order/retry/:orderId', checkoutController.retryPayment);
+router.get('/order/view/:id', checkoutController.viewFailedOrder);
 router.post('/checkout/apply-coupon', checkoutController.applyCoupon);
 router.post('/checkout/remove-coupon', checkoutController.removeCoupon);
 router.post('/address/select', checkoutController.selectAddress);
@@ -73,5 +77,8 @@ router.get('/address/:id', checkoutController.getAddress);
 router.post('/address/add', checkoutController.addAddress);
 router.post('/address/edit/:id', checkoutController.editAddress);
 
+router.get('/referral', userAuth, referralController.getReferralDashboard);
+router.get('/referral/info', userAuth, referralController.getReferralInfo);
+router.get('/referral/validate/:identifier', referralController.validateReferral);
 
 module.exports = router;

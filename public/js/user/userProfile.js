@@ -1,12 +1,3 @@
-// const multer = require('multer');
-// const path = require('path');
-
-
-// function toggleSidebar() {
-//   const sidebar = document.getElementById('sidebar');
-//   sidebar.classList.toggle('open');
-// }
-
 document.addEventListener('click', function(event) {
   const sidebar = document.getElementById('sidebar');
   const menuBtn = document.querySelector('.mobile-menu-btn');

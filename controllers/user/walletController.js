@@ -1,21 +1,47 @@
-const Wallet = require("../../models/walletSchema");
 const User = require("../../models/userSchema");
+const Cart = require("../../models/cartSchema");
 const Razorpay = require('razorpay');
 const crypto = require("crypto");
+
+const getCartCount = async (userId) => {
+  try {
+    if (!userId) return 0;
+    const cart = await Cart.findOne({ userId });
+    return cart ? cart.items.length : 0;
+  } catch (error) {
+    console.error("Error getting cart count:", error);
+    return 0;
+  }
+};
 
 const getWallet = async (req, res) => {
   try {
     const userId = req.session.user._id;
     const user = await User.findById(userId);
-    const walletHistory = await Wallet.find({ userId }).sort({ date: -1 });
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (!user.wallet) {
+      user.wallet = { balance: 0, transactions: [] };
+      await user.save();
+    }
+
+    const walletHistory = user.wallet.transactions ? 
+      user.wallet.transactions.sort((a, b) => new Date(b.date) - new Date(a.date)) : [];
+
+    const cartCount = await getCartCount(userId);
 
     res.render("profileWallet", {
       user: {
         fullName: user.fullName,
         walletBalance: user.wallet.balance || 0,
+        _id: user._id
       },
       walletHistory,
       currentPage: "wallet",
+      cartCount
     });
   } catch (error) {
     console.error("Error fetching wallet page:", error);
@@ -27,16 +53,25 @@ const updateWallet = async (userId, amount, description, type) => {
   try {
     const user = await User.findById(userId);
     if (!user) throw new Error("User not found");
-    user.wallet.balance = (user.wallet.balance || 0) + (type === "Credit" ? amount : -amount);
-    await user.save();
-
-    await Wallet.create({
-      userId,
-      date: new Date(),
-      description,
-      type,
-      amount,
+    
+    if (!user.wallet) {
+      user.wallet = { balance: 0, transactions: [] };
+    }
+    
+    const currentBalance = user.wallet.balance || 0;
+    const transactionAmount = type === "Credit" || type === "credit" ? amount : -amount;
+    user.wallet.balance = currentBalance + transactionAmount;
+    
+    user.wallet.transactions.push({
+      amount: Math.abs(amount),
+      type: type.toLowerCase(),
+      description: description,
+      date: new Date()
     });
+    
+    await user.save();
+    
+    console.log(`Wallet updated for user ${userId}: ${type} ₹${amount} - ${description}`);
   } catch (error) {
     console.error("Error updating wallet:", error);
     throw error;

@@ -32,6 +32,8 @@
         <input type="date" id="expiryDate" name="expiryDate" required>
         <label for="usageLimit">Usage Limit</label>
         <input type="number" id="usageLimit" name="usageLimit" min="1" required placeholder="e.g., 1">
+        <label for="minimumAmount">Minimum Order Amount (₹)</label>
+        <input type="number" id="minimumAmount" name="minimumAmount" min="0" placeholder="0 (no minimum)" step="0.01">
         <div class="modal-actions">
           <a href="/admin/coupons" class="btn-action" style="background-color: #6b7280; color: white;">Cancel</a>
           <button type="submit" class="btn-action">Create Coupon</button>
@@ -44,6 +46,6 @@
     <p>© 2025 Admin Dashboard. All rights reserved.</p>
   </footer>
 
-  <script src="/js/coupon.js"></script>
+  <script src="/js/admin/coupon.js"></script>
 </body>
 </html>

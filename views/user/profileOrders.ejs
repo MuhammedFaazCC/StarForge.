@@ -4,15 +4,495 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Orders - StarForge</title>
-  <link rel="stylesheet" href="/css/user/userProfile.css">
+  <link rel="stylesheet" href="/css/user/profileDashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .orders-container {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e5e7eb;
+    }
+
+    .orders-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0;
+    }
+
+    .orders-table thead {
+      background: linear-gradient(135deg, #fca120 0%, #e8940f 100%);
+      color: white;
+    }
+
+    .orders-table th {
+      padding: 1.25rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: none;
+    }
+
+    .orders-table td {
+      padding: 1.25rem 1rem;
+      border-bottom: 1px solid #f3f4f6;
+      vertical-align: top;
+      font-size: 0.95rem;
+    }
+
+    .orders-table tbody tr {
+      transition: all 0.3s ease;
+    }
+
+    .orders-table tbody tr:hover {
+      background: #fafbfc;
+    }
+
+    .orders-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .product-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .product-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #f3f4f6;
+      gap: 1rem;
+    }
+
+    .product-item:last-child {
+      border-bottom: none;
+    }
+
+    .product-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .product-name {
+      font-weight: 600;
+      color: #222;
+      margin-bottom: 0.25rem;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .product-quantity {
+      color: #6b7280;
+      font-size: 0.85rem;
+    }
+
+    .product-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .order-id {
+      font-family: 'Courier New', monospace;
+      font-weight: 600;
+      color: #374151;
+      font-size: 0.85rem;
+      background: #f3f4f6;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .order-date {
+      color: #374151;
+      font-weight: 500;
+    }
+
+    .payment-method {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .payment-method.online {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+    }
+
+    .payment-method.cod {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    .payment-method.wallet {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    .order-total {
+      font-weight: 700;
+      color: #222;
+      font-size: 1rem;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .action-btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      white-space: nowrap;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-1px);
+      text-decoration: none;
+    }
+
+    .btn-cancel {
+      background: #ef4444;
+      color: white;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-cancel:hover {
+      background: #dc2626;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+      color: white;
+    }
+
+    .btn-return {
+      background: #f59e0b;
+      color: white;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-return:hover {
+      background: #d97706;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+      color: white;
+    }
+
+    .btn-view {
+      background: #fca120;
+      color: white;
+      box-shadow: 0 2px 8px rgba(252, 161, 32, 0.3);
+    }
+
+    .btn-view:hover {
+      background: #e8940f;
+      box-shadow: 0 4px 12px rgba(252, 161, 32, 0.4);
+      color: white;
+    }
+
+    .no-orders {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 2px dashed #e5e7eb;
+    }
+
+    .no-orders h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #374151;
+    }
+
+    .no-orders p {
+      color: #6b7280;
+      margin-bottom: 2rem;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .no-orders .btn-primary {
+      background: linear-gradient(135deg, #fca120 0%, #e8940f 100%);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1rem;
+      box-shadow: 0 4px 16px rgba(252, 161, 32, 0.3);
+    }
+
+    .no-orders .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(252, 161, 32, 0.4);
+      color: white;
+      text-decoration: none;
+    }
+
+    .pagination-container {
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .pagination-info {
+      color: #6b7280;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .pagination-btn {
+      padding: 0.625rem 1rem;
+      border: 2px solid #e5e7eb;
+      background: white;
+      color: #374151;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      min-width: 44px;
+      text-align: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pagination-btn:hover:not(.disabled):not(.active) {
+      background: #fef7ed;
+      border-color: #fca120;
+      color: #fca120;
+      transform: translateY(-1px);
+      text-decoration: none;
+    }
+
+    .pagination-btn.active {
+      background: linear-gradient(135deg, #fca120 0%, #e8940f 100%);
+      color: white;
+      border-color: #fca120;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(252, 161, 32, 0.3);
+    }
+
+    .pagination-btn.disabled {
+      color: #9ca3af;
+      background: #f9fafb;
+      border-color: #e5e7eb;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .pagination-dots {
+      padding: 0.625rem 0.5rem;
+      color: #9ca3af;
+      font-weight: 500;
+    }
+
+    @media (max-width: 1024px) {
+      .orders-table {
+        font-size: 0.85rem;
+      }
+
+      .orders-table th,
+      .orders-table td {
+        padding: 1rem 0.75rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .orders-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .orders-table thead {
+        display: none;
+      }
+
+      .orders-table tbody,
+      .orders-table tr,
+      .orders-table td {
+        display: block;
+        width: 100%;
+      }
+
+      .orders-table tbody tr {
+        margin-bottom: 1.5rem;
+        padding: 1.5rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        background: white;
+      }
+
+      .orders-table tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f3f4f6;
+        text-align: left;
+        position: relative;
+        min-height: auto;
+        font-size: 0.9rem;
+      }
+
+      .orders-table tbody td:last-child {
+        border-bottom: none;
+      }
+
+      .orders-table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        width: 40%;
+        flex-shrink: 0;
+      }
+
+      .orders-table tbody td:nth-child(1)::before {
+        content: "Products";
+      }
+
+      .orders-table tbody td:nth-child(2)::before {
+        content: "Order ID";
+      }
+
+      .orders-table tbody td:nth-child(3)::before {
+        content: "Date";
+      }
+
+      .orders-table tbody td:nth-child(4)::before {
+        content: "Payment";
+      }
+
+      .orders-table tbody td:nth-child(5)::before {
+        content: "Status";
+      }
+
+      .orders-table tbody td:nth-child(6)::before {
+        content: "Total";
+      }
+
+      .orders-table tbody td:nth-child(7)::before {
+        content: "Actions";
+      }
+
+      .product-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .product-actions {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+        align-items: stretch;
+        width: 60%;
+      }
+
+      .action-btn {
+        justify-content: center;
+        width: 100%;
+      }
+
+      .pagination {
+        gap: 0.25rem;
+      }
+
+      .pagination-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+        min-width: 40px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .orders-table tbody tr {
+        padding: 1rem;
+      }
+
+      .orders-table tbody td {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .orders-table tbody td::before {
+        width: 100%;
+        margin-bottom: 0.25rem;
+      }
+
+      .action-buttons {
+        width: 100%;
+      }
+
+      .pagination-container {
+        padding: 1rem;
+      }
+
+      .pagination-info {
+        font-size: 0.8rem;
+        text-align: center;
+      }
+    }
+  </style>
 </head>
 <body>
-  <nav class="top-navbar">
-    <a href="/" class="navbar-brand">StarForge.</a>
-    <div class="navbar-user">
-      <span>Welcome back, <%= user.fullName %></span>
-    </div>
-  </nav>
+  <%- include('../partials/user/profileNavbar', { user, cartCount: cartCount || 0 }) %>
 
   <%- include('../partials/user/profileSidebar', { user, currentPage: 'orders' }) %>
 
@@ -35,13 +515,14 @@
                 <th>Products</th>
                 <th>Order ID</th>
                 <th>Placed On</th>
+                <th>Payment Method</th>
                 <th>Status</th>
                 <th>Total</th>
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
-              <% orders.forEach(order => { %>
+            <% orders.forEach(order => { %>
+              <tbody class="order-box">
                 <tr>
                   <td>
                     <ul>
@@ -51,12 +532,7 @@
                           <span class="orderStatus <%= item.status ? item.status.toLowerCase().replace(' ', '-') : 'unknown' %>">
                             <%= item.status || 'Unknown' %>
                           </span>
-                          <% if (item.status === "Ordered") { %>
-                            <button class="btn btn-sm btn-danger cancel-item" data-order-id="<%= order._id %>" data-product-id="<%= item.productId?._id || '' %>">Cancel</button>
-                          <% } %>
-                          <% if (item.status === "Delivered") { %>
-                            <button class="btn btn-sm btn-warning request-return-item" data-order-id="<%= order._id %>" data-product-id="<%= item.productId?._id || '' %>">Request Return</button>
-                          <% } %>
+                          
                         </li>
                       <% }); %>
                     </ul>
@@ -64,23 +540,34 @@
                   <td><%= order._id %></td>
                   <td><%= order.createdAt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) %></td>
                   <td>
+                    <span class="payment-method <%= order.paymentMethod ? order.paymentMethod.toLowerCase() : 'unknown' %>">
+                      <% if (order.paymentMethod === 'Online') { %>
+                        Razorpay
+                      <% } else if (order.paymentMethod === 'COD') { %>
+                        Cash on Delivery
+                      <% } else if (order.paymentMethod === 'Wallet') { %>
+                        Wallet
+                      <% } else { %>
+                        <%= order.paymentMethod || 'Unknown' %>
+                      <% } %>
+                    </span>
+                  </td>
+                  <td>
                     <span class="orderStatus <%= order.status ? order.status.toLowerCase().replace(' ', '-') : 'unknown' %>">
                       <%= order.status || 'Unknown' %>
                     </span>
                   </td>
-                  <td>₹<%= order.totalAmount || 'N/A' %></td>
+                  <td>₹<%= order.totalAmount.toFixed(2) || 'N/A' %></td>
                   <td>
-                    <% if (order.status === "Processing" || order.status === "Confirmed") { %>
-                      <button class="btn btn-sm btn-danger cancel-order" data-order-id="<%= order._id %>">Cancel</button>
-                    <% } %>
-                    <% if (order.status === "Delivered") { %>
-                      <button class="btn btn-sm btn-warning request-return" data-order-id="<%= order._id %>">Request Return</button>
-                    <% } %>
-                    <a href="/order/<%= order._id %>" class="btn btn-sm btn-primary">View</a>
+                    <div class="action-buttons">
+                      
+                      
+                      <a href="/orders/<%= order._id %>" class="btn btn-sm btn-primary">View</a>
+                    </div>
                   </td>
                 </tr>
-              <% }); %>
-            </tbody>
+              </tbody>
+            <% }); %>
           </table>
         <% } else { %>
           <div class="no-orders">
@@ -89,123 +576,425 @@
             <a href="/products" class="btn btn-primary">Start Shopping</a>
           </div>
         <% } %>
+
+        <% if (pagination && pagination.totalPages > 1) { %>
+          <div class="pagination-container">
+            <div class="pagination-info">
+              Showing <%= ((pagination.currentPage - 1) * 10) + 1 %> to <%= Math.min(pagination.currentPage * 10, pagination.totalOrders) %> of <%= pagination.totalOrders %> orders
+            </div>
+            <div class="pagination">
+              <% if (pagination.hasPrevPage) { %>
+                <a href="?page=<%= pagination.prevPage %>" class="pagination-btn">
+                  ← Previous
+                </a>
+              <% } else { %>
+                <span class="pagination-btn disabled">← Previous</span>
+              <% } %>
+
+              <% 
+                let startPage = Math.max(1, pagination.currentPage - 2);
+                let endPage = Math.min(pagination.totalPages, pagination.currentPage + 2);
+                
+                if (endPage - startPage < 4) {
+                  if (startPage === 1) {
+                    endPage = Math.min(pagination.totalPages, startPage + 4);
+                  } else {
+                    startPage = Math.max(1, endPage - 4);
+                  }
+                }
+              %>
+
+              <% if (startPage > 1) { %>
+                <a href="?page=1" class="pagination-btn">1</a>
+                <% if (startPage > 2) { %>
+                  <span class="pagination-dots">...</span>
+                <% } %>
+              <% } %>
+
+              <% for (let i = startPage; i <= endPage; i++) { %>
+                <% if (i === pagination.currentPage) { %>
+                  <span class="pagination-btn active"><%= i %></span>
+                <% } else { %>
+                  <a href="?page=<%= i %>" class="pagination-btn"><%= i %></a>
+                <% } %>
+              <% } %>
+
+              <% if (endPage < pagination.totalPages) { %>
+                <% if (endPage < pagination.totalPages - 1) { %>
+                  <span class="pagination-dots">...</span>
+                <% } %>
+                <a href="?page=<%= pagination.totalPages %>" class="pagination-btn"><%= pagination.totalPages %></a>
+              <% } %>
+
+              <% if (pagination.hasNextPage) { %>
+                <a href="?page=<%= pagination.nextPage %>" class="pagination-btn">
+                  Next →
+                </a>
+              <% } else { %>
+                <span class="pagination-btn disabled">Next →</span>
+              <% } %>
+            </div>
+          </div>
+        <% } %>
       </div>
     </div>
   </main>
 
-  <div class="modal-overlay" id="returnModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Request Return</h5>
-        <button type="button" class="btn-close" onclick="closeReturnModal()"></button>
-      </div>
-      <form id="returnForm">
-        <div class="modal-body">
-          <div class="form-group">
-            <label for="returnReason">Reason for Return</label>
-            <textarea class="form-control" id="returnReason" name="reason" rows="4" required></textarea>
-            <div class="invalid-feedback">Please provide a reason for the return.</div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="closeReturnModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary" id="submitReturnBtn">Submit Return</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <script>
-  document.addEventListener("DOMContentLoaded", () => {
-
-    document.querySelectorAll('.cancelItemBtn').forEach(button => {
-      button.addEventListener('click', async () => {
-        const orderId = button.dataset.orderId;
-        const productId = button.dataset.productId;
-        if (confirm('Cancel this item?')) {
-          const res = await fetch(`/cancelItem/${orderId}/${productId}`, { method: 'POST' });
-          const result = await res.json();
-          alert(result.message || result.error);
-          location.reload();
-        }
-      });
-    });
-
-    let currentOrderId, currentProductId;
-    document.querySelectorAll('.returnItemBtn').forEach(button => {
-      button.addEventListener('click', () => {
-        currentOrderId = button.dataset.orderId;
-        currentProductId = button.dataset.productId;
-        returnModal.classList.add('show');
-        returnModal.classList.remove('hidden');
-      });
-    });
-
-    document.getElementById('returnForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const reason = document.getElementById('returnReason').value.trim();
-      if (!reason) {
-        document.getElementById('returnReason').classList.add('is-invalid');
-        return;
-      }
-
-      const res = await fetch(`/returnItem/${currentOrderId}/${currentProductId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason })
-      });
-      const result = await res.json();
-      alert(result.message || result.error);
-      closeReturnModal();
-      location.reload();
-    });
-
-    const returnModal = document.getElementById('returnModal');
-    let currentOrderId;
-
-    document.querySelectorAll('.returnOrderBtn').forEach(button => {
-      button.addEventListener('click', () => {
-        currentOrderId = button.dataset.orderId;
-        returnModal.classList.add('show');
-        returnModal.classList.remove('hidden');
-      });
-    });
-
-    window.closeReturnModal = function () {
-      returnModal.classList.add('hidden');
-      returnModal.classList.remove('show');
-      document.getElementById('returnForm').reset();
-      document.getElementById('returnReason').classList.remove('is-invalid');
+  <style>
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    
+    .action-buttons .btn {
+      font-size: 0.8rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-danger {
+      background-color: #dc3545;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background-color: #c82333;
+      transform: translateY(-1px);
+    }
+    
+    .btn-warning {
+      background-color: #ffc107;
+      color: #212529;
+    }
+    
+    .btn-warning:hover {
+      background-color: #e0a800;
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background-color: #0056b3;
+      transform: translateY(-1px);
     }
 
-    document.getElementById('returnForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const reason = document.getElementById('returnReason').value.trim();
-      if (!reason) {
-        document.getElementById('returnReason').classList.add('is-invalid');
-        return;
-      }
+    .pagination-container {
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
 
-      try {
-        const response = await fetch(`/return/${currentOrderId}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ reason }),
-        });
-        const result = await response.json();
-        if (result.message) {
-          alert(result.message);
-          closeReturnModal();
-          location.reload();
-        } else {
-          alert(result.error || 'Error submitting return request');
-        }
-      } catch (error) {
-        alert('Error submitting return request');
+    .pagination-info {
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .pagination-btn {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #ddd;
+      background-color: #fff;
+      color: #007bff;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .pagination-btn:hover:not(.disabled):not(.active) {
+      background-color: #f8f9fa;
+      border-color: #007bff;
+      transform: translateY(-1px);
+    }
+
+    .pagination-btn.active {
+      background-color: #007bff;
+      color: white;
+      border-color: #007bff;
+      font-weight: 600;
+    }
+
+    .pagination-btn.disabled {
+      color: #6c757d;
+      background-color: #f8f9fa;
+      border-color: #ddd;
+      cursor: not-allowed;
+    }
+
+    .pagination-dots {
+      padding: 0.5rem 0.25rem;
+      color: #6c757d;
+    }
+
+    @media (max-width: 768px) {
+      .pagination {
+        gap: 0.25rem;
       }
+      
+      .pagination-btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+        min-width: 35px;
+      }
+      
+      .pagination-info {
+        font-size: 0.8rem;
+        text-align: center;
+      }
+    }
+  </style>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      
+      document.querySelectorAll('.cancel-order-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+          const orderId = button.dataset.orderId;
+          await cancelOrder(orderId);
+        });
+      });
+
+      document.querySelectorAll('.return-order-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+          const orderId = button.dataset.orderId;
+          await requestReturn(orderId);
+        });
+      });
+
+      document.querySelectorAll('.cancel-item').forEach(button => {
+        button.addEventListener('click', async () => {
+          const orderId = button.dataset.orderId;
+          const productId = button.dataset.productId;
+          await cancelItem(orderId, productId);
+        });
+      });
+
+      document.querySelectorAll('.request-return-item').forEach(button => {
+        button.addEventListener('click', async () => {
+          const orderId = button.dataset.orderId;
+          const productId = button.dataset.productId;
+          await requestReturnItem(orderId, productId);
+        });
+      });
     });
 
-  });
+    async function cancelOrder(orderId) {
+      const result = await Swal.fire({
+        title: 'Cancel Order?',
+        text: 'Are you sure you want to cancel this order? This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, Cancel Order',
+        cancelButtonText: 'Keep Order'
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const response = await fetch(`/order/cancel/${orderId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+
+          const data = await response.json();
+          window.location.reload()
+
+          if (data.success) {
+            await Swal.fire({
+              title: 'Order Cancelled!',
+              text: data.message,
+              icon: 'success',
+              confirmButtonColor: '#28a745'
+            });
+            window.location.reload();
+          } else {
+            throw new Error(data.message || 'Failed to cancel order');
+          }
+        } catch (error) {
+          await Swal.fire({
+            title: 'Error!',
+            text: error.message || 'Something went wrong while cancelling the order.',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+          });
+        }
+      }
+    }
+
+    async function requestReturn(orderId) {
+      const { value: reason } = await Swal.fire({
+        title: 'Request Return',
+        text: 'Please provide a reason for returning this order:',
+        input: 'textarea',
+        inputPlaceholder: 'Enter your reason for return...',
+        inputAttributes: {
+          'aria-label': 'Return reason'
+        },
+        showCancelButton: true,
+        confirmButtonColor: '#ffc107',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Submit Return Request',
+        cancelButtonText: 'Cancel',
+        inputValidator: (value) => {
+          if (!value || value.trim().length < 10) {
+            return 'Please provide a detailed reason (at least 10 characters)';
+          }
+        }
+      });
+
+      if (reason) {
+        try {
+          const response = await fetch(`/order/return/${orderId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ reason: reason.trim() })
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            await Swal.fire({
+              title: 'Return Request Submitted!',
+              text: data.message,
+              icon: 'success',
+              confirmButtonColor: '#28a745'
+            });
+            window.location.reload();
+          } else {
+            throw new Error(data.message || 'Failed to submit return request');
+          }
+        } catch (error) {
+          await Swal.fire({
+            title: 'Error!',
+            text: error.message || 'Something went wrong while submitting the return request.',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+          });
+        }
+      }
+    }
+
+    async function cancelItem(orderId, productId) {
+      const result = await Swal.fire({
+        title: 'Cancel Item?',
+        text: 'Are you sure you want to cancel this item?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, Cancel Item',
+        cancelButtonText: 'Keep Item'
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const response = await fetch(`/cancelItem/${orderId}/${productId}`, {
+            method: 'POST'
+          });
+          const data = await response.json();
+          
+          if (data.message) {
+            await Swal.fire({
+              title: 'Item Cancelled!',
+              text: data.message,
+              icon: 'success',
+              confirmButtonColor: '#28a745'
+            });
+            window.location.reload();
+          } else {
+            throw new Error(data.error || 'Failed to cancel item');
+          }
+        } catch (error) {
+          await Swal.fire({
+            title: 'Error!',
+            text: error.message || 'Something went wrong while cancelling the item.',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+          });
+        }
+      }
+    }
+
+    async function requestReturnItem(orderId, productId) {
+      const { value: reason } = await Swal.fire({
+        title: 'Request Item Return',
+        text: 'Please provide a reason for returning this item:',
+        input: 'textarea',
+        inputPlaceholder: 'Enter your reason for return...',
+        inputAttributes: {
+          'aria-label': 'Return reason'
+        },
+        showCancelButton: true,
+        confirmButtonColor: '#ffc107',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Submit Return Request',
+        cancelButtonText: 'Cancel',
+        inputValidator: (value) => {
+          if (!value || value.trim().length < 10) {
+            return 'Please provide a detailed reason (at least 10 characters)';
+          }
+        }
+      });
+
+      if (reason) {
+        try {
+          const response = await fetch(`/returnItem/${orderId}/${productId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ reason: reason.trim() })
+          });
+
+          const data = await response.json();
+
+          if (data.message) {
+            await Swal.fire({
+              title: 'Return Request Submitted!',
+              text: data.message,
+              icon: 'success',
+              confirmButtonColor: '#28a745'
+            });
+            window.location.reload();
+          } else {
+            throw new Error(data.error || 'Failed to submit return request');
+          }
+        } catch (error) {
+          await Swal.fire({
+            title: 'Error!',
+            text: error.message || 'Something went wrong while submitting the return request.',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+          });
+        }
+      }
+    }
   </script>
 </body>
 </html>

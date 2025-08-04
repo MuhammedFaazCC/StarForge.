@@ -9,13 +9,12 @@ body {
   background-color: #f4f4f9;
   color: #333;
   line-height: 1.6;
-  padding-top: 60px; /* Offset for fixed navbar */
+  padding-top: 60px;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
 
-/* Navbar */
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -67,7 +66,6 @@ body {
   display: none;
 }
 
-/* Main Content */
 .main-content {
   flex: 1;
   display: flex;
@@ -76,7 +74,6 @@ body {
   padding: 20px;
 }
 
-/* Form Container */
 .form-container {
   max-width: 600px;
   width: 100%;
@@ -86,7 +83,6 @@ body {
   padding: 20px;
 }
 
-/* Headings */
 h2 {
   font-size: 28px;
   font-weight: 700;
@@ -95,13 +91,11 @@ h2 {
   text-align: center;
 }
 
-/* Form Styling */
 form {
   display: grid;
   gap: 20px;
 }
 
-/* Form Group */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -119,7 +113,6 @@ form {
   font-size: 12px;
 }
 
-/* Inputs, Textareas */
 input[type="text"],
 textarea {
   width: 100%;
@@ -142,7 +135,6 @@ textarea {
   min-height: 100px;
 }
 
-/* File Input */
 input[type="file"] {
   padding: 8px;
   font-size: 14px;
@@ -167,7 +159,6 @@ input[type="file"]::-webkit-file-upload-button:hover {
   background-color: #0056b3;
 }
 
-/* Image Preview */
 .image-preview {
   margin-top: 10px;
   display: flex;
@@ -183,7 +174,6 @@ input[type="file"]::-webkit-file-upload-button:hover {
   border: 1px solid #ccc;
 }
 
-/* Status Toggle */
 .status-toggle {
   display: flex;
   align-items: center;
@@ -226,7 +216,6 @@ input[type="file"]::-webkit-file-upload-button:hover {
   transform: translateX(20px);
 }
 
-/* Form Actions */
 .form-actions {
   display: flex;
   gap: 10px;
@@ -275,7 +264,6 @@ input[type="file"]::-webkit-file-upload-button:hover {
   transform: translateY(0);
 }
 
-/* Footer */
 footer p {
   width: 100%;
   padding: 10px;
@@ -285,10 +273,9 @@ footer p {
   font-size: 0.8rem;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   body {
-    padding-top: 50px; /* Adjust for smaller navbar */
+    padding-top: 50px;
   }
 
   .main-content {
@@ -334,7 +321,7 @@ footer p {
   }
 
   .toggle-btn {
-    display: block; /* Show toggle button on smaller screens */
+    display: block;
   }
 }
 

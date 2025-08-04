@@ -27,6 +27,11 @@ const couponSchema = new mongoose.Schema({
     type: Number,
     default: 1 
   },
+  minimumAmount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
   usedBy: [{
     userId: {
       type: mongoose.Schema.Types.ObjectId,

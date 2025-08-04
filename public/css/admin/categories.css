@@ -12,7 +12,6 @@ body {
     background-color: #f8fafc;
 }
 
-/* Navbar */
 .navbar {
     display: flex;
     justify-content: space-between;
@@ -64,7 +63,6 @@ body {
     display: none;
 }
 
-/* Side Panel */
 .side-panel {
     width: 220px;
     background-color: #808080;

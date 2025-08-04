@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("JS Loaded ✅");
+  console.log("JS Loaded");
 
   const hamburger = document.querySelector("#hamburgerMenu");
   const sidebar = document.querySelector(".sidebar");
