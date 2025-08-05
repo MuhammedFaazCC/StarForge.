@@ -27,35 +27,41 @@
           <section class="cart-items">
             <% cart.items.forEach(item=> { %>
               <% if (item.productId) { const product=item.productId; %>
-                <div class="cart-item <%= product.stock === 0 ? 'out-of-stock' : '' %>">
+                <div class="cart-item <%= product.stock === 0 ? 'out-of-stock' : '' %>" data-item-id="<%= item._id %>">
                   <img src="<%= product.mainImage || product.additionalImages?.[0] || '/images/default.jpg' %>"
                     alt="Product">
                   <div class="item-details">
                     <h3>
                       <%= product.name %>
                     </h3>
-                    <p>Price: ₹ <%= product.salesPrice ? product.salesPrice.toFixed(2) : product.price.toFixed(2) %>
+                    <p>Price: ₹ <span class="item-price"><%= product.salesPrice ? product.salesPrice.toFixed(2) : product.price.toFixed(2) %></span>
                     </p>
-                    </p>
+                    <p>Subtotal: ₹ <span class="item-subtotal"><%= (item.quantity * (product.salesPrice || product.price)).toFixed(2) %></span></p>
                     <p>Status: <%= product.stock> 0 ? 'In Stock' : 'Out of Stock' %></p>
                     <div class="quantity-control">
                       <% if (product.stock> 0) { %>
-
-                        <button onclick="updateCartQuantity('<%= item._id %>', -1)" 
+                        <% const maxAllowed = Math.min(5, product.stock); %>
+                        <button class="qty-btn decrease-btn" 
+                                data-item-id="<%= item._id %>" 
+                                data-change="-1"
                                 <%= item.quantity === 1 ? 'disabled title="Minimum quantity reached"' : '' %>>
                           −
                         </button>
-                        <input type="text" value="<%= item.quantity %>" readonly>
-                        <button onclick="updateCartQuantity('<%= item._id %>', 1)" 
-                                <%= item.quantity >= item.productId.stock ? 'disabled title="Stock limit reached"' : '' %>>
+                        <input type="text" class="quantity-input" value="<%= item.quantity %>" readonly>
+                        <button class="qty-btn increase-btn" 
+                                data-item-id="<%= item._id %>" 
+                                data-change="1"
+                                data-max-allowed="<%= maxAllowed %>"
+                                <%= item.quantity >= maxAllowed ? 'disabled title="' + (product.stock < 5 ? 'Stock limit reached' : 'Maximum limit (5) reached') + '"' : '' %>>
                           +
                         </button>
-
+                        <div class="loading-spinner" style="display: none;">
+                          <div class="spinner"></div>
+                        </div>
                         <% } else { %>
                           <span class="out-text">Not available</span>
                           <% } %>
                     </div>
-
 
                     <button class="remove-btn" onclick="removeFromCart('<%= item._id %>')">Remove</button>
                   </div>
@@ -66,14 +72,13 @@
 
           <aside class="cart-summary">
   <h3>Order Summary</h3>
-  <p>Total Items: <%= cart.items.reduce((sum, item) => sum + item.quantity, 0) %></p>
+  <p>Total Items: <span id="total-items"><%= cart.items.reduce((sum, item) => sum + item.quantity, 0) %></span></p>
   <p>
-    Total Price: ₹
-    <%= cart.items.reduce((sum, item) => {
+    Total Price: ₹<span id="cart-total"><%= cart.items.reduce((sum, item) => {
       const price = Number(item.productId?.salesPrice) || 0;
       const qty = Number(item.quantity) || 0;
       return sum + price * qty;
-    }, 0).toFixed(2) %>
+    }, 0).toFixed(2) %></span>
   </p>
   <a href="/checkout" class="checkout-btn">Proceed to Checkout</a>
 </aside>

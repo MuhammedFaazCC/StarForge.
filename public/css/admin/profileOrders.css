@@ -236,6 +236,97 @@ body {
   background-color: #1976d2;
 }
 
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-ordered {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-processing {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.status-shipped {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.status-out-for-delivery {
+  background-color: #e8f5e8;
+  color: #388e3c;
+}
+
+.status-delivered {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.status-cancelled {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.status-return-requested {
+  background-color: #fff8e1;
+  color: #f57f17;
+}
+
+.status-returned {
+  background-color: #fce4ec;
+  color: #c2185b;
+}
+
+.status-return-declined {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+/* Mark as delivered button */
+.mark-delivered-btn {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.mark-delivered-btn:hover {
+  background-color: #45a049;
+}
+
+.mark-delivered-btn:active {
+  background-color: #3d8b40;
+}
+
+/* Delivered text */
+.delivered-text {
+  color: #2e7d32;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+/* No action text */
+.no-action {
+  color: #999;
+  font-style: italic;
+  font-size: 12px;
+}
+
 @media (max-width: 768px) {
   .main-content {
     margin-left: 0;

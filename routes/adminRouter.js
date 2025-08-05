@@ -40,6 +40,7 @@ router.get('/orders', adminAuth, adminController.getAdminOrdersPage);
 router.get('/orders/:id', adminAuth, adminController.getOrderDetails);
 router.get("/orders/:id/invoice", adminAuth, adminController.getInvoicePDF);
 router.post('/orders/:id/status', adminAuth, adminController.statusUpdate);
+router.post('/orders/:orderId/items/:itemId/status', adminAuth, adminController.updateItemStatus);
 
 router.get('/returns', adminAuth, adminController.getReturnRequestsPage);
 router.post('/order/return/accept/:id', adminAuth, adminController.acceptReturnRequest);

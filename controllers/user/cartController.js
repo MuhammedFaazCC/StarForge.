@@ -7,7 +7,7 @@ const viewCart = async (req, res) => {
   const userId = req.session.user._id;
   const cart = await Cart.findOne({ userId:userId }).populate('items.productId');
   
-  res.render('cart', { cart });
+  res.render('cart', { cart, user: req.session.user });
 };
 
 const addToCart = async (req, res) => {
@@ -107,13 +107,48 @@ const updateCartQuantity = async (req, res) => {
     }
 
     const newQty = item.quantity + change;
-    if (newQty < 1 || newQty > item.productId.stock) {
-      return res.status(400).json({ success: false, error: 'Invalid quantity (check stock)' });
+    const maxAllowed = Math.min(5, item.productId.stock); // Limit to 5 or stock, whichever is lower
+
+    // Validate quantity limits
+    if (newQty < 1) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Minimum quantity is 1' 
+      });
     }
 
+    if (newQty > maxAllowed) {
+      const limitReason = item.productId.stock < 5 ? 'available stock' : 'maximum limit (5)';
+      return res.status(400).json({ 
+        success: false, 
+        error: `Cannot exceed ${limitReason}. Maximum allowed: ${maxAllowed}` 
+      });
+    }
+
+    // Update quantity
     item.quantity = newQty;
     await cart.save();
-    return res.json({ success: true });
+
+    // Calculate updated totals
+    const updatedCart = await Cart.findOne({ userId: req.session.user._id }).populate('items.productId');
+    const itemSubtotal = item.quantity * item.productId.salesPrice;
+    const cartTotal = updatedCart.items.reduce((sum, cartItem) => {
+      const price = Number(cartItem.productId?.salesPrice) || 0;
+      const qty = Number(cartItem.quantity) || 0;
+      return sum + (price * qty);
+    }, 0);
+    const totalItems = updatedCart.items.reduce((sum, cartItem) => sum + cartItem.quantity, 0);
+
+    return res.json({ 
+      success: true,
+      data: {
+        itemSubtotal: itemSubtotal.toFixed(2),
+        cartTotal: cartTotal.toFixed(2),
+        totalItems: totalItems,
+        newQuantity: newQty,
+        maxAllowed: maxAllowed
+      }
+    });
 
   } catch (error) {
     console.error('Error in updateCartQuantity:', error);

@@ -235,6 +235,37 @@ const statusUpdate = async (req, res) => {
   }
 };
 
+const updateItemStatus = async (req, res) => {
+  const { status } = req.body;
+  const { orderId, itemId } = req.params;
+
+  try {
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    const item = order.items.id(itemId);
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Item not found' });
+    }
+
+    // Update the item status
+    item.status = status;
+    
+    // If marking as delivered, set delivered timestamp
+    if (status === 'Delivered') {
+      item.deliveredAt = new Date();
+    }
+
+    await order.save();
+    res.json({ success: true, message: 'Item status updated successfully' });
+  } catch (error) {
+    console.error('Item status update failed:', error);
+    res.status(500).json({ success: false, message: 'Failed to update item status' });
+  }
+};
+
 const salesPage = async (req, res) => {
   try {
     const { 
@@ -1152,6 +1183,7 @@ module.exports = {
   getOrderDetails,
   getInvoicePDF,
   statusUpdate,
+  updateItemStatus,
   salesPage,
   couponsPage,
   getCreateCouponPage,

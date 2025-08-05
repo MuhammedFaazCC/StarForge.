@@ -1,37 +1,173 @@
-async function updateCartQuantity(cartItemId, change) {
+// Cart functionality with AJAX updates
+document.addEventListener('DOMContentLoaded', function() {
+  // Add event listeners to quantity buttons
+  const qtyButtons = document.querySelectorAll('.qty-btn');
+  qtyButtons.forEach(button => {
+    button.addEventListener('click', handleQuantityChange);
+  });
+});
+
+async function handleQuantityChange(event) {
+  const button = event.target;
+  const itemId = button.dataset.itemId;
+  const change = parseInt(button.dataset.change);
+  const cartItem = button.closest('.cart-item');
+  const quantityInput = cartItem.querySelector('.quantity-input');
+  const loadingSpinner = cartItem.querySelector('.loading-spinner');
+  const increaseBtn = cartItem.querySelector('.increase-btn');
+  const decreaseBtn = cartItem.querySelector('.decrease-btn');
+  const itemSubtotalElement = cartItem.querySelector('.item-subtotal');
+
+  // Show loading state
+  showLoadingState(cartItem, true);
+  
   try {
-    const res = await fetch(`/cart/update/${cartItemId}`, {
+    const response = await fetch(`/cart/update/${itemId}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
       body: JSON.stringify({ change })
     });
 
-    let data;
-    try {
-      data = await res.json();
-    } catch (e) {
-      throw new Error('Invalid server response — check if route exists');
-    }
+    const data = await response.json();
 
-    if (res.ok && data.success) {
-      location.reload();
+    if (response.ok && data.success) {
+      // Update the UI with new values
+      updateCartUI(cartItem, data.data);
+      
+      // Show success feedback
+      showToast('Quantity updated successfully', 'success');
     } else {
-      Swal.fire({
+      // Show error message
+      await Swal.fire({
         icon: 'error',
         title: 'Update Failed',
         text: data.error || 'Could not update quantity.',
+        timer: 3000,
+        showConfirmButton: false
       });
     }
-  } catch (err) {
-    console.error('Update error:', err);
-    Swal.fire({
+  } catch (error) {
+    console.error('Update error:', error);
+    await Swal.fire({
       icon: 'error',
       title: 'Something Went Wrong',
-      text: err.message || 'Try again later.',
+      text: 'Network error. Please try again later.',
+      timer: 3000,
+      showConfirmButton: false
+    });
+  } finally {
+    // Hide loading state
+    showLoadingState(cartItem, false);
+  }
+}
+
+function updateCartUI(cartItem, data) {
+  const quantityInput = cartItem.querySelector('.quantity-input');
+  const itemSubtotalElement = cartItem.querySelector('.item-subtotal');
+  const increaseBtn = cartItem.querySelector('.increase-btn');
+  const decreaseBtn = cartItem.querySelector('.decrease-btn');
+  
+  // Update quantity display
+  quantityInput.value = data.newQuantity;
+  
+  // Update item subtotal
+  itemSubtotalElement.textContent = data.itemSubtotal;
+  
+  // Update cart totals
+  document.getElementById('total-items').textContent = data.totalItems;
+  document.getElementById('cart-total').textContent = data.cartTotal;
+  
+  // Update button states
+  updateButtonStates(cartItem, data.newQuantity, data.maxAllowed);
+}
+
+function updateButtonStates(cartItem, currentQuantity, maxAllowed) {
+  const increaseBtn = cartItem.querySelector('.increase-btn');
+  const decreaseBtn = cartItem.querySelector('.decrease-btn');
+  
+  // Update decrease button
+  if (currentQuantity <= 1) {
+    decreaseBtn.disabled = true;
+    decreaseBtn.title = 'Minimum quantity reached';
+  } else {
+    decreaseBtn.disabled = false;
+    decreaseBtn.title = '';
+  }
+  
+  // Update increase button
+  if (currentQuantity >= maxAllowed) {
+    increaseBtn.disabled = true;
+    const limitReason = maxAllowed < 5 ? 'Stock limit reached' : 'Maximum limit (5) reached';
+    increaseBtn.title = limitReason;
+  } else {
+    increaseBtn.disabled = false;
+    increaseBtn.title = '';
+  }
+}
+
+function showLoadingState(cartItem, isLoading) {
+  const loadingSpinner = cartItem.querySelector('.loading-spinner');
+  const qtyButtons = cartItem.querySelectorAll('.qty-btn');
+  
+  if (isLoading) {
+    // Show spinner and disable buttons
+    if (loadingSpinner) loadingSpinner.style.display = 'inline-block';
+    qtyButtons.forEach(btn => {
+      btn.disabled = true;
+      btn.style.opacity = '0.6';
+    });
+  } else {
+    // Hide spinner and re-enable buttons based on their state
+    if (loadingSpinner) loadingSpinner.style.display = 'none';
+    qtyButtons.forEach(btn => {
+      btn.style.opacity = '1';
+      // Don't automatically enable - let updateButtonStates handle this
     });
   }
 }
 
+function showToast(message, type = 'success') {
+  // Create a simple toast notification
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: ${type === 'success' ? '#28a745' : '#dc3545'};
+    color: white;
+    padding: 12px 20px;
+    border-radius: 4px;
+    z-index: 10000;
+    font-size: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+  `;
+  
+  document.body.appendChild(toast);
+  
+  // Animate in
+  setTimeout(() => {
+    toast.style.transform = 'translateX(0)';
+  }, 100);
+  
+  // Remove after 3 seconds
+  setTimeout(() => {
+    toast.style.transform = 'translateX(100%)';
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 300);
+  }, 3000);
+}
+
+// Legacy function for remove functionality (keeping existing implementation)
 function removeFromCart(cartItemId) {
   Swal.fire({
     title: 'Are you sure?',
@@ -59,4 +195,20 @@ function removeFromCart(cartItemId) {
         });
     }
   });
+}
+
+// Legacy function for backward compatibility (now using new implementation)
+async function updateCartQuantity(cartItemId, change) {
+  // Find the button that corresponds to this action
+  const cartItem = document.querySelector(`[data-item-id="${cartItemId}"]`);
+  if (!cartItem) {
+    console.error('Cart item not found');
+    return;
+  }
+  
+  const button = cartItem.querySelector(`[data-change="${change}"]`);
+  if (button) {
+    // Trigger the new event handler
+    await handleQuantityChange({ target: button });
+  }
 }

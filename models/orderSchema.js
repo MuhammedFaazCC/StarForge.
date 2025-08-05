@@ -54,11 +54,19 @@ const orderSchema = new mongoose.Schema({
         salesPrice: Number,
         status: {
             type: String,
-            enum: ['Ordered', 'Cancelled', 'Delivered', 'Return Requested', 'Returned'],
+            enum: ['Ordered', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Return Requested', 'Returned', 'Return Declined'],
             default: 'Ordered'
+        },
+        deliveredAt: {
+            type: Date,
+            default: null
         },
         cancelledAt: {
             type: Date,
+            default: null
+        },
+        cancellationReason: {
+            type: String,
             default: null
         },
         returnReason: {

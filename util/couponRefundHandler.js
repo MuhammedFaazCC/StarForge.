@@ -182,28 +182,46 @@ const areAllItemsCancelled = (order) => {
 
 const handleItemCancellationWithCoupon = async (order, itemsToCancel, userId, options = {}) => {
   try {
+    console.log(`Starting cancellation process for order ${order._id}, items:`, itemsToCancel.map(i => i.productId));
+    
     const couponResult = await handleCouponInvalidationAndRefund(order, itemsToCancel, userId);
     
+    // Update item statuses
+    let itemsUpdated = 0;
     for (const itemToCancel of itemsToCancel) {
       const orderItem = order.items.find(item => 
         item.productId.toString() === itemToCancel.productId.toString()
       );
       if (orderItem) {
+        console.log(`Updating item ${orderItem.productId} status from ${orderItem.status || 'Ordered'} to Cancelled`);
         orderItem.status = 'Cancelled';
         orderItem.cancelledAt = new Date();
         if (options.cancellationReason) {
           orderItem.cancellationReason = options.cancellationReason;
         }
+        itemsUpdated++;
+      } else {
+        console.error(`Item not found in order: ${itemToCancel.productId}`);
+        couponResult.errors.push({
+          type: 'item_not_found',
+          error: `Item ${itemToCancel.productId} not found in order`
+        });
       }
     }
     
+    console.log(`Updated ${itemsUpdated} items to Cancelled status`);
+    
+    // Restore product stock
     const stockErrors = await restoreProductStock(itemsToCancel);
     if (stockErrors.length > 0) {
+      console.error("Stock restoration errors:", stockErrors);
       couponResult.errors.push(...stockErrors);
     }
     
+    // Process wallet refund if needed
     if (couponResult.totalRefundAmount > 0) {
       try {
+        console.log(`Processing wallet refund of ₹${couponResult.totalRefundAmount} for user ${userId}`);
         await processRefundToWallet(
           order, 
           couponResult.totalRefundAmount, 
@@ -211,6 +229,7 @@ const handleItemCancellationWithCoupon = async (order, itemsToCancel, userId, op
           options.refundReason || `Refund for cancelled items from order #${order._id}`
         );
         couponResult.refundProcessed = true;
+        console.log(`Wallet refund processed successfully`);
       } catch (refundError) {
         console.error("Refund processing failed:", refundError);
         couponResult.errors.push({
@@ -218,21 +237,36 @@ const handleItemCancellationWithCoupon = async (order, itemsToCancel, userId, op
           error: refundError.message
         });
         couponResult.refundProcessed = false;
+        // Continue with status update even if refund fails
       }
     }
     
-    if (areAllItemsCancelled(order)) {
+    // Check if all items are cancelled and update order status
+    const allItemsCancelled = areAllItemsCancelled(order);
+    if (allItemsCancelled) {
+      console.log(`All items cancelled, updating order ${order._id} status to Cancelled`);
       order.status = 'Cancelled';
       couponResult.orderFullyCancelled = true;
-      console.log(`Order ${order._id} marked as fully cancelled`);
     }
     
+    // Save the order with updated statuses
+    console.log(`Saving order ${order._id} with updated statuses`);
     await order.save();
+    
+    console.log(`Order saved successfully for order ${order._id}`);
     
     return couponResult;
     
   } catch (error) {
     console.error("Error in handleItemCancellationWithCoupon:", error);
+    console.error("Stack trace:", error.stack);
+    
+    // Add detailed error logging
+    console.error("Order ID:", order._id);
+    console.error("Items to cancel:", itemsToCancel);
+    console.error("User ID:", userId);
+    console.error("Options:", options);
+    
     throw error;
   }
 };

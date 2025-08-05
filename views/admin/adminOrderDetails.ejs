@@ -37,10 +37,13 @@
             <th>Image</th>
             <th>Quantity</th>
             <th>Price</th>
+            <th>Status</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <% order.items.forEach(item => { %>
+            <% const itemStatus = item.status || 'Ordered'; %>
             <tr>
               <td><%= item.productId?.name || 'Deleted Product' %></td>
               <td>
@@ -52,14 +55,72 @@
               </td>
               <td><%= item.quantity %></td>
               <td>₹<%= item.salesPrice.toFixed(2) %></td>
+              <td>
+                <span class="status-badge status-<%= itemStatus.toLowerCase().replace(/\s+/g, '-') %>">
+                  <%= itemStatus %>
+                </span>
+                <% if (item.deliveredAt) { %>
+                  <br><small>Delivered: <%= item.deliveredAt.toDateString() %></small>
+                <% } %>
+              </td>
+              <td>
+                <% if (itemStatus === 'Shipped' || itemStatus === 'Out for Delivery') { %>
+                  <button class="mark-delivered-btn" 
+                          data-order-id="<%= order._id %>" 
+                          data-item-id="<%= item._id %>">
+                    Mark as Delivered
+                  </button>
+                <% } else if (itemStatus === 'Delivered') { %>
+                  <span class="delivered-text">✓ Delivered</span>
+                <% } else { %>
+                  <span class="no-action">-</span>
+                <% } %>
+              </td>
             </tr>
           <% }) %>
         </tbody>
-
       </table>
       <a href="/admin/orders/<%= order._id %>/invoice" class="invoice-btn">Download Invoice</a>
       <a href="/admin/orders" class="back-btn" style="margin-top: 20px;">Back to Orders</a>
     </div>
   </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Handle mark as delivered button clicks
+      document.querySelectorAll('.mark-delivered-btn').forEach(button => {
+        button.addEventListener('click', async function() {
+          const orderId = this.getAttribute('data-order-id');
+          const itemId = this.getAttribute('data-item-id');
+          
+          const confirmed = confirm('Mark this item as delivered?');
+          if (!confirmed) return;
+
+          try {
+            const response = await fetch(`/admin/orders/${orderId}/items/${itemId}/status`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ status: 'Delivered' })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+              alert('Item marked as delivered successfully!');
+              // Reload the page to show updated status
+              window.location.reload();
+            } else {
+              alert('Failed to update item status: ' + (data.message || 'Unknown error'));
+            }
+          } catch (error) {
+            console.error('Error updating item status:', error);
+            alert('An error occurred while updating the item status.');
+          }
+        });
+      });
+    });
+  </script>
 </body>
-</html
+</html>
