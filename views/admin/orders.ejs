@@ -51,64 +51,121 @@
                         <a href="/admin/orders" class="btn-clear">Clear</a>
                     </form>
 
-                    <table class="orders-table">
-                        <thead>
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Customer</th>
-                                <th>Date</th>
-                                <th>Payment Method</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% orders.forEach(order=> { %>
-                                <tr>
-                                    <td>
-                                        <%= order._id %>
-                                    </td>
-                                    <td>
-                                        <%= order.userId.fullName || order.userId.email %>
-                                    </td>
-                                    <td>
-                                        <%= order.createdAt.toLocaleDateString() %>
-                                    </td>
-                                    <td>
-                                        <span class="payment-method <%= order.paymentMethod ? order.paymentMethod.toLowerCase() : 'unknown' %>">
-                                            <% if (order.paymentMethod === 'Online') { %>
-                                                Razorpay
-                                            <% } else if (order.paymentMethod === 'COD') { %>
-                                                COD
-                                            <% } else if (order.paymentMethod === 'Wallet') { %>
-                                                Wallet
-                                            <% } else { %>
-                                                <%= order.paymentMethod || 'Unknown' %>
-                                            <% } %>
-                                        </span>
-                                    </td>
-                                    <td>$<%= order.totalAmount.toFixed(2) %>
-                                    </td>
-                                    <td>
-                                        <select class="status-select" data-order-id="<%= order._id %>">
-                                            <% ['Pending', 'Placed' , 'Shipped' , 'Out for Delivery' , 'Delivered'
-                                                , 'Cancelled' ].forEach(s=> { %>
-                                                <option value="<%= s %>" <%=s===order.status ? 'selected' : '' %>><%= s
-                                                        %>
-                                                </option>
-                                                <% }) %>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <a href="/admin/orders/<%= order._id %>" class="btn-view">View</a>
-                                    </td>
-                                </tr>
-                                <% }); %>
+                    <div class="orders-container">
+                        <% orders.forEach(order => { %>
+                            <div class="order-card" data-order-id="<%= order._id %>">
+                                <div class="order-header">
+                                    <div class="order-info">
+                                        <h3>Order #<%= order._id.toString().slice(-8) %></h3>
+                                        <div class="order-meta">
+                                            <span class="customer-name">
+                                                <i class="fas fa-user"></i>
+                                                <%= order.userId.fullName || order.userId.email %>
+                                            </span>
+                                            <span class="order-date">
+                                                <i class="fas fa-calendar"></i>
+                                                <%= order.createdAt.toLocaleDateString() %>
+                                            </span>
+                                            <span class="payment-method <%= order.paymentMethod ? order.paymentMethod.toLowerCase() : 'unknown' %>">
+                                                <i class="fas fa-credit-card"></i>
+                                                <% if (order.paymentMethod === 'Online') { %>
+                                                    Razorpay
+                                                <% } else if (order.paymentMethod === 'COD') { %>
+                                                    COD
+                                                <% } else if (order.paymentMethod === 'Wallet') { %>
+                                                    Wallet
+                                                <% } else { %>
+                                                    <%= order.paymentMethod || 'Unknown' %>
+                                                <% } %>
+                                            </span>
+                                            <span class="order-total">
+                                                <i class="fas fa-dollar-sign"></i>
+                                                $<%= order.totalAmount.toFixed(2) %>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="order-actions">
+                                        <a href="/admin/orders/<%= order._id %>" class="btn-view">
+                                            <i class="fas fa-eye"></i>
+                                            View Details
+                                        </a>
+                                    </div>
+                                </div>
 
-
-                        </tbody>
-                    </table>
+                                <div class="order-items">
+                                    <h4>Items (<%= order.items.length %>)</h4>
+                                    <div class="items-grid">
+                                        <% order.items.forEach((item, index) => { %>
+                                            <% const itemStatus = item.status || 'Placed'; %>
+                                            <% const isFinalStatus = ['Delivered', 'Returned', 'Cancelled'].includes(itemStatus); %>
+                                            <div class="item-card" data-item-id="<%= item._id %>">
+                                                <div class="item-image">
+                                                    <% if (item.productId?.mainImage) { %>
+                                                        <img src="<%= item.productId.mainImage %>" alt="<%= item.productId?.name || 'Product' %>">
+                                                    <% } else { %>
+                                                        <div class="no-image">
+                                                            <i class="fas fa-image"></i>
+                                                        </div>
+                                                    <% } %>
+                                                </div>
+                                                <div class="item-details">
+                                                    <h5><%= item.productId?.name || 'Deleted Product' %></h5>
+                                                    <p class="item-price">$<%= item.salesPrice.toFixed(2) %> × <%= item.quantity %></p>
+                                                    <div class="item-status-container">
+                                                        <span class="status-badge status-<%= itemStatus.toLowerCase().replace(/\s+/g, '-') %>">
+                                                            <%= itemStatus %>
+                                                        </span>
+                                                        <% if (item.deliveredAt) { %>
+                                                            <small class="status-timestamp">Delivered: <%= item.deliveredAt.toDateString() %></small>
+                                                        <% } %>
+                                                        <% if (item.cancelledAt) { %>
+                                                            <small class="status-timestamp">Cancelled: <%= item.cancelledAt.toDateString() %></small>
+                                                        <% } %>
+                                                    </div>
+                                                </div>
+                                                <div class="item-actions">
+                                                    <% if (!isFinalStatus) { %>
+                                                        <select class="item-status-dropdown" 
+                                                                data-order-id="<%= order._id %>" 
+                                                                data-item-id="<%= item._id %>" 
+                                                                data-current-status="<%= itemStatus %>">
+                                                            <option value="">Update Status</option>
+                                                            <% 
+                                                                const statusOptions = ['Placed', 'Ordered', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'];
+                                                                const currentIndex = statusOptions.indexOf(itemStatus);
+                                                                statusOptions.forEach((status, statusIndex) => {
+                                                                    // Only show valid next statuses
+                                                                    if (status !== itemStatus && 
+                                                                        ((status === 'Cancelled') || 
+                                                                         (currentIndex < statusOptions.indexOf('Delivered') && statusIndex > currentIndex && status !== 'Cancelled'))) {
+                                                            %>
+                                                                <option value="<%= status %>"><%= status %></option>
+                                                            <% 
+                                                                    }
+                                                                });
+                                                            %>
+                                                        </select>
+                                                        <button class="btn-update-status" 
+                                                                data-order-id="<%= order._id %>" 
+                                                                data-item-id="<%= item._id %>"
+                                                                disabled>
+                                                            <i class="fas fa-sync"></i>
+                                                            Update
+                                                        </button>
+                                                    <% } else { %>
+                                                        <span class="final-status">
+                                                            <i class="fas fa-check-circle"></i>
+                                                            Final Status
+                                                        </span>
+                                                    <% } %>
+                                                </div>
+                                            </div>
+                                        <% }); %>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
 
                     <!-- Pagination -->
                     <% if (pagination && pagination.totalPages > 1) { %>

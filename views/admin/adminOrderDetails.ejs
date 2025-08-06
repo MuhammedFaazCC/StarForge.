@@ -37,14 +37,16 @@
             <th>Image</th>
             <th>Quantity</th>
             <th>Price</th>
-            <th>Status</th>
+            <th>Current Status</th>
+            <th>Update Status</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <% order.items.forEach(item => { %>
-            <% const itemStatus = item.status || 'Ordered'; %>
-            <tr>
+            <% const itemStatus = item.status || 'Placed'; %>
+            <% const isFinalStatus = ['Delivered', 'Returned', 'Cancelled'].includes(itemStatus); %>
+            <tr data-item-id="<%= item._id %>">
               <td><%= item.productId?.name || 'Deleted Product' %></td>
               <td>
                 <% if (item.productId?.mainImage?.[0]) { %>
@@ -60,18 +62,50 @@
                   <%= itemStatus %>
                 </span>
                 <% if (item.deliveredAt) { %>
-                  <br><small>Delivered: <%= item.deliveredAt.toDateString() %></small>
+                  <br><small class="status-timestamp">Delivered: <%= item.deliveredAt.toDateString() %></small>
+                <% } %>
+                <% if (item.cancelledAt) { %>
+                  <br><small class="status-timestamp">Cancelled: <%= item.cancelledAt.toDateString() %></small>
+                <% } %>
+                <% if (item.returnRequestedAt) { %>
+                  <br><small class="status-timestamp">Return Requested: <%= item.returnRequestedAt.toDateString() %></small>
                 <% } %>
               </td>
               <td>
-                <% if (itemStatus === 'Shipped' || itemStatus === 'Out for Delivery') { %>
-                  <button class="mark-delivered-btn" 
+                <% if (!isFinalStatus) { %>
+                  <div class="status-update-container">
+                    <select class="status-dropdown" data-item-id="<%= item._id %>" data-current-status="<%= itemStatus %>">
+                      <option value="">Select Status</option>
+                      <% 
+                        const statusOptions = ['Placed', 'Ordered', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'];
+                        const currentIndex = statusOptions.indexOf(itemStatus);
+                        statusOptions.forEach((status, index) => {
+                          // Only show valid next statuses
+                          if (status === itemStatus || 
+                              (status === 'Cancelled') || 
+                              (currentIndex < statusOptions.indexOf('Delivered') && index > currentIndex && status !== 'Cancelled')) {
+                      %>
+                        <option value="<%= status %>" <%= status === itemStatus ? 'selected' : '' %>>
+                          <%= status %>
+                        </option>
+                      <% 
+                          }
+                        });
+                      %>
+                    </select>
+                  </div>
+                <% } else { %>
+                  <span class="final-status-text">Final Status</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (!isFinalStatus) { %>
+                  <button class="update-status-btn" 
                           data-order-id="<%= order._id %>" 
-                          data-item-id="<%= item._id %>">
-                    Mark as Delivered
+                          data-item-id="<%= item._id %>"
+                          disabled>
+                    Update
                   </button>
-                <% } else if (itemStatus === 'Delivered') { %>
-                  <span class="delivered-text">✓ Delivered</span>
                 <% } else { %>
                   <span class="no-action">-</span>
                 <% } %>
@@ -87,7 +121,127 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Handle mark as delivered button clicks
+      // Status validation rules
+      const statusTransitions = {
+        'Placed': ['Ordered', 'Processing', 'Shipped', 'Cancelled'],
+        'Ordered': ['Processing', 'Shipped', 'Cancelled'],
+        'Processing': ['Shipped', 'Cancelled'],
+        'Shipped': ['Out for Delivery', 'Delivered', 'Cancelled'],
+        'Out for Delivery': ['Delivered', 'Cancelled'],
+        'Delivered': [], // Final status
+        'Cancelled': [], // Final status
+        'Return Requested': ['Returned', 'Return Declined'],
+        'Returned': [], // Final status
+        'Return Declined': []
+      };
+
+      // Function to validate status transition
+      function isValidTransition(currentStatus, newStatus) {
+        if (currentStatus === newStatus) return false; // No change
+        if (newStatus === 'Cancelled') return true; // Can always cancel (except final states)
+        return statusTransitions[currentStatus]?.includes(newStatus) || false;
+      }
+
+      // Handle dropdown changes
+      document.querySelectorAll('.status-dropdown').forEach(dropdown => {
+        dropdown.addEventListener('change', function() {
+          const itemId = this.getAttribute('data-item-id');
+          const currentStatus = this.getAttribute('data-current-status');
+          const newStatus = this.value;
+          const updateBtn = document.querySelector(`button[data-item-id="${itemId}"]`);
+          
+          if (newStatus && newStatus !== currentStatus) {
+            if (isValidTransition(currentStatus, newStatus)) {
+              updateBtn.disabled = false;
+              updateBtn.classList.add('enabled');
+            } else {
+              updateBtn.disabled = true;
+              updateBtn.classList.remove('enabled');
+              alert(`Invalid status transition from "${currentStatus}" to "${newStatus}"`);
+              this.value = currentStatus; // Reset to current status
+            }
+          } else {
+            updateBtn.disabled = true;
+            updateBtn.classList.remove('enabled');
+          }
+        });
+      });
+
+      // Handle update button clicks
+      document.querySelectorAll('.update-status-btn').forEach(button => {
+        button.addEventListener('click', async function() {
+          const orderId = this.getAttribute('data-order-id');
+          const itemId = this.getAttribute('data-item-id');
+          const dropdown = document.querySelector(`select[data-item-id="${itemId}"]`);
+          const newStatus = dropdown.value;
+          const currentStatus = dropdown.getAttribute('data-current-status');
+          
+          if (!newStatus || newStatus === currentStatus) {
+            alert('Please select a different status');
+            return;
+          }
+
+          // Confirm the status change
+          const confirmed = confirm(`Change item status from "${currentStatus}" to "${newStatus}"?`);
+          if (!confirmed) return;
+
+          // Disable button during request
+          this.disabled = true;
+          this.textContent = 'Updating...';
+
+          try {
+            const response = await fetch(`/admin/orders/${orderId}/items/${itemId}/status`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ status: newStatus })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+              // Show success message
+              const successMsg = document.createElement('div');
+              successMsg.className = 'success-message';
+              successMsg.textContent = `Item status updated to "${newStatus}" successfully!`;
+              successMsg.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #4caf50;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 4px;
+                z-index: 1000;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+              `;
+              document.body.appendChild(successMsg);
+              
+              // Remove message after 3 seconds
+              setTimeout(() => {
+                successMsg.remove();
+              }, 3000);
+
+              // Reload the page to show updated status
+              setTimeout(() => {
+                window.location.reload();
+              }, 1500);
+            } else {
+              alert('Failed to update item status: ' + (data.message || 'Unknown error'));
+              this.disabled = false;
+              this.textContent = 'Update';
+            }
+          } catch (error) {
+            console.error('Error updating item status:', error);
+            alert('An error occurred while updating the item status.');
+            this.disabled = false;
+            this.textContent = 'Update';
+          }
+        });
+      });
+
+      // Handle legacy mark as delivered buttons (if any exist)
       document.querySelectorAll('.mark-delivered-btn').forEach(button => {
         button.addEventListener('click', async function() {
           const orderId = this.getAttribute('data-order-id');
@@ -109,7 +263,6 @@
             
             if (data.success) {
               alert('Item marked as delivered successfully!');
-              // Reload the page to show updated status
               window.location.reload();
             } else {
               alert('Failed to update item status: ' + (data.message || 'Unknown error'));

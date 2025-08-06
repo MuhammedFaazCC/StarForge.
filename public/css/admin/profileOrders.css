@@ -327,6 +327,101 @@ body {
   font-size: 12px;
 }
 
+/* Status update components */
+.status-update-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.status-dropdown {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+  background-color: #fff;
+  cursor: pointer;
+  min-width: 140px;
+  transition: border-color 0.3s ease;
+}
+
+.status-dropdown:focus {
+  outline: none;
+  border-color: #FCA120;
+  box-shadow: 0 0 0 2px rgba(252, 161, 32, 0.2);
+}
+
+.status-dropdown:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+  color: #999;
+}
+
+.update-status-btn {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  min-width: 70px;
+}
+
+.update-status-btn:disabled {
+  background-color: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.update-status-btn.enabled {
+  background-color: #28a745;
+  cursor: pointer;
+}
+
+.update-status-btn.enabled:hover {
+  background-color: #218838;
+  transform: translateY(-1px);
+}
+
+.update-status-btn:active {
+  transform: translateY(0);
+}
+
+.final-status-text {
+  color: #6c757d;
+  font-style: italic;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-timestamp {
+  color: #6c757d;
+  font-size: 10px;
+  font-style: italic;
+  margin-top: 2px;
+  display: block;
+}
+
+/* Success message animation */
+.success-message {
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 @media (max-width: 768px) {
   .main-content {
     margin-left: 0;
@@ -370,4 +465,25 @@ body {
     color: #555;
     width: 45%;
   }
+
+  /* Mobile responsive styles for new components */
+  .status-dropdown {
+    min-width: 120px;
+    font-size: 11px;
+  }
+
+  .update-status-btn {
+    min-width: 60px;
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+
+  .status-update-container {
+    gap: 3px;
+  }
+}
+/* Placed status style */
+.status-placed {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
 }
