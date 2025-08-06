@@ -214,7 +214,8 @@ const applyCoupon = async (req, res) => {
       subtotal: subtotal.toLocaleString('en-IN'),
       discount: discountAmount.toLocaleString('en-IN'),
       grandTotal: grandTotal.toLocaleString('en-IN'),
-      coupon: { code: coupon.code, discount: coupon.discount }
+      coupon: { code: coupon.code, discount: coupon.discount },
+      message: `Coupon "${coupon.code}" applied successfully! You saved ₹${discountAmount.toLocaleString('en-IN')}`
     });
   } catch (error) {
     console.error("Apply coupon error:", error);

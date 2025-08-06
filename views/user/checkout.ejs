@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Checkout</title>
   <link rel="stylesheet" href="/css/user/checkout.css">
+  <link rel="stylesheet" href="/css/user/checkout-coupon.css">
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
@@ -86,12 +87,22 @@
 
         <div>
           <h3>Coupon</h3>
+          
+          <!-- Coupon Message Area -->
+          <div id="couponMessage" style="display: none; margin-bottom: 10px; padding: 10px; border-radius: 5px;"></div>
 
-          <% if (coupon) { %>
-            <p>Applied Coupon: <%= coupon.code %> (<%= coupon.discount %>% off)
+          <!-- Applied Coupon Display -->
+          <div id="appliedCouponSection" style="<%= coupon ? '' : 'display: none;' %>">
+            <p id="appliedCouponText">
+              <% if (coupon) { %>
+                Applied Coupon: <%= coupon.code %> (<%= coupon.discount %>% off)
+              <% } %>
               <button id="removeCouponBtn" class="btn-secondary">Remove</button>
             </p>
-          <% } else { %>
+          </div>
+
+          <!-- Coupon Input Section -->
+          <div id="couponInputSection" style="<%= coupon ? 'display: none;' : '' %>">
             <div class="coupon-box">
               <input type="text" id="couponCode" placeholder="Enter coupon code">
               <button id="applyCouponBtn" class="btn-secondary">Apply</button>
@@ -117,21 +128,24 @@
                 <p>No active coupons available right now.</p>
               <% } %>
             </div>
-          <% } %>
+          </div>
+
+          <!-- Hidden field to store applied coupon for form submission -->
+          <input type="hidden" id="appliedCouponCode" value="<%= coupon ? coupon.code : '' %>">
         </div>
 
         <table class="sales-table">
           <tr>
             <td>Subtotal</td>
-            <td>₹<%= subtotal %></td>
+            <td id="subtotalAmount">₹<%= subtotal %></td>
           </tr>
           <tr>
             <td>Discount</td>
-            <td>₹<%= discount %></td>
+            <td id="discountAmount">₹<%= discount %></td>
           </tr>
           <tr>
             <td><strong>Grand Total</strong></td>
-            <td><strong>₹<%= grandTotal %></strong></td>
+            <td id="grandTotalAmount"><strong>₹<%= grandTotal %></strong></td>
           </tr>
         </table>
 
