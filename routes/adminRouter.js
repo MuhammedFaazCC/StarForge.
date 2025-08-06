@@ -63,6 +63,7 @@ router.patch('/customers/:id/:action', adminAuth, customerController.customerTog
 router.get("/sales", adminAuth, adminController.salesPage);
 router.get("/sales/export/pdf", adminAuth, adminController.exportSalesReportPDF);
 router.get("/sales/export/excel", adminAuth, adminController.exportSalesReportExcel);
+router.get("/sales/export/csv", adminAuth, adminController.exportSalesReportCSV);
 router.get("/sales/chart-data", adminAuth, adminController.getSalesChartData);
 
 router.get('/categories', adminAuth, categoryController.getAllCategories);

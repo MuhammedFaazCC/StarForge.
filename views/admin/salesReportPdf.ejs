@@ -146,31 +146,29 @@
         <h2>Sales Summary</h2>
         <div class="summary-grid">
             <div class="summary-card">
+                <h3>Total Sales</h3>
+                <p>₹<%= analytics.totalSales ? analytics.totalSales.toLocaleString('en-IN') : analytics.totalSalesAmount.toLocaleString('en-IN') %></p>
+            </div>
+            <div class="summary-card">
                 <h3>Total Orders</h3>
                 <p><%= analytics.totalOrders %></p>
             </div>
             <div class="summary-card">
-                <h3>Total Sales</h3>
-                <p>₹<%= analytics.totalSalesAmount.toLocaleString('en-IN') %></p>
+                <h3>Products Sold</h3>
+                <p><%= analytics.totalProductsSold || 'N/A' %></p>
             </div>
             <div class="summary-card">
                 <h3>Total Discounts</h3>
                 <p>₹<%= analytics.totalDiscounts.toLocaleString('en-IN') %></p>
             </div>
             <div class="summary-card">
+                <h3>Total Returns</h3>
+                <p>₹<%= analytics.totalReturns ? analytics.totalReturns.toLocaleString('en-IN') : '0' %></p>
+            </div>
+            <div class="summary-card">
                 <h3>Net Revenue</h3>
                 <p>₹<%= analytics.netRevenue.toLocaleString('en-IN') %></p>
             </div>
-            <% if (analytics.returnedOrders !== undefined) { %>
-            <div class="summary-card">
-                <h3>Returned Orders</h3>
-                <p><%= analytics.returnedOrders %></p>
-            </div>
-            <div class="summary-card">
-                <h3>Average Order Value</h3>
-                <p>₹<%= analytics.averageOrderValue.toLocaleString('en-IN') %></p>
-            </div>
-            <% } %>
         </div>
     </div>
 

@@ -221,6 +221,16 @@
       transform: translateY(-1px);
     }
 
+    .btn-download {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .btn-download:hover {
+      background-color: #218838;
+      transform: translateY(-1px);
+    }
+
     .address-section {
       background-color: #f8f9fa;
       padding: 1rem;
@@ -523,6 +533,10 @@
           Request Return
         </button>
       <% } %>
+      
+      <a href="/order/<%= order._id %>/invoice" class="action-btn btn-download" target="_blank">
+        📄 Download Invoice
+      </a>
       
       <a href="/orders" class="action-btn btn-back">
         Back to Orders

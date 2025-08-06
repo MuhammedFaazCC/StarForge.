@@ -389,7 +389,7 @@ const codSuccess = (req, res) => {
     });
   } catch (error) {
     console.error("COD Success page error:", error);
-    res.status(500).render('error', { message: 'Unable to load order confirmation page' });
+    res.status(500).redirect('/cart');
   }
 };
 
@@ -479,7 +479,7 @@ const orderSuccess = async (req, res) => {
         
         if (expectedSignature !== signature) {
           console.error("Retry payment signature verification failed");
-          return res.redirect(`/order/failure?error=signature_verification_failed&order_id=${order_id}`);
+          return res.redirect(`/payment/failure?error=signature_verification_failed&orderId=${order_id}`);
         }
       }
 
@@ -523,7 +523,7 @@ const orderSuccess = async (req, res) => {
       
       if (expectedSignature !== signature) {
         console.error("Payment signature verification failed");
-        return res.redirect(`/order/failure?error=signature_verification_failed&order_id=${order_id}`);
+        return res.redirect(`/payment/failure?error=signature_verification_failed&orderId=${order_id}`);
       }
     }
 
@@ -779,7 +779,170 @@ const orderFailure = async (req, res) => {
     });
   } catch (error) {
     console.error("Order failure page error:", error);
-    res.status(500).render('error', { message: 'Unable to load failure page' });
+    res.status(500).render('orderFailure', {
+      user: req.session.user || null,
+      error: 'Unable to load failure page. Please try again later.',
+      orderId: null,
+      canRetry: false
+    });
+  }
+};
+
+const paymentFailure = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.redirect('/login?redirect=/payment/failure');
+    }
+
+    const { error, orderId, referenceId } = req.query;
+    let errorMessage = "Oops! Something went wrong with your payment. Please try again or choose a different method.";
+    let failedOrderId = orderId || null;
+
+    // Customize error message based on error type
+    switch (error) {
+      case 'signature_verification_failed':
+        errorMessage = "Payment verification failed. Please contact support if this persists.";
+        break;
+      case 'payment_failed':
+        errorMessage = "Payment was not completed successfully. Please try again.";
+        break;
+      case 'payment_cancelled':
+        errorMessage = "Payment was cancelled. You can retry the payment or choose a different method.";
+        break;
+      case 'order_mismatch':
+        errorMessage = "Order verification failed. Please try again.";
+        break;
+      case 'insufficient_stock':
+        errorMessage = "Some items in your cart are out of stock. Please update your cart.";
+        break;
+      case 'network_error':
+        errorMessage = "Network error occurred during payment. Please check your connection and try again.";
+        break;
+      default:
+        errorMessage = "Oops! Something went wrong with your payment. Please try again or choose a different method.";
+    }
+
+    const userId = req.session.user._id;
+    let canRetry = true; // Default to true for better UX
+
+    console.log("Payment failure debug:", {
+      orderId: failedOrderId,
+      hasSession: !!req.session.pendingOrder,
+      userId: userId
+    });
+
+    // If no orderId is provided, try to create a failed order from pending session data
+    if (!failedOrderId && req.session.pendingOrder) {
+      const pending = req.session.pendingOrder;
+      const cart = await Cart.findOne({ _id: pending.cartId, userId }).populate('items.productId');
+      const selectedAddress = await Address.findById(pending.addressId);
+
+      if (cart && selectedAddress) {
+        let totalAmount = cart.items.reduce((total, item) => total + item.quantity * item.productId.salesPrice, 0);
+        let couponData = null;
+        if (req.session.coupon) {
+          const discountAmount = req.session.coupon.discountAmount || 0;
+          totalAmount -= discountAmount;
+          couponData = {
+            code: req.session.coupon.code,
+            discountAmount: discountAmount,
+          };
+        }
+
+        // Check if a similar failed order already exists
+        const existingOrder = await Order.findOne({ 
+          userId, 
+          paymentMethod: 'Online',
+          status: 'Payment Failed',
+          totalAmount,
+          createdAt: { $gte: new Date(Date.now() - 10 * 60 * 1000) } // Within last 10 minutes
+        });
+
+        if (!existingOrder) {
+          const failedOrder = new Order({
+            userId,
+            items: cart.items.map(item => ({
+              productId: item.productId._id,
+              name: item.productId.name,
+              quantity: item.quantity,
+              salesPrice: item.productId.salesPrice,
+            })),
+            address: `${selectedAddress.name}, ${selectedAddress.address}, ${selectedAddress.city}, ${selectedAddress.district}, ${selectedAddress.state} - ${selectedAddress.pinCode}`,
+            paymentMethod: 'Online',
+            totalAmount,
+            coupon: couponData,
+            status: "Payment Failed",
+            createdAt: new Date(),
+            offeredPrice: totalAmount,
+            razorpayOrderId: pending.razorpayOrderId,
+            failureReason: errorMessage
+          });
+
+          await failedOrder.save();
+          failedOrderId = failedOrder._id;
+          console.log("Created failed order:", failedOrderId);
+        } else {
+          failedOrderId = existingOrder._id;
+          console.log("Using existing failed order:", failedOrderId);
+        }
+      }
+    }
+
+    // Check if retry is possible for existing orders
+    if (failedOrderId && !failedOrderId.toString().startsWith('temp_')) {
+      const order = await Order.findOne({ 
+        _id: failedOrderId, 
+        userId: userId,
+        status: 'Payment Failed'
+      });
+      
+      if (order) {
+        const orderAge = Date.now() - order.createdAt.getTime();
+        canRetry = orderAge <= 24 * 60 * 60 * 1000; // 24 hours
+        console.log("Order age check:", { orderAge, canRetry });
+      }
+    }
+
+    // If still no order found, create a temporary one for retry
+    if (!failedOrderId) {
+      if (req.session.pendingOrder) {
+        failedOrderId = 'temp_' + Date.now();
+        canRetry = true;
+        console.log("Created temporary order ID:", failedOrderId);
+      } else {
+        // No session data, check if user has any recent failed orders
+        const recentFailedOrder = await Order.findOne({
+          userId: userId,
+          status: 'Payment Failed',
+          createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Within 24 hours
+        }).sort({ createdAt: -1 });
+
+        if (recentFailedOrder) {
+          failedOrderId = recentFailedOrder._id;
+          canRetry = true;
+          console.log("Found recent failed order:", failedOrderId);
+        }
+      }
+    }
+
+    console.log("Final values:", { failedOrderId, canRetry });
+
+    res.render("paymentFailure", {
+      user: req.session.user,
+      error: errorMessage,
+      orderId: failedOrderId,
+      referenceId: referenceId || null,
+      canRetry: canRetry
+    });
+  } catch (error) {
+    console.error("Payment failure page error:", error);
+    res.status(500).render('paymentFailure', {
+      user: req.session.user || null,
+      error: 'Unable to load payment failure page. Please try again later.',
+      orderId: null,
+      referenceId: null,
+      canRetry: true // Enable retry even on error
+    });
   }
 };
 
@@ -791,30 +954,66 @@ const retryPayment = async (req, res) => {
 
     const orderId = req.params.orderId;
     const userId = req.session.user._id;
+    let order = null;
+    let totalAmount = 0;
 
-    const order = await Order.findOne({ 
-      _id: orderId, 
-      userId, 
-      status: 'Payment Failed' 
-    }).populate('items.productId');
-
-    if (!order) {
-      return res.status(404).json({ success: false, error: "Order not found or cannot be retried" });
-    }
-
-    const orderAge = Date.now() - order.createdAt.getTime();
-    if (orderAge > 24 * 60 * 60 * 1000) {
-      return res.status(400).json({ success: false, error: "Order retry period has expired" });
-    }
-
-    for (const item of order.items) {
-      const product = await Product.findById(item.productId._id);
-      if (!product || product.stock < item.quantity) {
-        return res.status(400).json({
-          success: false,
-          error: `Insufficient stock for ${item.name}. Available: ${product ? product.stock : 0}, Required: ${item.quantity}`,
-        });
+    // Check if it's a temporary order ID or a real order
+    if (orderId.startsWith('temp_')) {
+      // Handle temporary order - use session data
+      if (!req.session.pendingOrder) {
+        return res.status(400).json({ success: false, error: "No pending order found. Please try placing the order again." });
       }
+
+      const pending = req.session.pendingOrder;
+      const cart = await Cart.findOne({ _id: pending.cartId, userId }).populate('items.productId');
+      
+      if (!cart || cart.items.length === 0) {
+        return res.status(400).json({ success: false, error: "Cart is empty. Please add items to cart first." });
+      }
+
+      // Check stock availability
+      for (const item of cart.items) {
+        if (item.productId.stock < item.quantity) {
+          return res.status(400).json({
+            success: false,
+            error: `Insufficient stock for ${item.productId.name}. Available: ${item.productId.stock}, Required: ${item.quantity}`,
+          });
+        }
+      }
+
+      totalAmount = cart.items.reduce((total, item) => total + item.quantity * item.productId.salesPrice, 0);
+      if (req.session.coupon) {
+        totalAmount -= req.session.coupon.discountAmount || 0;
+      }
+    } else {
+      // Handle real order ID
+      order = await Order.findOne({ 
+        _id: orderId, 
+        userId, 
+        status: 'Payment Failed' 
+      }).populate('items.productId');
+
+      if (!order) {
+        return res.status(404).json({ success: false, error: "Order not found or cannot be retried" });
+      }
+
+      const orderAge = Date.now() - order.createdAt.getTime();
+      if (orderAge > 24 * 60 * 60 * 1000) {
+        return res.status(400).json({ success: false, error: "Order retry period has expired" });
+      }
+
+      // Check stock availability for real order
+      for (const item of order.items) {
+        const product = await Product.findById(item.productId._id);
+        if (!product || product.stock < item.quantity) {
+          return res.status(400).json({
+            success: false,
+            error: `Insufficient stock for ${item.name}. Available: ${product ? product.stock : 0}, Required: ${item.quantity}`,
+          });
+        }
+      }
+
+      totalAmount = order.totalAmount;
     }
 
     const razorpayInstance = new Razorpay({
@@ -823,7 +1022,7 @@ const retryPayment = async (req, res) => {
     });
 
     const options = {
-      amount: Math.round(order.totalAmount * 100),
+      amount: Math.round(totalAmount * 100),
       currency: "INR",
       receipt: "retry_order_" + Date.now(),
     };
@@ -831,9 +1030,10 @@ const retryPayment = async (req, res) => {
     const razorpayOrder = await razorpayInstance.orders.create(options);
 
     req.session.retryOrder = {
-      originalOrderId: orderId,
+      originalOrderId: orderId.startsWith('temp_') ? null : orderId,
       razorpayOrderId: razorpayOrder.id,
-      amount: order.totalAmount,
+      amount: totalAmount,
+      isTemporary: orderId.startsWith('temp_')
     };
 
     res.json({ 
@@ -915,6 +1115,7 @@ module.exports = {
   postRazorpay,
   orderSuccess,
   orderFailure,
+  paymentFailure,
   retryPayment,
   viewFailedOrder,
   addAddress,

@@ -8,6 +8,7 @@ const adminRouter = require("./routes/adminRouter");
 const session = require('express-session');
 const passport = require('./config/passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const cartWishlistCount = require('./middlewares/cartWishlistCount');
 require('dotenv').config();
 
 const app = express();
@@ -56,6 +57,9 @@ app.use((req, res, next) => {
     res.locals.message = req.session.message || null;
     next();
 });
+
+// Add cart and wishlist counts to all views
+app.use(cartWishlistCount);
 
 app.use("/", userRouter);
 app.use("/admin", adminRouter);

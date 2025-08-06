@@ -48,6 +48,7 @@ router.post('/cancelItem/:orderId/:productId', userAuth, userController.cancelSi
 router.post('/order/cancel/:id', userAuth, userController.cancelOrderNew);
 router.post('/order/return/:id', userAuth, userController.returnOrder);
 router.get("/orders/:id", userAuth, userController.viewOrderDetails);
+router.get("/order/:orderId/invoice", userAuth, userController.downloadInvoice);
 router.get('/changePassword', userAuth, userController.getChangePassword);
 router.post('/changePassword', userAuth, userController.postChangePassword);
 router.post('/returnItem/:orderId/:productId', userAuth, userController.requestReturnItem)
@@ -68,6 +69,7 @@ router.get('/order/placed', checkoutController.codSuccess);
 router.post('/create-order', checkoutController.postRazorpay);
 router.get('/order/success', checkoutController.orderSuccess);
 router.get('/order/failure', checkoutController.orderFailure);
+router.get('/payment/failure', checkoutController.paymentFailure);
 router.post('/order/retry/:orderId', checkoutController.retryPayment);
 router.get('/order/view/:id', checkoutController.viewFailedOrder);
 router.post('/checkout/apply-coupon', checkoutController.applyCoupon);

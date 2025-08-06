@@ -25,14 +25,14 @@
             <div class="nav-buttons">
                 <a href="/wishlist" class="nav-link position-relative" title="Wishlist" id="wishlist-link">
                     <i class="far fa-heart"></i>
-                    <% if (typeof wishlistCount !== 'undefined' && wishlistCount > 0) { %>
-                        <span class="count-badge" id="wishlist-badge"><%= wishlistCount %></span>
+                    <% if (typeof wishlistCount !== 'undefined') { %>
+                        <span class="count-badge <%= wishlistCount === 0 ? 'count-badge-zero' : '' %>" id="wishlist-badge"><%= wishlistCount %></span>
                     <% } %>
                 </a>
                 <a href="/cart" class="nav-link position-relative" title="Cart" id="cart-link">
                     <i class="fas fa-shopping-cart"></i>
-                    <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %>
-                        <span class="count-badge" id="cart-badge"><%= cartCount %></span>
+                    <% if (typeof cartCount !== 'undefined') { %>
+                        <span class="count-badge <%= cartCount === 0 ? 'count-badge-zero' : '' %>" id="cart-badge"><%= cartCount %></span>
                     <% } %>
                 </a>
                 <div class="profile-container">

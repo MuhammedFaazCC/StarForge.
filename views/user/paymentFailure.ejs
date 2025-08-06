@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Failed - StarForge</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .payment-failure-container {
+      text-align: center;
+      padding: 40px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background-color: #fff;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .failure-icon {
+      font-size: 60px;
+      color: #dc3545;
+      margin-bottom: 20px;
+    }
+
+    .failure-title {
+      font-size: 28px;
+      color: #dc3545;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    .failure-message {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 30px;
+      line-height: 1.5;
+    }
+
+    .order-info {
+      background-color: #f8f9fa;
+      padding: 20px;
+      border-radius: 6px;
+      margin-bottom: 30px;
+      border-left: 4px solid #dc3545;
+      text-align: left;
+    }
+
+    .order-info h4 {
+      margin: 0 0 15px 0;
+      color: #333;
+      font-size: 16px;
+    }
+
+    .order-info p {
+      margin: 8px 0;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .order-info strong {
+      color: #333;
+    }
+
+    .order-value {
+      background-color: #fff;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 13px;
+      border: 1px solid #ddd;
+      display: inline-block;
+      margin-left: 10px;
+    }
+
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 30px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: background-color 0.3s ease;
+      min-width: 120px;
+    }
+
+    .btn-retry {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .btn-retry:hover {
+      background-color: #218838;
+    }
+
+    .btn-retry:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+    }
+
+    .btn-orders {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .btn-orders:hover {
+      background-color: #0056b3;
+    }
+
+    .btn-home {
+      background-color: #6c757d;
+      color: white;
+    }
+
+    .btn-home:hover {
+      background-color: #545b62;
+    }
+
+    .loading {
+      display: none;
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+    }
+
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #28a745;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading p {
+      margin: 0;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .help-section {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+      font-size: 14px;
+      color: #666;
+    }
+
+    @media (max-width: 768px) {
+      .payment-failure-container {
+        padding: 30px 20px;
+        margin: 10px;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .btn {
+        width: 100%;
+        max-width: 250px;
+        margin-bottom: 10px;
+      }
+
+      .order-info {
+        text-align: center;
+      }
+
+      .order-value {
+        display: block;
+        margin: 5px 0;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="payment-failure-container">
+    <!-- Failure Icon -->
+    <div class="failure-icon">✗</div>
+    
+    <!-- Main Heading -->
+    <h1 class="failure-title">Payment Failed</h1>
+    
+    <!-- Error Message -->
+    <p class="failure-message"><%= error %></p>
+
+    <!-- Order Information (if available) -->
+    <% if (orderId || referenceId) { %>
+      <div class="order-info">
+        <h4>Order Details</h4>
+        <% if (orderId) { %>
+          <p>
+            <strong>Order ID:</strong>
+            <span class="order-value"><%= orderId %></span>
+          </p>
+        <% } %>
+        <% if (referenceId) { %>
+          <p>
+            <strong>Reference ID:</strong>
+            <span class="order-value"><%= referenceId %></span>
+          </p>
+        <% } %>
+        <p>
+          <strong>Status:</strong>
+          <span class="order-value" style="color: #dc3545;">Payment Failed</span>
+        </p>
+        <p>
+          <strong>Time:</strong>
+          <span class="order-value"><%= new Date().toLocaleString('en-IN', { 
+            timeZone: 'Asia/Kolkata',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          }) %></span>
+        </p>
+      </div>
+    <% } %>
+
+    <!-- Debug Info (remove this after testing) -->
+    <!-- 
+    Debug: orderId = <%= orderId %>, canRetry = <%= canRetry %>, condition = <%= orderId || canRetry %>
+    -->
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <!-- Always show retry button if we have an orderId or if canRetry is true -->
+      <% if (orderId || canRetry) { %>
+        <button class="btn btn-retry" id="retryBtn" onclick="retryPayment('<%= orderId || 'temp_' + Date.now() %>')">
+          Retry Payment
+        </button>
+      <% } %>
+      
+      <a href="/orders" class="btn btn-orders">
+        Go to Orders
+      </a>
+      
+      <a href="/" class="btn btn-home">
+        Home
+      </a>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Processing payment retry...</p>
+    </div>
+
+    <!-- Help Section -->
+    <div class="help-section">
+      <p><strong>Need help?</strong> Contact our support team if you continue to experience issues.</p>
+      <% if (orderId) { %>
+        <p>You can retry payment within 24 hours of the original order.</p>
+      <% } %>
+    </div>
+  </div>
+
+  <script>
+    async function retryPayment(orderId) {
+      const retryBtn = document.getElementById('retryBtn');
+      const loading = document.getElementById('loading');
+      
+      try {
+        retryBtn.disabled = true;
+        retryBtn.textContent = 'Processing...';
+        loading.style.display = 'block';
+
+        const response = await fetch(`/order/retry/${orderId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to create retry payment');
+        }
+
+        if (typeof Razorpay === 'undefined') {
+          throw new Error('Payment system is not loaded. Please refresh the page and try again.');
+        }
+
+        const options = {
+          key: data.key,
+          amount: data.order.amount,
+          currency: data.order.currency,
+          name: 'StarForge',
+          description: `Retry Payment for Order #${orderId}`,
+          order_id: data.order.id,
+          handler: function (response) {
+            window.location.href = `/order/success?payment_id=${response.razorpay_payment_id}&order_id=${response.razorpay_order_id}&signature=${response.razorpay_signature}`;
+          },
+          modal: {
+            ondismiss: function() {
+              retryBtn.disabled = false;
+              retryBtn.textContent = 'Retry Payment';
+              loading.style.display = 'none';
+            }
+          },
+          theme: {
+            color: '#28a745'
+          }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+
+        loading.style.display = 'none';
+
+      } catch (error) {
+        console.error('Retry payment error:', error);
+        
+        retryBtn.disabled = false;
+        retryBtn.textContent = 'Retry Payment';
+        loading.style.display = 'none';
+
+        alert(error.message || 'Unable to retry payment. Please try again later.');
+      }
+    }
+
+    // Auto-focus retry button if available
+    document.addEventListener('DOMContentLoaded', function() {
+      const retryBtn = document.getElementById('retryBtn');
+      if (retryBtn) {
+        retryBtn.focus();
+      }
+    });
+  </script>
+</body>
+</html>

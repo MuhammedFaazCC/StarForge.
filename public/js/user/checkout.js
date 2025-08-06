@@ -254,7 +254,12 @@ document.addEventListener('DOMContentLoaded', () => {
           currency: data.order.currency,
           order_id: data.order.id,
           handler: function (response) {
-            window.location.href = `/order/success?payment_id=${response.razorpay_payment_id}&order_id=${response.razorpay_order_id}`;
+            // Payment successful - redirect to success page
+            if (response.razorpay_signature) {
+              window.location.href = `/order/success?payment_id=${response.razorpay_payment_id}&order_id=${response.razorpay_order_id}&signature=${response.razorpay_signature}`;
+            } else {
+              window.location.href = `/order/success?payment_id=${response.razorpay_payment_id}&order_id=${response.razorpay_order_id}`;
+            }
           },
           prefill: {
             name: window.USER_NAME || 'Customer',
@@ -263,8 +268,9 @@ document.addEventListener('DOMContentLoaded', () => {
           theme: { color: '#28a745' },
           modal: {
             ondismiss: function () {
-              submitButton.disabled = false;
-              submitButton.textContent = 'Place Order';
+              // Payment was cancelled or failed - redirect to failure page
+              console.log('Payment modal dismissed - payment cancelled or failed');
+              window.location.href = `/payment/failure?error=payment_cancelled&orderId=${data.order.id}`;
             },
             escape: true,
             backdropclose: false
@@ -272,6 +278,13 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const rzp = new Razorpay(options);
+        
+        // Handle payment errors
+        rzp.on('payment.failed', function (response) {
+          console.error('Payment failed:', response.error);
+          window.location.href = `/payment/failure?error=payment_failed&orderId=${data.order.id}&referenceId=${response.error.metadata?.payment_id || ''}`;
+        });
+
         rzp.open();
       } catch (err) {
         console.error('Razorpay fetch error:', err);

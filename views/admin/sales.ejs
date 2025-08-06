@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Records - StarForge</title>
+    <title>Sales Report - StarForge</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -20,10 +20,95 @@
     <div class="main-content" id="main-content">
         <div class="sales-section">
             <div class="header-section">
-                <h2>Sales Records</h2>
+                <h2><i class="fas fa-chart-line"></i> Sales Report</h2>
+                <div class="export-buttons">
+                    <button class="export-btn pdf-btn" onclick="exportReport('pdf')">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                    </button>
+                    <button class="export-btn excel-btn" onclick="exportReport('excel')">
+                        <i class="fas fa-file-excel"></i> Export Excel
+                    </button>
+                    <button class="export-btn csv-btn" onclick="exportReport('csv')">
+                        <i class="fas fa-file-csv"></i> Export CSV
+                    </button>
+                </div>
             </div>
 
+            <!-- Sales Summary Section -->
+            <div class="summary-section">
+                <h3><i class="fas fa-chart-bar"></i> Sales Summary</h3>
+                <div class="summary-cards">
+                    <div class="summary-card total-sales">
+                        <div class="card-icon">
+                            <i class="fas fa-rupee-sign"></i>
+                        </div>
+                        <div class="card-content">
+                            <h4>Total Sales</h4>
+                            <p class="amount">₹<%= analytics.totalSales.toLocaleString('en-IN') %></p>
+                            <small>From delivered orders</small>
+                        </div>
+                    </div>
+
+                    <div class="summary-card total-orders">
+                        <div class="card-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="card-content">
+                            <h4>Total Orders</h4>
+                            <p class="count"><%= analytics.totalOrders %></p>
+                            <small>Delivered orders</small>
+                        </div>
+                    </div>
+
+                    <div class="summary-card total-products">
+                        <div class="card-icon">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="card-content">
+                            <h4>Products Sold</h4>
+                            <p class="count"><%= analytics.totalProductsSold %></p>
+                            <small>Total quantity</small>
+                        </div>
+                    </div>
+
+                    <div class="summary-card total-discounts">
+                        <div class="card-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="card-content">
+                            <h4>Total Discounts</h4>
+                            <p class="amount">₹<%= analytics.totalDiscounts.toLocaleString('en-IN') %></p>
+                            <small>Coupon discounts</small>
+                        </div>
+                    </div>
+
+                    <div class="summary-card total-returns">
+                        <div class="card-icon">
+                            <i class="fas fa-undo"></i>
+                        </div>
+                        <div class="card-content">
+                            <h4>Total Returns</h4>
+                            <p class="amount">₹<%= analytics.totalReturns.toLocaleString('en-IN') %></p>
+                            <small><%= analytics.returnedOrdersCount %> returned orders</small>
+                        </div>
+                    </div>
+
+                    <div class="summary-card net-revenue">
+                        <div class="card-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="card-content">
+                            <h4>Net Revenue</h4>
+                            <p class="amount">₹<%= analytics.netRevenue.toLocaleString('en-IN') %></p>
+                            <small>Sales - Returns</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
             <div class="filters-section">
+                <h3><i class="fas fa-filter"></i> Filters & Controls</h3>
                 <form id="filterForm" method="GET" action="/admin/sales">
                     <div class="filter-row">
                         <div class="filter-group">
@@ -49,20 +134,16 @@
                         </div>
 
                         <div class="filter-group">
-                            <label for="status">Status:</label>
+                            <label for="status">Order Status:</label>
                             <select name="status" id="status">
                                 <option value="" <%= status === '' ? 'selected' : '' %>>All Status</option>
+                                <option value="Delivered" <%= status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                                <option value="Returned" <%= status === 'Returned' ? 'selected' : '' %>>Returned</option>
                                 <option value="Pending" <%= status === 'Pending' ? 'selected' : '' %>>Pending</option>
                                 <option value="Processing" <%= status === 'Processing' ? 'selected' : '' %>>Processing</option>
                                 <option value="Shipped" <%= status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
-                                <option value="Delivered" <%= status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
                                 <option value="Placed" <%= status === 'Placed' ? 'selected' : '' %>>Placed</option>
                             </select>
-                        </div>
-
-                        <div class="filter-group">
-                            <label for="search">Search:</label>
-                            <input type="text" name="search" id="search" placeholder="Product name, customer, order ID, or date" value="<%= search %>">
                         </div>
 
                         <div class="filter-group">
@@ -70,9 +151,14 @@
                             <select name="paymentMethod" id="paymentMethod">
                                 <option value="" <%= paymentMethod === '' ? 'selected' : '' %>>All Methods</option>
                                 <option value="COD" <%= paymentMethod === 'COD' ? 'selected' : '' %>>Cash on Delivery</option>
-                                <option value="Razorpay" <%= paymentMethod === 'Razorpay' ? 'selected' : '' %>>Razorpay</option>
+                                <option value="Online" <%= paymentMethod === 'Online' ? 'selected' : '' %>>Online Payment</option>
                                 <option value="Wallet" <%= paymentMethod === 'Wallet' ? 'selected' : '' %>>Wallet</option>
                             </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="search">Search Customer:</label>
+                            <input type="text" name="search" id="search" placeholder="Customer name or email" value="<%= search %>">
                         </div>
 
                         <div class="filter-group">
@@ -80,36 +166,40 @@
                             <select name="sort" id="sort">
                                 <option value="date_desc" <%= sort === 'date_desc' ? 'selected' : '' %>>Date (Newest First)</option>
                                 <option value="date_asc" <%= sort === 'date_asc' ? 'selected' : '' %>>Date (Oldest First)</option>
-                                <option value="revenue_desc" <%= sort === 'revenue_desc' ? 'selected' : '' %>>Revenue (High to Low)</option>
-                                <option value="revenue_asc" <%= sort === 'revenue_asc' ? 'selected' : '' %>>Revenue (Low to High)</option>
-                                <option value="quantity_desc" <%= sort === 'quantity_desc' ? 'selected' : '' %>>Quantity (High to Low)</option>
-                                <option value="quantity_asc" <%= sort === 'quantity_asc' ? 'selected' : '' %>>Quantity (Low to High)</option>
+                                <option value="amount_desc" <%= sort === 'amount_desc' ? 'selected' : '' %>>Amount (High to Low)</option>
+                                <option value="amount_asc" <%= sort === 'amount_asc' ? 'selected' : '' %>>Amount (Low to High)</option>
                             </select>
                         </div>
 
                         <div class="filter-group">
-                            <button type="submit" class="filter-btn">Apply Filters</button>
-                            <button type="button" class="clear-btn" onclick="clearFilters()">Clear</button>
+                            <button type="submit" class="filter-btn">
+                                <i class="fas fa-search"></i> Apply Filters
+                            </button>
+                            <button type="button" class="clear-btn" onclick="clearFilters()">
+                                <i class="fas fa-times"></i> Clear
+                            </button>
                         </div>
                     </div>
                 </form>
             </div>
 
+            <!-- Detailed Sales Table -->
             <div class="table-section">
-                <h3>Sales Details</h3>
+                <h3><i class="fas fa-table"></i> Detailed Sales Table</h3>
                 <div class="table-container">
                     <table class="sales-table">
                         <thead>
                             <tr>
                                 <th>Order ID</th>
-                                <th>Date</th>
-                                <th>Customer</th>
+                                <th>Order Date</th>
+                                <th>Customer Name</th>
                                 <th>Payment Method</th>
-                                <th>Subtotal</th>
-                                <th>Discount</th>
-                                <th>Coupon</th>
+                                <th>Coupon Used</th>
                                 <th>Total Amount</th>
-                                <th>Status</th>
+                                <th>Discount</th>
+                                <th>Net Paid Amount</th>
+                                <th>Order Status</th>
+                                <th>Products List</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -121,17 +211,34 @@
                                         <button class="expand-btn" onclick="toggleOrderItems('<%= index %>')">
                                             <i class="fas fa-chevron-right" id="chevron-<%= index %>"></i>
                                         </button>
-                                        <%= sale.id %>
+                                        <span class="order-id"><%= sale.id %></span>
                                     </div>
                                 </td>
-                                <td><%= sale.date %></td>
-                                <td><%= sale.customer %></td>
-                                <td><%= sale.paymentMethod %></td>
-                                <td>₹<%= sale.subtotal.toLocaleString('en-IN') %></td>
-                                <td>₹<%= sale.discount.toLocaleString('en-IN') %></td>
-                                <td><%= sale.couponCode %></td>
-                                <td>₹<%= sale.totalAmount.toLocaleString('en-IN') %></td>
-                                <td><span class="status-badge <%= sale.status.toLowerCase().replace(' ', '-') %>"><%= sale.status %></span></td>
+                                <td><%= sale.orderDate %></td>
+                                <td><%= sale.customerName %></td>
+                                <td>
+                                    <span class="payment-method <%= sale.paymentMethod.toLowerCase() %>">
+                                        <%= sale.paymentMethod %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="coupon-code">
+                                        <%= sale.couponUsed %>
+                                    </span>
+                                </td>
+                                <td class="amount">₹<%= sale.totalAmount.toLocaleString('en-IN') %></td>
+                                <td class="discount">₹<%= sale.discount.toLocaleString('en-IN') %></td>
+                                <td class="amount net-amount">₹<%= sale.netPaidAmount.toLocaleString('en-IN') %></td>
+                                <td>
+                                    <span class="status-badge <%= sale.orderStatus.toLowerCase().replace(' ', '-') %>">
+                                        <%= sale.orderStatus %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="products-count">
+                                        <%= sale.productsList.length %> item(s)
+                                    </span>
+                                </td>
                                 <td>
                                     <button class="view-btn" onclick="viewOrderDetails('<%= sale.id %>')" title="View Full Order Details">
                                         <i class="fas fa-eye"></i>
@@ -139,11 +246,11 @@
                                 </td>
                             </tr>
                             <tr class="items-row" id="items-<%= index %>" style="display: none;">
-                                <td colspan="10">
+                                <td colspan="11">
                                     <div class="items-container">
-                                        <h4>Order Items:</h4>
+                                        <h4><i class="fas fa-list"></i> Order Items:</h4>
                                         <div class="items-grid">
-                                            <% sale.items.forEach(item => { %>
+                                            <% sale.productsList.forEach(item => { %>
                                             <div class="item-card">
                                                 <div class="item-info">
                                                     <strong><%= item.name %></strong>
@@ -163,7 +270,10 @@
                             <% }) %>
                             <% if (sales.length === 0) { %>
                             <tr>
-                                <td colspan="10" class="no-data">No sales found for the selected criteria</td>
+                                <td colspan="11" class="no-data">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No sales found for the selected criteria</p>
+                                </td>
                             </tr>
                             <% } %>
                         </tbody>
@@ -171,10 +281,13 @@
                 </div>
             </div>
 
+            <!-- Pagination -->
             <% if (totalPages > 1) { %>
             <div class="pagination">
                 <% if (currentPage > 1) { %>
-                <a href="?page=<%= currentPage - 1 %>&search=<%= search %>&status=<%= status %>&paymentMethod=<%= paymentMethod %>&sort=<%= sort %>&dateFilter=<%= dateFilter %>&startDate=<%= startDate %>&endDate=<%= endDate %>" class="page-btn">Previous</a>
+                <a href="?page=<%= currentPage - 1 %>&search=<%= search %>&status=<%= status %>&paymentMethod=<%= paymentMethod %>&sort=<%= sort %>&dateFilter=<%= dateFilter %>&startDate=<%= startDate %>&endDate=<%= endDate %>" class="page-btn">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
                 <% } %>
                 
                 <% for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) { %>
@@ -183,7 +296,9 @@
                 <% } %>
                 
                 <% if (currentPage < totalPages) { %>
-                <a href="?page=<%= currentPage + 1 %>&search=<%= search %>&status=<%= status %>&paymentMethod=<%= paymentMethod %>&sort=<%= sort %>&dateFilter=<%= dateFilter %>&startDate=<%= startDate %>&endDate=<%= endDate %>" class="page-btn">Next</a>
+                <a href="?page=<%= currentPage + 1 %>&search=<%= search %>&status=<%= status %>&paymentMethod=<%= paymentMethod %>&sort=<%= sort %>&dateFilter=<%= dateFilter %>&startDate=<%= startDate %>&endDate=<%= endDate %>" class="page-btn">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
                 <% } %>
             </div>
             <% } %>
@@ -194,7 +309,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/admin/common.js"></script>
-    <script src="/js/admin/sales.js"></script>
 
     <script>
         function toggleCustomDates() {
@@ -232,12 +346,82 @@
             }
         }
 
+        function exportReport(format) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const exportUrl = `/admin/sales/export/${format}?${urlParams.toString()}`;
+            
+            // Show loading indicator
+            Swal.fire({
+                title: 'Generating Report...',
+                text: `Please wait while we generate your ${format.toUpperCase()} report.`,
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Create a temporary link to download the file
+            const link = document.createElement('a');
+            link.href = exportUrl;
+            link.download = `sales_report_${new Date().toISOString().split('T')[0]}.${format}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Close loading indicator after a short delay
+            setTimeout(() => {
+                Swal.close();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Report Generated!',
+                    text: `Your ${format.toUpperCase()} report has been downloaded.`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }, 1000);
+        }
+
+        // Auto-submit form on search input with debounce
         let searchTimeout;
         document.getElementById('search').addEventListener('input', function() {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 document.getElementById('filterForm').submit();
             }, 500);
+        });
+
+        // Auto-submit form on filter changes
+        document.getElementById('status').addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+
+        document.getElementById('paymentMethod').addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+
+        document.getElementById('sort').addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+
+        document.getElementById('dateFilter').addEventListener('change', function() {
+            if (this.value !== 'custom') {
+                document.getElementById('filterForm').submit();
+            }
+        });
+
+        // Submit form when custom date range is selected
+        document.getElementById('startDate').addEventListener('change', function() {
+            if (document.getElementById('dateFilter').value === 'custom' && 
+                document.getElementById('endDate').value) {
+                document.getElementById('filterForm').submit();
+            }
+        });
+
+        document.getElementById('endDate').addEventListener('change', function() {
+            if (document.getElementById('dateFilter').value === 'custom' && 
+                document.getElementById('startDate').value) {
+                document.getElementById('filterForm').submit();
+            }
         });
     </script>
 </body>

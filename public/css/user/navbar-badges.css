@@ -1,0 +1,87 @@
+/* Notification Badge Styles */
+.position-relative {
+    position: relative;
+}
+
+.count-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background-color: #fca120;
+    color: #ffffff;
+    font-size: 0.6rem;
+    font-weight: 700;
+    min-width: 14px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+    border: 1px solid #000000;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+    animation: badge-pulse 0.3s ease-in-out;
+}
+
+.count-badge-zero {
+    background-color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-size: 0.55rem;
+}
+
+/* Animation for badge appearance */
+@keyframes badge-pulse {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Hover effects for nav links with badges */
+.nav-link:hover .count-badge {
+    background-color: #e8940f;
+    transform: scale(1.1);
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-link:hover .count-badge-zero {
+    background-color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .count-badge {
+        top: -5px;
+        right: -5px;
+        min-width: 12px;
+        width: 12px;
+        height: 12px;
+        font-size: 0.55rem;
+    }
+}
+
+/* Additional styling for better visibility */
+.nav-link {
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-link:hover {
+    transform: translateY(-1px);
+}
+
+/* Ensure badges don't interfere with click area */
+.nav-link .count-badge {
+    pointer-events: none;
+}
