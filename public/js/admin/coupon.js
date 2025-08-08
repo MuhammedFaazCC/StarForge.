@@ -1,4 +1,4 @@
-const toggleBtn = document.querySelector(".toggle-btn");
+ const toggleBtn = document.querySelector(".toggle-btn");
 const sidePanel = document.querySelector(".side-panel");
 const mainContent = document.querySelector(".main-content");
 
@@ -21,67 +21,627 @@ document.querySelectorAll(".side-panel a").forEach((link) => {
   });
 });
 
+// Custom Notification System
+class NotificationManager {
+  constructor() {
+    this.container = document.getElementById('notification-container');
+    this.notifications = [];
+  }
+
+  show(message, type = 'info', duration = 5000) {
+    const notification = this.createNotification(message, type, duration);
+    this.container.appendChild(notification);
+    this.notifications.push(notification);
+
+    // Trigger animation
+    setTimeout(() => {
+      notification.classList.add('show');
+    }, 100);
+
+    // Auto remove
+    if (duration > 0) {
+      setTimeout(() => {
+        this.remove(notification);
+      }, duration);
+    }
+
+    return notification;
+  }
+
+  createNotification(message, type, duration) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    
+    const icons = {
+      success: '✓',
+      error: '✕',
+      warning: '⚠',
+      info: 'ℹ'
+    };
+
+    notification.innerHTML = `
+      <div class="notification-content">
+        <span class="notification-icon">${icons[type] || icons.info}</span>
+        <span class="notification-message">${message}</span>
+      </div>
+      <button class="notification-close" onclick="notificationManager.remove(this.parentElement)">×</button>
+      ${duration > 0 ? `<div class="notification-progress" style="width: 100%; animation: progress ${duration}ms linear;"></div>` : ''}
+    `;
+
+    return notification;
+  }
+
+  remove(notification) {
+    if (notification && notification.parentElement) {
+      notification.classList.remove('show');
+      setTimeout(() => {
+        if (notification.parentElement) {
+          notification.parentElement.removeChild(notification);
+        }
+        const index = this.notifications.indexOf(notification);
+        if (index > -1) {
+          this.notifications.splice(index, 1);
+        }
+      }, 300);
+    }
+  }
+
+  success(message, duration = 5000) {
+    return this.show(message, 'success', duration);
+  }
+
+  error(message, duration = 7000) {
+    return this.show(message, 'error', duration);
+  }
+
+  warning(message, duration = 6000) {
+    return this.show(message, 'warning', duration);
+  }
+
+  info(message, duration = 5000) {
+    return this.show(message, 'info', duration);
+  }
+}
+
+// Initialize notification manager
+const notificationManager = new NotificationManager();
+
+// Add CSS animation for progress bar
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes progress {
+    from { width: 100%; }
+    to { width: 0%; }
+  }
+`;
+document.head.appendChild(style);
+
+// Confirmation Modal Functions
+let currentCouponId = null;
+let currentCouponCode = null;
+
+function showConfirmationModal(couponId, couponCode) {
+  currentCouponId = couponId;
+  currentCouponCode = couponCode;
+  
+  const modal = document.getElementById('confirmation-modal');
+  const message = document.getElementById('confirmation-message');
+  
+  message.textContent = `Are you sure you want to delete the coupon "${couponCode}"? This action cannot be undone.`;
+  modal.classList.add('show');
+  
+  // Add event listener to confirm button
+  const confirmBtn = document.getElementById('confirm-delete-btn');
+  confirmBtn.onclick = () => confirmDelete();
+}
+
+function hideConfirmationModal() {
+  const modal = document.getElementById('confirmation-modal');
+  modal.classList.remove('show');
+  currentCouponId = null;
+  currentCouponCode = null;
+}
+
+function confirmDelete() {
+  if (!currentCouponId) return;
+  
+  const confirmBtn = document.getElementById('confirm-delete-btn');
+  const originalText = confirmBtn.textContent;
+  
+  // Show loading state
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = 'Deleting...';
+  
+  // Perform the actual deletion
+  performCouponDeletion(currentCouponId, currentCouponCode)
+    .finally(() => {
+      // Reset button state
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = originalText;
+      hideConfirmationModal();
+    });
+}
+
+async function performCouponDeletion(couponId, couponCode) {
+  try {
+    console.log(`Attempting to delete coupon: ${couponCode} (ID: ${couponId})`);
+    
+    const response = await fetch(`/admin/coupons/delete/${couponId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log(`Response status: ${response.status}`);
+    
+    // Parse the response data regardless of status
+    let data;
+    try {
+      data = await response.json();
+      console.log('Response data:', data);
+    } catch (parseError) {
+      console.error('Failed to parse response JSON:', parseError);
+      throw new Error('Invalid server response');
+    }
+
+    if (response.ok && data.success) {
+      // Success case - show notification and remove row from table
+      notificationManager.success(data.message || `Coupon "${couponCode}" deleted successfully!`);
+      
+      // Remove the coupon row from the table
+      const deleteButton = document.querySelector(`button[onclick="deleteCoupon('${couponId}')"]`);
+      if (deleteButton) {
+        const row = deleteButton.closest('tr');
+        if (row) {
+          row.remove();
+        }
+      }
+    } else if (data.canSoftDelete) {
+      // Show options for soft delete or force delete
+      showDeleteOptionsModal(couponId, couponCode, data.message, data.usageCount);
+    } else {
+      // Error case - show the specific error message from server
+      const errorMessage = data.message || getDefaultErrorMessage(response.status);
+      notificationManager.error(errorMessage);
+    }
+  } catch (error) {
+    console.error("Error deleting coupon:", error);
+    
+    // Handle network errors or other exceptions
+    let errorMessage = "Failed to delete coupon. Please check your connection and try again.";
+    
+    if (error.message === 'Invalid server response') {
+      errorMessage = "Server returned an invalid response. Please try again.";
+    } else if (error.message.includes('fetch')) {
+      errorMessage = "Network error. Please check your connection and try again.";
+    }
+    
+    notificationManager.error(errorMessage);
+  }
+}
+
+async function performSoftDelete(couponId, couponCode) {
+  try {
+    console.log(`Attempting to soft delete coupon: ${couponCode} (ID: ${couponId})`);
+    
+    const response = await fetch(`/admin/coupons/soft-delete/${couponId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log(`Soft delete response status: ${response.status}`);
+    
+    let data;
+    try {
+      data = await response.json();
+      console.log('Soft delete response data:', data);
+    } catch (parseError) {
+      console.error('Failed to parse soft delete response JSON:', parseError);
+      throw new Error('Invalid server response');
+    }
+
+    if (response.ok && data.success) {
+      // Success case - show notification and update UI
+      notificationManager.success(data.message || `Coupon "${couponCode}" deactivated successfully!`);
+      
+      // Update the coupon row in the table
+      updateCouponRowStatus(couponId, 'Inactive');
+    } else {
+      const errorMessage = data.message || getDefaultErrorMessage(response.status);
+      notificationManager.error(errorMessage);
+    }
+  } catch (error) {
+    console.error("Error soft deleting coupon:", error);
+    notificationManager.error("Failed to deactivate coupon. Please try again.");
+  }
+}
+
+async function performForceDelete(couponId, couponCode) {
+  try {
+    console.log(`Attempting to force delete coupon: ${couponCode} (ID: ${couponId})`);
+    
+    const response = await fetch(`/admin/coupons/delete/${couponId}?force=true`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log(`Force delete response status: ${response.status}`);
+    
+    let data;
+    try {
+      data = await response.json();
+      console.log('Force delete response data:', data);
+    } catch (parseError) {
+      console.error('Failed to parse force delete response JSON:', parseError);
+      throw new Error('Invalid server response');
+    }
+
+    if (response.ok && data.success) {
+      // Success case - show notification and remove row from table
+      notificationManager.success(data.message || `Coupon "${couponCode}" permanently deleted!`);
+      
+      // Remove the coupon row from the table
+      const deleteButton = document.querySelector(`button[onclick="deleteCoupon('${couponId}')"]`);
+      if (deleteButton) {
+        const row = deleteButton.closest('tr');
+        if (row) {
+          row.remove();
+        }
+      }
+    } else {
+      const errorMessage = data.message || getDefaultErrorMessage(response.status);
+      notificationManager.error(errorMessage);
+    }
+  } catch (error) {
+    console.error("Error force deleting coupon:", error);
+    notificationManager.error("Failed to permanently delete coupon. Please try again.");
+  }
+}
+
+function getDefaultErrorMessage(status) {
+  switch (status) {
+    case 400:
+      return "Invalid request. Cannot delete this coupon.";
+    case 404:
+      return "Coupon not found.";
+    case 500:
+      return "Server error. Please try again later.";
+    default:
+      return "Failed to delete coupon. Please try again.";
+  }
+}
+
+// Main delete function called by the delete buttons
+function deleteCoupon(couponId) {
+  // Get the coupon code from the table row
+  const deleteButton = document.querySelector(`button[onclick="deleteCoupon('${couponId}')"]`);
+  const row = deleteButton.closest('tr');
+  const couponCode = row.cells[0].textContent.trim(); // First cell contains the coupon code
+  
+  console.log(`Delete requested for coupon: ${couponCode} (ID: ${couponId})`);
+  
+  // Show confirmation modal instead of browser confirm
+  showConfirmationModal(couponId, couponCode);
+}
+
+// Create Coupon Form Handler
 const createCouponForm = document.getElementById("createCouponForm");
+
+if (createCouponForm) {
+  createCouponForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
     const code = document.getElementById("code").value.trim().toUpperCase();
     const discount = parseFloat(document.getElementById("discount").value);
     const expiryDate = new Date(document.getElementById("expiryDate").value);
     const usageLimit = parseInt(document.getElementById("usageLimit").value);
+    const minimumAmount = parseFloat(document.getElementById("minimumAmount").value) || 0;
 
+    // Validation
     if (!code) {
-      alert("Coupon code is required");
+      notificationManager.error("Coupon code is required");
       return;
     }
 
     if (isNaN(discount) || discount < 0 || discount > 100) {
-      alert("Discount must be between 0 and 100");
+      notificationManager.error("Discount must be between 0 and 100");
       return;
     }
 
     if (isNaN(expiryDate.getTime()) || expiryDate <= new Date()) {
-      alert("Expiry date must be in the future");
+      notificationManager.error("Expiry date must be in the future");
       return;
     }
 
     if (isNaN(usageLimit) || usageLimit < 1) {
-      alert("Usage limit must be a positive integer");
+      notificationManager.error("Usage limit must be a positive integer");
       return;
     }
+
+    // Show loading notification
+    const loadingNotification = notificationManager.info("Creating coupon...", 0);
 
     try {
       const response = await fetch("/admin/coupons/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, discount, expiryDate, usageLimit }),
+        body: JSON.stringify({ code, discount, expiryDate, usageLimit, minimumAmount }),
       });
+      
       const result = await response.json();
 
+      // Remove loading notification
+      notificationManager.remove(loadingNotification);
+
       if (result.success) {
+        // Success case - redirect immediately
         window.location.href = "/admin/coupons";
       } else {
-        alert(result.message);
+        notificationManager.error(result.message || "Failed to create coupon");
       }
     } catch (error) {
       console.error("Error creating coupon:", error);
-      alert("Failed to create coupon");
+      notificationManager.remove(loadingNotification);
+      notificationManager.error("Failed to create coupon. Please try again.");
     }
+  });
+}
 
-function deleteCoupon(couponId) {
-  if (!confirm("Are you sure you want to delete this coupon?")) return;
+// Delete Options Modal Functions
+let deleteOptionsCouponId = null;
+let deleteOptionsCouponCode = null;
 
-  fetch(`/admin/coupons/delete/${couponId}`, {
-    method: "DELETE",
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.success) {
-        window.location.reload();
-      } else {
-        alert(data.message);
-      }
-    })
-    .catch((error) => {
-      console.error("Error deleting coupon:", error);
-      alert("Failed to delete coupon");
+function showDeleteOptionsModal(couponId, couponCode, message, usageCount) {
+  deleteOptionsCouponId = couponId;
+  deleteOptionsCouponCode = couponCode;
+  
+  // Create the modal if it doesn't exist
+  let modal = document.getElementById('delete-options-modal');
+  if (!modal) {
+    modal = createDeleteOptionsModal();
+    document.body.appendChild(modal);
+  }
+  
+  const messageElement = document.getElementById('delete-options-message');
+  const usageInfo = document.getElementById('delete-options-usage');
+  
+  messageElement.textContent = message;
+  usageInfo.textContent = `This coupon has been used ${usageCount} time(s). Choose an option:`;
+  
+  modal.classList.add('show');
+}
+
+function hideDeleteOptionsModal() {
+  const modal = document.getElementById('delete-options-modal');
+  if (modal) {
+    modal.classList.remove('show');
+  }
+  deleteOptionsCouponId = null;
+  deleteOptionsCouponCode = null;
+}
+
+function createDeleteOptionsModal() {
+  const modal = document.createElement('div');
+  modal.id = 'delete-options-modal';
+  modal.className = 'confirmation-modal';
+  
+  modal.innerHTML = `
+    <div class="confirmation-content" style="max-width: 500px;">
+      <h3>Coupon Deletion Options</h3>
+      <p id="delete-options-message"></p>
+      <p id="delete-options-usage" style="font-weight: 500; color: #374151; margin-bottom: 20px;"></p>
+      
+      <div class="delete-options">
+        <div class="delete-option">
+          <h4>Deactivate (Recommended)</h4>
+          <p>Sets coupon status to "Inactive". Preserves usage history and order data. Coupon cannot be used by customers.</p>
+          <button type="button" class="confirmation-btn soft-delete" onclick="confirmSoftDelete()">Deactivate Coupon</button>
+        </div>
+        
+        <div class="delete-option">
+          <h4>Permanently Delete</h4>
+          <p>Completely removes the coupon and all usage history. This action cannot be undone.</p>
+          <button type="button" class="confirmation-btn force-delete" onclick="confirmForceDelete()">Permanently Delete</button>
+        </div>
+      </div>
+      
+      <div class="confirmation-actions" style="margin-top: 25px;">
+        <button type="button" class="confirmation-btn cancel" onclick="hideDeleteOptionsModal()">Cancel</button>
+      </div>
+    </div>
+  `;
+  
+  return modal;
+}
+
+function confirmSoftDelete() {
+  if (!deleteOptionsCouponId) return;
+  
+  const softDeleteBtn = document.querySelector('.soft-delete');
+  const originalText = softDeleteBtn.textContent;
+  
+  softDeleteBtn.disabled = true;
+  softDeleteBtn.textContent = 'Deactivating...';
+  
+  performSoftDelete(deleteOptionsCouponId, deleteOptionsCouponCode)
+    .finally(() => {
+      softDeleteBtn.disabled = false;
+      softDeleteBtn.textContent = originalText;
+      hideDeleteOptionsModal();
     });
 }
+
+function confirmForceDelete() {
+  if (!deleteOptionsCouponId) return;
+  
+  const forceDeleteBtn = document.querySelector('.force-delete');
+  const originalText = forceDeleteBtn.textContent;
+  
+  forceDeleteBtn.disabled = true;
+  forceDeleteBtn.textContent = 'Deleting...';
+  
+  performForceDelete(deleteOptionsCouponId, deleteOptionsCouponCode)
+    .finally(() => {
+      forceDeleteBtn.disabled = false;
+      forceDeleteBtn.textContent = originalText;
+      hideDeleteOptionsModal();
+    });
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', (e) => {
+  const confirmationModal = document.getElementById('confirmation-modal');
+  const deleteOptionsModal = document.getElementById('delete-options-modal');
+  
+  if (e.target === confirmationModal) {
+    hideConfirmationModal();
+  }
+  
+  if (e.target === deleteOptionsModal) {
+    hideDeleteOptionsModal();
+  }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    hideConfirmationModal();
+    hideDeleteOptionsModal();
+  }
+});
+
+// Reactivate coupon function
+async function reactivateCoupon(couponId) {
+  // Get the coupon code from the table row
+  const reactivateButton = document.querySelector(`button[onclick="reactivateCoupon('${couponId}')"]`);
+  const row = reactivateButton.closest('tr');
+  const couponCode = row.cells[0].textContent.trim(); // First cell contains the coupon code
+  
+  console.log(`Reactivate requested for coupon: ${couponCode} (ID: ${couponId})`);
+  
+  // Show confirmation for reactivation
+  const confirmed = confirm(`Are you sure you want to reactivate the coupon "${couponCode}"?`);
+  if (!confirmed) return;
+  
+  const originalText = reactivateButton.textContent;
+  
+  // Show loading state
+  reactivateButton.disabled = true;
+  reactivateButton.textContent = 'Reactivating...';
+  
+  try {
+    const response = await fetch(`/admin/coupons/reactivate/${couponId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log(`Reactivate response status: ${response.status}`);
+    
+    let data;
+    try {
+      data = await response.json();
+      console.log('Reactivate response data:', data);
+    } catch (parseError) {
+      console.error('Failed to parse reactivate response JSON:', parseError);
+      throw new Error('Invalid server response');
+    }
+
+    if (response.ok && data.success) {
+      // Success case - show notification and update UI
+      notificationManager.success(data.message || `Coupon "${couponCode}" reactivated successfully!`);
+      
+      // Update the coupon row in the table
+      updateCouponRowStatus(couponId, 'Active');
+    } else {
+      const errorMessage = data.message || getDefaultErrorMessage(response.status);
+      notificationManager.error(errorMessage);
+    }
+  } catch (error) {
+    console.error("Error reactivating coupon:", error);
+    
+    let errorMessage = "Failed to reactivate coupon. Please check your connection and try again.";
+    
+    if (error.message === 'Invalid server response') {
+      errorMessage = "Server returned an invalid response. Please try again.";
+    } else if (error.message.includes('fetch')) {
+      errorMessage = "Network error. Please check your connection and try again.";
+    }
+    
+    notificationManager.error(errorMessage);
+  } finally {
+    // Reset button state
+    reactivateButton.disabled = false;
+    reactivateButton.textContent = originalText;
+  }
+}
+
+// Helper function to update coupon row status in the UI
+function updateCouponRowStatus(couponId, newStatus) {
+  // Find the button that corresponds to this coupon
+  const button = document.querySelector(`button[onclick*="'${couponId}'"]`);
+  if (!button) return;
+  
+  const row = button.closest('tr');
+  if (!row) return;
+  
+  // Find the status cell (assuming it's the 4th column based on typical table structure)
+  const statusCell = row.cells[3]; // Adjust index if needed
+  if (!statusCell) return;
+  
+  // Update the status badge
+  const statusBadge = statusCell.querySelector('.status');
+  if (statusBadge) {
+    // Remove old status classes
+    statusBadge.classList.remove('active', 'inactive', 'expired');
+    
+    // Add new status class and update text
+    statusBadge.classList.add(newStatus.toLowerCase());
+    statusBadge.textContent = newStatus;
+  }
+  
+  // Update the action buttons based on new status
+  const actionsCell = row.cells[4]; // Assuming actions are in the 5th column
+  if (!actionsCell) return;
+  
+  if (newStatus === 'Inactive') {
+    // Show reactivate button, hide delete button temporarily
+    const deleteButton = actionsCell.querySelector('.btn-block');
+    const reactivateButton = actionsCell.querySelector('.btn-reactivate');
+    
+    if (deleteButton) {
+      deleteButton.style.display = 'none';
+    }
+    
+    if (!reactivateButton) {
+      // Create reactivate button if it doesn't exist
+      const newReactivateButton = document.createElement('button');
+      newReactivateButton.className = 'btn-action btn-reactivate';
+      newReactivateButton.textContent = 'Reactivate';
+      newReactivateButton.onclick = () => reactivateCoupon(couponId);
+      actionsCell.appendChild(newReactivateButton);
+    } else {
+      reactivateButton.style.display = 'inline-block';
+    }
+  } else if (newStatus === 'Active') {
+    // Show delete button, hide reactivate button
+    const deleteButton = actionsCell.querySelector('.btn-block');
+    const reactivateButton = actionsCell.querySelector('.btn-reactivate');
+    
+    if (deleteButton) {
+      deleteButton.style.display = 'inline-block';
+    }
+    
+    if (reactivateButton) {
+      reactivateButton.style.display = 'none';
+    }
+  }
+}
+
+console.log('Coupon management system initialized with custom notifications and soft delete options');

@@ -3,8 +3,8 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/userSchema');
 
 passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  clientID: process.env.GOOGLE_CLIENT_ID, // eslint-disable-line no-undef
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET, // eslint-disable-line no-undef
   callbackURL: "http://localhost:8080/auth/google/callback"
 }, async (accessToken, refreshToken, profile, done) => {
   console.log("✅ Raw Google profile:", JSON.stringify(profile, null, 2));

@@ -67,7 +67,6 @@ const getCheckoutPage = async (req, res) => {
       }
     }
 
-    const currentDate = new Date();
     const allCoupons = await Coupon.find({
       status: 'Active',
       expiryDate: { $gt: new Date() }
@@ -695,7 +694,7 @@ const orderFailure = async (req, res) => {
       return res.redirect('/login?redirect=/order/failure');
     }
 
-    const { error, order_id, payment_id } = req.query;
+    const { error, order_id } = req.query;
     let errorMessage = "Payment failed. Please try again.";
     let failedOrderId = null;
 

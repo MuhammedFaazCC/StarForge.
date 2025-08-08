@@ -14,7 +14,7 @@ const Cart = require("../../models/cartSchema");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadPath = path.join(__dirname, '../../public/uploads/profiles');
+      const uploadPath = path.join(process.cwd(), 'public/uploads/profiles');
     
     if (!fs.existsSync(uploadPath)) {
       fs.mkdirSync(uploadPath, { recursive: true });
@@ -58,10 +58,11 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-transporter.verify((error, success) => {
+transporter.verify((error) => {
   if (error) {
     console.error("SMTP Transporter Error:", error.message);
   } else {
+    console.log("SMTP Transporter is ready");
   }
 });
 
@@ -320,7 +321,7 @@ const postEditProfile = async (req, res) => {
     let profileImageFilename = user.profileImage;
     if (req.file) {
       if (user.profileImage) {
-        const oldImagePath = path.join(__dirname, '../../public/uploads/profiles', user.profileImage);
+        const oldImagePath = path.join(process.cwd(), 'public/uploads/profiles', user.profileImage);
         if (fs.existsSync(oldImagePath)) {
           try {
             fs.unlinkSync(oldImagePath);
@@ -1869,7 +1870,7 @@ const uploadProfileImage = async (req, res) => {
     }
 
     if (user.profileImage) {
-      const oldImagePath = path.join(__dirname, '../../public/uploads/profiles', user.profileImage);
+      const oldImagePath = path.join(process.cwd(), 'public/uploads/profiles', user.profileImage);
       if (fs.existsSync(oldImagePath)) {
         try {
           fs.unlinkSync(oldImagePath);
@@ -1937,7 +1938,7 @@ const removeProfileImage = async (req, res) => {
       });
     }
 
-    const imagePath = path.join(__dirname, '../../public/uploads/profiles', user.profileImage);
+    const imagePath = path.join(process.cwd(), 'public/uploads/profiles', user.profileImage);
     if (fs.existsSync(imagePath)) {
       try {
         fs.unlinkSync(imagePath);

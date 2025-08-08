@@ -1,7 +1,6 @@
 const Offer = require('../../models/offerSchema');
 const Product = require('../../models/productSchema');
 const Category = require('../../models/categorySchema');
-const User = require('../../models/userSchema');
 
 const getOffers = async (req, res) => {
     try {

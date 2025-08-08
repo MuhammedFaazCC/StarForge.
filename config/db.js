@@ -3,7 +3,7 @@ require('dotenv').config();
 
 const connectDB = async () => {
     try {
-        const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/StarForge';
+        const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/StarForge'; // eslint-disable-line no-undef
         console.log('Connecting to MongoDB with URI:', uri);
         
         if (!uri) {
@@ -14,7 +14,7 @@ const connectDB = async () => {
         console.log('DB connected');
     } catch (error) {
         console.error('DB Connection error:', error.message);
-        process.exit(1);
+        process.exit(1); // eslint-disable-line no-undef
     }
 };
 

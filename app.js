@@ -1,5 +1,4 @@
 const express = require("express");
-const mongoose = require('mongoose');
 const path = require("path");
 const db = require("./config/db");
 const flash = require('connect-flash');
@@ -7,7 +6,6 @@ const userRouter = require("./routes/userRouter");
 const adminRouter = require("./routes/adminRouter");
 const session = require('express-session');
 const passport = require('./config/passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const cartWishlistCount = require('./middlewares/cartWishlistCount');
 require('dotenv').config();
 

@@ -58,23 +58,6 @@ const Wishlist = require('../../models/wishlistSchema')
     const minPrice = parseInt(req.query.minPrice);
     const maxPrice = parseInt(req.query.maxPrice);
     if (!isNaN(minPrice) || !isNaN(maxPrice)) {
-      const priceFilterStage = {
-        $addFields: {
-          salePrice: {
-            $cond: {
-              if: { $gt: ["$offer", 0] },
-              then: {
-                $multiply: [
-                  "$price",
-                  { $subtract: [1, { $divide: ["$offer", 100] }] }
-                ]
-              },
-              else: "$price"
-            }
-          }
-        }
-      };
-
       const salePriceFilter = {};
       if (!isNaN(minPrice)) salePriceFilter.$gte = minPrice;
       if (!isNaN(maxPrice)) salePriceFilter.$lte = maxPrice;

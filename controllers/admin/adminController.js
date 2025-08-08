@@ -183,7 +183,7 @@ const getInvoicePDF = async (req, res) => {
     const order = await Order.findById(orderId).populate("userId");
     if (!order) return res.status(404).send("Order not found");
 
-    const filePath = path.join(__dirname, '../../views/admin/invoicePdf.ejs');
+    const filePath = path.join(__dirname, '../../views/admin/invoicePdf.ejs'); // eslint-disable-line no-undef
 
     ejs.renderFile(filePath, {
       order,
@@ -348,7 +348,6 @@ const salesPage = async (req, res) => {
     const successfulOrders = allMatchingOrders.filter(order => 
       !['Cancelled', 'Payment Failed'].includes(order.status)
     );
-    const deliveredOrders = allMatchingOrders.filter(order => order.status === 'Delivered');
     const returnedOrders = allMatchingOrders.filter(order => order.status === 'Returned');
     
     const totalProductsSold = successfulOrders.reduce((sum, order) => {
@@ -548,21 +547,193 @@ const postCreateCoupon = async (req, res) => {
 const deleteCoupon = async (req, res) => {
   try {
     const { id } = req.params;
+    const { force } = req.query; // Check if force delete is requested
+    
+    // Validate the coupon ID format
+    if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ success: false, message: "Invalid coupon ID" });
+    }
+
     const coupon = await Coupon.findById(id);
 
     if (!coupon) {
-      return res.json({ success: false, message: "Coupon not found" });
+      return res.status(404).json({ success: false, message: "Coupon not found" });
     }
 
-    if (coupon.usedBy.length > 0) {
-      return res.json({ success: false, message: "Cannot delete coupon in use" });
+    // Check if coupon is currently being used in any active orders
+    const Order = require("../../models/orderSchema");
+    const ordersUsingCoupon = await Order.countDocuments({ 
+      'coupon.code': coupon.code,
+      status: { $nin: ['Cancelled', 'Payment Failed'] }
+    });
+
+    if (ordersUsingCoupon > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Cannot delete coupon "${coupon.code}". It is currently being used in ${ordersUsingCoupon} active order(s).`,
+        canSoftDelete: false
+      });
     }
 
-    await Coupon.findByIdAndDelete(id);
-    res.json({ success: true });
+    // Check if coupon has been used by users (has usage history)
+    const totalUsageCount = coupon.usedBy.reduce((total, usage) => total + usage.usedCount, 0);
+    const hasUsageHistory = totalUsageCount > 0;
+
+    if (hasUsageHistory && force !== 'true') {
+      // Offer soft delete option for coupons with usage history
+      return res.status(400).json({ 
+        success: false, 
+        message: `Coupon "${coupon.code}" has been used ${totalUsageCount} time(s). You can either permanently delete it (losing usage history) or deactivate it to preserve the data.`,
+        canSoftDelete: true,
+        usageCount: totalUsageCount
+      });
+    }
+
+    if (force === 'true') {
+      // Force delete - permanently remove the coupon
+      await Coupon.findByIdAndDelete(id);
+      console.log(`Coupon force deleted: ${coupon.code} (ID: ${id})`);
+      res.status(200).json({ 
+        success: true, 
+        message: `Coupon "${coupon.code}" permanently deleted` 
+      });
+    } else {
+      // Regular delete for unused coupons
+      await Coupon.findByIdAndDelete(id);
+      console.log(`Coupon deleted successfully: ${coupon.code} (ID: ${id})`);
+      res.status(200).json({ 
+        success: true, 
+        message: `Coupon "${coupon.code}" deleted successfully` 
+      });
+    }
+    
   } catch (error) {
     console.error("Error deleting coupon:", error);
-    res.json({ success: false, message: "Failed to delete coupon" });
+    
+    // Handle specific MongoDB errors
+    if (error.name === 'CastError') {
+      return res.status(400).json({ success: false, message: "Invalid coupon ID format" });
+    }
+    
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to delete coupon. Please try again." 
+    });
+  }
+};
+
+const softDeleteCoupon = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Validate the coupon ID format
+    if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ success: false, message: "Invalid coupon ID" });
+    }
+
+    const coupon = await Coupon.findById(id);
+
+    if (!coupon) {
+      return res.status(404).json({ success: false, message: "Coupon not found" });
+    }
+
+    if (coupon.status === 'Inactive') {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Coupon "${coupon.code}" is already deactivated` 
+      });
+    }
+
+    // Soft delete by setting status to Inactive
+    coupon.status = 'Inactive';
+    coupon.deactivatedAt = new Date();
+    await coupon.save();
+    
+    console.log(`Coupon soft deleted (deactivated): ${coupon.code} (ID: ${id})`);
+    res.status(200).json({ 
+      success: true, 
+      message: `Coupon "${coupon.code}" has been deactivated. Usage history preserved.` 
+    });
+    
+  } catch (error) {
+    console.error("Error soft deleting coupon:", error);
+    
+    // Handle specific MongoDB errors
+    if (error.name === 'CastError') {
+      return res.status(400).json({ success: false, message: "Invalid coupon ID format" });
+    }
+    
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to deactivate coupon. Please try again." 
+    });
+  }
+};
+
+const reactivateCoupon = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Validate the coupon ID format
+    if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ success: false, message: "Invalid coupon ID" });
+    }
+
+    const coupon = await Coupon.findById(id);
+
+    if (!coupon) {
+      return res.status(404).json({ success: false, message: "Coupon not found" });
+    }
+
+    if (coupon.status === 'Active') {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Coupon "${coupon.code}" is already active` 
+      });
+    }
+
+    if (coupon.status === 'Expired') {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Cannot reactivate expired coupon "${coupon.code}". Please create a new coupon or extend the expiry date.` 
+      });
+    }
+
+    // Check if coupon has expired
+    if (coupon.expiryDate < new Date()) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Cannot reactivate coupon "${coupon.code}" as it has expired. Please create a new coupon or extend the expiry date.` 
+      });
+    }
+
+    // Reactivate by setting status to Active
+    coupon.status = 'Active';
+    coupon.reactivatedAt = new Date();
+    // Remove deactivatedAt field if it exists
+    if (coupon.deactivatedAt) {
+      coupon.deactivatedAt = undefined;
+    }
+    await coupon.save();
+    
+    console.log(`Coupon reactivated: ${coupon.code} (ID: ${id})`);
+    res.status(200).json({ 
+      success: true, 
+      message: `Coupon "${coupon.code}" has been reactivated successfully.` 
+    });
+    
+  } catch (error) {
+    console.error("Error reactivating coupon:", error);
+    
+    // Handle specific MongoDB errors
+    if (error.name === 'CastError') {
+      return res.status(400).json({ success: false, message: "Invalid coupon ID format" });
+    }
+    
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to reactivate coupon. Please try again." 
+    });
   }
 };
 
@@ -921,7 +1092,7 @@ const exportSalesReportPDF = async (req, res) => {
       status: order.status
     }));
 
-    const filePath = path.join(__dirname, '../../views/admin/salesReportPdf.ejs');
+    const filePath = path.join(__dirname, '../../views/admin/salesReportPdf.ejs'); // eslint-disable-line no-undef
 
     ejs.renderFile(filePath, {
       sales,
@@ -1310,6 +1481,8 @@ module.exports = {
   getCreateCouponPage,
   postCreateCoupon,
   deleteCoupon,
+  softDeleteCoupon,
+  reactivateCoupon,
   logout,
   getReturnRequestsPage,
   acceptReturnRequest,

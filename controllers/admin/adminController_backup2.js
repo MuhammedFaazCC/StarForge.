@@ -8,6 +8,9 @@ const path = require('path');
 const pdf = require('html-pdf');
 const ExcelJS = require('exceljs');
 
+// Define __dirname for ES modules compatibility
+const __dirname = path.dirname(require.main.filename);
+
 const loginPage = async (req, res) => {
   try {
     if (req.session.admin && req.session.admin._id) {
@@ -286,24 +289,27 @@ const salesPage = async (req, res) => {
     let dateQuery = {};
 
     switch (dateFilter) {
-      case 'today':
+      case 'today': {
         const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
         dateQuery = { orderDate: { $gte: startOfDay, $lt: endOfDay } };
         break;
-      case 'week':
+      }
+      case 'week': {
         const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
         startOfWeek.setHours(0, 0, 0, 0);
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 7);
         dateQuery = { orderDate: { $gte: startOfWeek, $lt: endOfWeek } };
         break;
-      case 'month':
+      }
+      case 'month': {
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
         dateQuery = { orderDate: { $gte: startOfMonth, $lt: endOfMonth } };
         break;
-      case 'custom':
+      }
+      case 'custom': {
         if (startDate && endDate) {
           const start = new Date(startDate);
           const end = new Date(endDate);
@@ -311,6 +317,7 @@ const salesPage = async (req, res) => {
           dateQuery = { orderDate: { $gte: start, $lte: end } };
         }
         break;
+      }
     }
 
     Object.assign(query, dateQuery);
@@ -878,24 +885,27 @@ const exportSalesReportPDF = async (req, res) => {
     let dateQuery = {};
 
     switch (dateFilter) {
-      case 'today':
+      case 'today': {
         const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
         dateQuery = { orderDate: { $gte: startOfDay, $lt: endOfDay } };
         break;
-      case 'week':
+      }
+      case 'week': {
         const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
         startOfWeek.setHours(0, 0, 0, 0);
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 7);
         dateQuery = { orderDate: { $gte: startOfWeek, $lt: endOfWeek } };
         break;
-      case 'month':
+      }
+      case 'month': {
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
         dateQuery = { orderDate: { $gte: startOfMonth, $lt: endOfMonth } };
         break;
-      case 'custom':
+      }
+      case 'custom': {
         if (startDate && endDate) {
           const start = new Date(startDate);
           const end = new Date(endDate);
@@ -903,6 +913,7 @@ const exportSalesReportPDF = async (req, res) => {
           dateQuery = { orderDate: { $gte: start, $lte: end } };
         }
         break;
+      }
     }
 
     Object.assign(query, dateQuery);
@@ -1004,24 +1015,27 @@ const exportSalesReportExcel = async (req, res) => {
     let dateQuery = {};
 
     switch (dateFilter) {
-      case 'today':
+      case 'today': {
         const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
         dateQuery = { orderDate: { $gte: startOfDay, $lt: endOfDay } };
         break;
-      case 'week':
+      }
+      case 'week': {
         const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
         startOfWeek.setHours(0, 0, 0, 0);
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 7);
         dateQuery = { orderDate: { $gte: startOfWeek, $lt: endOfWeek } };
         break;
-      case 'month':
+      }
+      case 'month': {
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
         dateQuery = { orderDate: { $gte: startOfMonth, $lt: endOfMonth } };
         break;
-      case 'custom':
+      }
+      case 'custom': {
         if (startDate && endDate) {
           const start = new Date(startDate);
           const end = new Date(endDate);
@@ -1029,6 +1043,7 @@ const exportSalesReportExcel = async (req, res) => {
           dateQuery = { orderDate: { $gte: start, $lte: end } };
         }
         break;
+      }
     }
 
     Object.assign(query, dateQuery);

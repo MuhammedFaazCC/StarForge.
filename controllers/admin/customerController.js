@@ -75,6 +75,7 @@ const customerClear = async (req, res) => {
     await User.deleteMany({ role: 'customer' });
     res.status(200).json({ success: true });
   } catch (error) {
+    console.error("Error clearing customers:", error);
     res.status(500).json({ success: false });
   }
 };
@@ -257,10 +258,10 @@ const customerToggleBlock = async (req, res) => {
       message: `User ${action}ed successfully` 
     });
   } catch (err) {
-    console.error(`Error ${action}ing user:`, err);
+    console.error(`Error ${req.params.action}ing user:`, err);
     res.status(500).json({ 
       success: false, 
-      message: `Failed to ${action} user`, 
+      message: `Failed to ${req.params.action} user`, 
       error: err.message 
     });
   }

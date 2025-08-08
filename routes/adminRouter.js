@@ -52,6 +52,8 @@ router.get('/coupons', adminAuth, adminController.couponsPage);
 router.get('/coupons/create', adminAuth, adminController.getCreateCouponPage);
 router.post('/coupons/create', adminAuth, adminController.postCreateCoupon);
 router.delete('/coupons/delete/:id', adminAuth, adminController.deleteCoupon);
+router.patch('/coupons/soft-delete/:id', adminAuth, adminController.softDeleteCoupon);
+router.patch('/coupons/reactivate/:id', adminAuth, adminController.reactivateCoupon);
 
 router.get("/customers", adminAuth, customerController.customersPage);
 router.post('/customers/clear', adminAuth, customerController.customerClear);

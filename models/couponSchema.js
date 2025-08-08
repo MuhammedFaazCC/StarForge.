@@ -45,6 +45,9 @@ const couponSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  deactivatedAt: {
+    type: Date
   }
 });
 
