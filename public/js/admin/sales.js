@@ -60,7 +60,7 @@ function exportReport(format) {
 }
 
 function viewOrderDetails(orderId) {
-    window.open(`/admin/orders/${orderId}`, '_blank');
+  window.location.href = `/admin/orders/${orderId}`;
 }
 
 function toggleOrderItems(index) {

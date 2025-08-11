@@ -37,11 +37,11 @@ async function updateItemsToShipped() {
       console.log(`  ✓ Order ${order._id} updated successfully`);
     }
 
-    console.log('\n✅ All orders updated successfully!');
+    console.log('\nAll orders updated successfully!');
     console.log('You can now test the "Mark as Delivered" functionality in the admin panel.');
     
   } catch (error) {
-    console.error('❌ Error updating orders:', error);
+    console.error('Error updating orders:', error);
   } finally {
     mongoose.connection.close();
     console.log('Database connection closed.');

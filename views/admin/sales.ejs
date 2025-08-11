@@ -200,7 +200,6 @@
                                 <th>Net Paid Amount</th>
                                 <th>Order Status</th>
                                 <th>Products List</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -238,11 +237,6 @@
                                     <span class="products-count">
                                         <%= sale.productsList.length %> item(s)
                                     </span>
-                                </td>
-                                <td>
-                                    <button class="view-btn" onclick="viewOrderDetails('<%= sale.id %>')" title="View Full Order Details">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
                                 </td>
                             </tr>
                             <tr class="items-row" id="items-<%= index %>" style="display: none;">

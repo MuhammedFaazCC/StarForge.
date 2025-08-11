@@ -7,15 +7,14 @@ const productsPage = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = 8;
     const skip = (page - 1) * limit;
-    const totalProducts = await Product.countDocuments({ isListed: true });
-    const products = await Product.find({isListed:true}).sort({_id:-1}).skip(skip).limit(limit);
+    const totalProducts = await Product.countDocuments({ isDeleted: false});
+    const products = await Product.find({ isDeleted: false }).populate("category").sort({ _id: -1 }).skip(skip).limit(limit);
     const totalPages = Math.ceil(totalProducts / limit);
     let message = req.session.message;
     req.session.message = null;
 
     res.render('products', {
       products,
-      product:products,
       currentPage: page,
       totalPages,
       hasPrevPage: page > 1,
