@@ -1,104 +1,319 @@
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<aside class="sidebar" id="sidebar">
+<!-- Enhanced Profile Sidebar Partial -->
+<aside class="profile-sidebar" id="profileSidebar">
     <div class="sidebar-header">
-        <span class="profile-initials"><%= user.fullName.split(' ').map(n => n[0]).join('') %></span>
-<h3 class="profile-name"><%= user.fullName %></h3>
-
+        <div class="profile-avatar">
+            <% if (user.profileImage) { %>
+                <img src="/uploads/profiles/<%= user.profileImage %>" alt="Profile Picture" class="profile-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="profile-initials" style="display: none;"><%= user.fullName.split(' ').map(n => n[0]).join('') %></div>
+            <% } else { %>
+                <div class="profile-initials"><%= user.fullName.split(' ').map(n => n[0]).join('') %></div>
+            <% } %>
+        </div>
+        <div class="profile-info">
+            <h3 class="profile-name"><%= user.fullName %></h3>
+            <p class="profile-email"><%= user.email %></p>
+            <div class="profile-status">
+                <span class="status-indicator active"></span>
+                <span class="status-text">Active</span>
+            </div>
+        </div>
     </div>
 
     <nav class="sidebar-nav">
         <ul class="nav-list">
             <li class="nav-item">
-                <a href="/LoadProfile" class="nav-link <%= currentPage === 'profile' ? 'active' : '' %>">
-                    <svg class="nav-icon" viewBox="0 0 24 24">
-                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                    </svg>
+                <a href="/LoadProfile" class="nav-link <%= currentPage === 'profile' ? 'active' : '' %>" data-page="profile">
+                    <i class="nav-icon fas fa-user"></i>
                     <span class="nav-text">My Profile</span>
+                    <% if (currentPage === 'profile') { %>
+                        <span class="active-indicator"></span>
+                    <% } %>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a href="/address" class="nav-link <%= currentPage === 'address' ? 'active' : '' %>">
-                    <svg class="nav-icon" viewBox="0 0 24 24">
-                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                    </svg>
-                    <span class="nav-text">My Address</span>
+                <a href="/address" class="nav-link <%= currentPage === 'address' ? 'active' : '' %>" data-page="address">
+                    <i class="nav-icon fas fa-map-marker-alt"></i>
+                    <span class="nav-text">My Addresses</span>
+                    <% if (currentPage === 'address') { %>
+                        <span class="active-indicator"></span>
+                    <% } %>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a href="/orders" class="nav-link <%= currentPage === 'orders' ? 'active' : '' %>">
-                    <svg class="nav-icon" viewBox="0 0 24 24">
-                        <path d="M7 4V2C7 1.45 7.45 1 8 1H16C16.55 1 17 1.45 17 2V4H20C20.55 4 21 4.45 21 5S20.55 6 20 6H19V19C19 20.1 18.1 21 17 21H7C5.9 21 5 20.1 5 19V6H4C3.45 6 3 5.55 3 5S3.45 4 4 4H7ZM9 3V4H15V3H9ZM7 6V19H17V6H7Z"/>
-                        <path d="M9 8V17H11V8H9ZM13 8V17H15V8H13Z"/>
-                    </svg>
-                    <span class="nav-text">My Order</span>
+                <a href="/orders" class="nav-link <%= currentPage === 'orders' ? 'active' : '' %>" data-page="orders">
+                    <i class="nav-icon fas fa-shopping-bag"></i>
+                    <span class="nav-text">My Orders</span>
+                    <% if (currentPage === 'orders') { %>
+                        <span class="active-indicator"></span>
+                    <% } %>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a href="/wishlist" class="nav-link <%= currentPage === 'wishlist' ? 'active' : '' %>">
-                    <svg class="nav-icon" viewBox="0 0 24 24">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                    </svg>
+                <a href="/wishlist" class="nav-link <%= currentPage === 'wishlist' ? 'active' : '' %>" data-page="wishlist">
+                    <i class="nav-icon fas fa-heart"></i>
                     <span class="nav-text">My Wishlist</span>
+                    <% if (currentPage === 'wishlist') { %>
+                        <span class="active-indicator"></span>
+                    <% } %>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a href="/wallet" class="nav-link <%= currentPage === 'wallet' ? 'active' : '' %>">
-                    <svg class="nav-icon" viewBox="0 0 24 24">
-                        <path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-                    </svg>
+                <a href="/wallet" class="nav-link <%= currentPage === 'wallet' ? 'active' : '' %>" data-page="wallet">
+                    <i class="nav-icon fas fa-wallet"></i>
                     <span class="nav-text">My Wallet</span>
+                    <% if (currentPage === 'wallet') { %>
+                        <span class="active-indicator"></span>
+                    <% } %>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a href="/referral" class="nav-link <%= currentPage === 'referral' ? 'active' : '' %>" data-page="referral">
+                    <i class="nav-icon fas fa-users"></i>
+                    <span class="nav-text">Referral Program</span>
+                    <% if (currentPage === 'referral') { %>
+                        <span class="active-indicator"></span>
+                    <% } %>
                 </a>
             </li>
 
+            <li class="nav-item nav-divider">
+                <hr class="sidebar-divider">
+            </li>
+            
             <li class="nav-item">
-                <a href="/changePassword" class="nav-link <%= currentPage === 'password' ? 'active' : '' %>">
-                    <svg class="nav-icon" viewBox="0 0 24 24">
-                        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM15.1 8H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/>
-                    </svg>
-                    <span class="nav-text">Change password</span>
+                <a href="/changePassword" class="nav-link <%= currentPage === 'password' ? 'active' : '' %>" data-page="password">
+                    <i class="nav-icon fas fa-lock"></i>
+                    <span class="nav-text">Change Password</span>
+                    <% if (currentPage === 'password') { %>
+                        <span class="active-indicator"></span>
+                    <% } %>
                 </a>
             </li>
 
             <li class="nav-item">
                 <a href="#" id="logout-btn" class="nav-link logout-link">
-                    <svg class="nav-icon" viewBox="0 0 24 24">
-                        <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-                    </svg>
-                    <span class="nav-text">Log out</span>
+                    <i class="nav-icon fas fa-sign-out-alt"></i>
+                    <span class="nav-text">Logout</span>
                 </a>
             </li>
         </ul>
     </nav>
+    
+    <!-- Mobile Toggle Button -->
+    <button class="sidebar-toggle d-md-none" id="sidebarToggle" aria-label="Toggle Sidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+</aside>
 
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Sidebar Overlay for Mobile -->
+<div class="sidebar-overlay d-md-none" id="sidebarOverlay"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
+    // Enhanced logout functionality
     const logoutBtn = document.getElementById('logout-btn');
-    if (!logoutBtn) return;
-
-    logoutBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-
-      Swal.fire({
-        title: 'Are you sure?',
-        text: "You will be logged out!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#f44336',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, logout'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          window.location.href = "/logout";
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        Swal.fire({
+          title: 'Are you sure?',
+          text: "You will be logged out of your account!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#fca120',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: 'Yes, logout',
+          cancelButtonText: 'Cancel',
+          reverseButtons: true,
+          customClass: {
+            popup: 'sidebar-swal-popup',
+            confirmButton: 'sidebar-swal-confirm',
+            cancelButton: 'sidebar-swal-cancel'
+          }
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Show loading state
+            Swal.fire({
+              title: 'Logging out...',
+              text: 'Please wait',
+              icon: 'info',
+              allowOutsideClick: false,
+              showConfirmButton: false,
+              timer: 1500,
+              timerProgressBar: true,
+              customClass: {
+                popup: 'sidebar-swal-popup'
+              }
+            }).then(() => {
+              window.location.href = "/logout";
+            });
+          }
+        });
+      });
+    }
+    
+    // Enhanced mobile sidebar toggle functionality
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.getElementById('profileSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    
+    if (sidebarToggle && sidebar && overlay) {
+      // Toggle sidebar
+      sidebarToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleSidebar();
+      });
+      
+      // Close sidebar when clicking overlay
+      overlay.addEventListener('click', () => {
+        closeSidebar();
+      });
+      
+      // Close sidebar when clicking outside
+      document.addEventListener('click', (e) => {
+        if (window.innerWidth < 768 && 
+            sidebar.classList.contains('show') && 
+            !sidebar.contains(e.target) && 
+            !sidebarToggle.contains(e.target)) {
+          closeSidebar();
+        }
+      });
+      
+      // Handle escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && sidebar.classList.contains('show')) {
+          closeSidebar();
+        }
+      });
+    }
+    
+    // Enhanced window resize handler
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        if (window.innerWidth >= 768) {
+          closeSidebar();
+        }
+      }, 150);
+    });
+    
+    // Add smooth scroll behavior for navigation links
+    const navLinks = document.querySelectorAll('.nav-link[href^="/"]');
+    navLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        // Close mobile sidebar when navigating
+        if (window.innerWidth < 768) {
+          setTimeout(() => {
+            closeSidebar();
+          }, 100);
+        }
+        
+        // Add loading state to clicked link
+        const icon = link.querySelector('.nav-icon');
+        const originalClass = icon.className;
+        icon.className = 'nav-icon fas fa-spinner fa-spin';
+        
+        // Restore icon after a short delay (in case navigation is instant)
+        setTimeout(() => {
+          icon.className = originalClass;
+        }, 1000);
+      });
+    });
+    
+    // Helper functions
+    function toggleSidebar() {
+      const isOpen = sidebar.classList.contains('show');
+      if (isOpen) {
+        closeSidebar();
+      } else {
+        openSidebar();
+      }
+    }
+    
+    function openSidebar() {
+      sidebar.classList.add('show');
+      overlay.classList.add('show');
+      document.body.classList.add('sidebar-open');
+      
+      // Focus management for accessibility
+      const firstNavLink = sidebar.querySelector('.nav-link');
+      if (firstNavLink) {
+        setTimeout(() => firstNavLink.focus(), 300);
+      }
+    }
+    
+    function closeSidebar() {
+      sidebar.classList.remove('show');
+      overlay.classList.remove('show');
+      document.body.classList.remove('sidebar-open');
+      
+      // Return focus to toggle button for accessibility
+      if (document.activeElement && sidebar.contains(document.activeElement)) {
+        sidebarToggle.focus();
+      }
+    }
+    
+    // Add active page indicator animation
+    const activeLink = document.querySelector('.nav-link.active');
+    if (activeLink) {
+      activeLink.style.animationDelay = '0.5s';
+      activeLink.classList.add('fade-in-up');
+    }
+    
+    // Add hover effects for better UX
+    const navItems = document.querySelectorAll('.nav-link');
+    navItems.forEach(item => {
+      item.addEventListener('mouseenter', () => {
+        if (!item.classList.contains('active')) {
+          item.style.transform = 'translateX(6px)';
+        }
+      });
+      
+      item.addEventListener('mouseleave', () => {
+        if (!item.classList.contains('active')) {
+          item.style.transform = '';
         }
       });
     });
   });
+  
+  // Add custom styles for SweetAlert
+  const swalStyles = `
+    <style>
+      .sidebar-swal-popup {
+        border-radius: 16px !important;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25) !important;
+      }
+      .sidebar-swal-confirm {
+        background: linear-gradient(135deg, #fca120 0%, #e8940f 100%) !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 0.75rem 1.5rem !important;
+        font-weight: 600 !important;
+      }
+      .sidebar-swal-cancel {
+        background: #6c757d !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 0.75rem 1.5rem !important;
+        font-weight: 600 !important;
+      }
+    </style>
+  `;
+  
+  if (!document.querySelector('#sidebar-swal-styles')) {
+    const styleElement = document.createElement('div');
+    styleElement.id = 'sidebar-swal-styles';
+    styleElement.innerHTML = swalStyles;
+    document.head.appendChild(styleElement);
+  }
 </script>
-
-</aside>

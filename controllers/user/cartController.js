@@ -41,19 +41,38 @@ const addToCart = async (req, res) => {
       cart = new Cart({ userId: userId, items: [] });
     }
 
-    const itemIndex = cart.items.findIndex(item => item.productId && item.productId.toString() === productId.toString());
+    const itemIndex = cart.items.findIndex(item => 
+      item.productId && item.productId.toString() === productId.toString()
+    );
 
     if (itemIndex !== -1) {
-      if (cart.items[itemIndex].quantity + quantity <= product.stock) {
-        cart.items[itemIndex].quantity += quantity;
-      } else {
+      const newTotal = cart.items[itemIndex].quantity + quantity;
+
+      if (newTotal > 5) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'You can only add up to 5 units of this product to your cart'
+        });
+      }
+
+      if (newTotal > product.stock) {
         return res.status(400).json({ 
           success: false, 
           message: 'Cannot exceed available stock quantity',
           outOfStock: true 
         });
       }
+
+      cart.items[itemIndex].quantity = newTotal;
+
     } else {
+      if (quantity > 5) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'You can only add up to 5 units of this product to your cart'
+        });
+      }
+
       if (quantity > product.stock) {
         return res.status(400).json({ 
           success: false, 

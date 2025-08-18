@@ -3,6 +3,7 @@ const User = require("../../models/userSchema");
 const Order = require("../../models/orderSchema");
 const Coupon = require("../../models/couponSchema");
 const Return = require("../../models/returnSchema");
+const Config = require("../../models/configSchema");
 const ejs = require('ejs');
 const path = require('path');
 const pdf = require('html-pdf');
@@ -482,20 +483,7 @@ const couponsPage = async (req, res) => {
   }
 };
 
-const getCreateCouponPage = async (req, res) => {
-  try {
-    res.render("createCoupon", {
-      admin: req.session.admin,
-      error: req.session.error || null,
-      success: req.session.success || null
-    });
-    req.session.error = null;
-    req.session.success = null;
-  } catch (error) {
-    console.error("Error loading create coupon page:", error);
-    res.status(500).send("Server error");
-  }
-};
+
 
 const postCreateCoupon = async (req, res) => {
   try {
@@ -541,6 +529,83 @@ const postCreateCoupon = async (req, res) => {
   } catch (error) {
     console.error("Error creating coupon:", error);
     res.json({ success: false, message: "Failed to create coupon" });
+  }
+};
+
+const getCoupon = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const coupon = await Coupon.findById(id);
+    
+    if (!coupon) {
+      return res.json({ success: false, message: "Coupon not found" });
+    }
+
+    res.json({ success: true, coupon });
+  } catch (error) {
+    console.error("Error fetching coupon:", error);
+    res.json({ success: false, message: "Failed to fetch coupon" });
+  }
+};
+
+const updateCoupon = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { code, discount, expiryDate, usageLimit, minimumAmount } = req.body;
+
+    if (!code || !discount || !expiryDate || !usageLimit) {
+      return res.json({ success: false, message: "All required fields must be filled" });
+    }
+
+    // Check if coupon exists
+    const existingCoupon = await Coupon.findById(id);
+    if (!existingCoupon) {
+      return res.json({ success: false, message: "Coupon not found" });
+    }
+
+    // Check if code already exists (excluding current coupon)
+    const duplicateCoupon = await Coupon.findOne({ 
+      code: code.toUpperCase(), 
+      _id: { $ne: id } 
+    });
+    if (duplicateCoupon) {
+      return res.json({ success: false, message: "Coupon code already exists" });
+    }
+
+    if (isNaN(discount) || discount < 0 || discount > 100) {
+      return res.json({ success: false, message: "Discount must be between 0 and 100" });
+    }
+
+    if (new Date(expiryDate) <= new Date()) {
+      return res.json({ success: false, message: "Expiry date must be in the future" });
+    }
+
+    if (isNaN(usageLimit) || usageLimit < 1) {
+      return res.json({ success: false, message: "Usage limit must be a positive integer" });
+    }
+
+    const minAmount = minimumAmount ? parseFloat(minimumAmount) : 0;
+    if (minAmount < 0) {
+      return res.json({ success: false, message: "Minimum amount cannot be negative" });
+    }
+
+    // Update coupon
+    const updatedCoupon = await Coupon.findByIdAndUpdate(id, {
+      code: code.toUpperCase(),
+      discount: parseFloat(discount),
+      expiryDate: new Date(expiryDate),
+      usageLimit: parseInt(usageLimit),
+      minimumAmount: minAmount
+    }, { new: true });
+
+    res.json({ 
+      success: true, 
+      message: "Coupon updated successfully",
+      coupon: updatedCoupon
+    });
+  } catch (error) {
+    console.error("Error updating coupon:", error);
+    res.json({ success: false, message: "Failed to update coupon" });
   }
 };
 
@@ -1467,6 +1532,85 @@ const getSalesChartData = async (req, res) => {
   }
 };
 
+const getReferralSettings = async (req, res) => {
+  try {
+    const referrerBonusConfig = await Config.findOne({ key: 'referrer_bonus_amount' });
+    const newUserBonusConfig = await Config.findOne({ key: 'new_user_bonus_amount' });
+    
+    const referrerBonus = referrerBonusConfig ? referrerBonusConfig.value : 100;
+    const newUserBonus = newUserBonusConfig ? newUserBonusConfig.value : 50;
+
+    // Get referral statistics
+    const totalReferrals = await User.countDocuments({ referredBy: { $exists: true, $ne: null } });
+    const totalReferrers = await User.countDocuments({ referralCode: { $exists: true, $ne: null } });
+    
+    // Calculate total bonuses paid
+    const users = await User.find({});
+    let totalBonusPaid = 0;
+    
+    users.forEach(user => {
+      if (user.wallet && user.wallet.transactions) {
+        const referralTransactions = user.wallet.transactions.filter(
+          transaction => transaction.type === 'credit' && 
+          (transaction.description.includes('Referral Bonus') || transaction.description.includes('Signup Bonus'))
+        );
+        totalBonusPaid += referralTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
+      }
+    });
+
+    const success = req.session.success || null;
+    const error = req.session.error || null;
+    req.session.success = null;
+    req.session.error = null;
+
+    res.render('admin/referralSettings', {
+      admin: req.session.admin,
+      referrerBonus,
+      newUserBonus,
+      totalReferrals,
+      totalReferrers,
+      totalBonusPaid,
+      success,
+      error,
+      currentPage: 'referral'
+    });
+  } catch (error) {
+    console.error('Error loading referral settings:', error);
+    req.session.error = 'Failed to load referral settings';
+    res.redirect('/admin/dashboard');
+  }
+};
+
+const updateReferralSettings = async (req, res) => {
+  try {
+    const { referrerBonus, newUserBonus } = req.body;
+
+    if (!referrerBonus || !newUserBonus || referrerBonus < 0 || newUserBonus < 0) {
+      req.session.error = 'Please provide valid bonus amounts';
+      return res.redirect('/admin/referral-settings');
+    }
+
+    await Config.findOneAndUpdate(
+      { key: 'referrer_bonus_amount' },
+      { value: parseInt(referrerBonus), updatedAt: new Date() },
+      { upsert: true }
+    );
+
+    await Config.findOneAndUpdate(
+      { key: 'new_user_bonus_amount' },
+      { value: parseInt(newUserBonus), updatedAt: new Date() },
+      { upsert: true }
+    );
+
+    req.session.success = 'Referral settings updated successfully';
+    res.redirect('/admin/referral-settings');
+  } catch (error) {
+    console.error('Error updating referral settings:', error);
+    req.session.error = 'Failed to update referral settings';
+    res.redirect('/admin/referral-settings');
+  }
+};
+
 module.exports = {
   loginPage,
   login,
@@ -1478,8 +1622,9 @@ module.exports = {
   updateItemStatus,
   salesPage,
   couponsPage,
-  getCreateCouponPage,
   postCreateCoupon,
+  getCoupon,
+  updateCoupon,
   deleteCoupon,
   softDeleteCoupon,
   reactivateCoupon,
@@ -1493,4 +1638,6 @@ module.exports = {
   exportSalesReportExcel,
   exportSalesReportCSV,
   getSalesChartData,
+  getReferralSettings,
+  updateReferralSettings
 };

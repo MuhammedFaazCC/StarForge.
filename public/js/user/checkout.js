@@ -33,7 +33,13 @@ function selectAddress(addressId) {
     .then(data => {
       if (!data.success) {
         console.error('Failed to select address:', data.message);
-        alert(data.message || 'Failed to select address. Please try again.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Address Selection Failed',
+          text: data.message || 'Failed to select address. Please try again.',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#d33'
+        });
         
         if (selectedCard) {
           selectedCard.classList.remove('selected');
@@ -48,7 +54,13 @@ function selectAddress(addressId) {
     })
     .catch(error => {
       console.error('Error selecting address:', error);
-      alert('Failed to select address. Please try again.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Address Selection Error',
+        text: 'Failed to select address. Please try again.',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#d33'
+      });
       
       if (selectedCard) {
         selectedCard.classList.remove('selected');
@@ -76,18 +88,31 @@ function openModal(addressId = '') {
         .then(data => {
           if (data.success) {
             form.querySelector('#name').value = data.address.name;
+            form.querySelector('#phone').value = data.address.phone || '';
             form.querySelector('#address').value = data.address.address;
             form.querySelector('#district').value = data.address.district;
             form.querySelector('#state').value = data.address.state;
             form.querySelector('#city').value = data.address.city;
             form.querySelector('#pinCode').value = data.address.pinCode;
           } else {
-            alert(data.message || 'Failed to load address details.');
+            Swal.fire({
+              icon: 'error',
+              title: 'Address Load Failed',
+              text: data.message || 'Failed to load address details.',
+              confirmButtonText: 'OK',
+              confirmButtonColor: '#d33'
+            });
           }
         })
         .catch(error => {
           console.error('Error fetching address:', error);
-          alert('Failed to load address details. Please try again.');
+          Swal.fire({
+            icon: 'error',
+            title: 'Address Load Error',
+            text: 'Failed to load address details. Please try again.',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#d33'
+          });
         });
     } else {
       form.reset();
@@ -434,7 +459,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (!paymentMethod) {
-      alert('Please select a payment method.');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Payment Method Required',
+        text: 'Please select a payment method.',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#ffc107'
+      });
       return;
     }
 
@@ -443,14 +474,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (paymentMethod === 'Online') {
       const totalAmountElement = document.getElementById('grandTotalAmount');
       if (!totalAmountElement) {
-        alert('Unable to process payment. Please refresh and try again.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Payment Processing Error',
+          text: 'Unable to process payment. Please refresh and try again.',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#d33'
+        });
         return;
       }
 
       const totalAmount = parseFloat(totalAmountElement.textContent.replace('₹', '').replace(/,/g, ''));
 
       if (isNaN(totalAmount) || totalAmount <= 0) {
-        alert('Invalid total amount. Please refresh and try again.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Invalid Amount',
+          text: 'Invalid total amount. Please refresh and try again.',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#d33'
+        });
         return;
       }
 
@@ -469,14 +512,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await response.json();
 
         if (!response.ok || !data.success) {
-          alert(data.error || 'Failed to initiate payment');
+          Swal.fire({
+            icon: 'error',
+            title: 'Payment Initiation Failed',
+            text: data.error || 'Failed to initiate payment',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#d33'
+          });
           submitButton.disabled = false;
           submitButton.textContent = 'Place Order';
           return;
         }
 
         if (typeof Razorpay === 'undefined') {
-          alert('Payment system is not loaded. Please refresh the page and try again.');
+          Swal.fire({
+            icon: 'error',
+            title: 'System Error',
+            text: 'Payment system is not loaded. Please refresh the page and try again.',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#d33'
+          });
           submitButton.disabled = false;
           submitButton.textContent = 'Place Order';
           return;
@@ -522,7 +577,13 @@ document.addEventListener('DOMContentLoaded', () => {
         rzp.open();
       } catch (err) {
         console.error('Razorpay fetch error:', err);
-        alert('Payment initiation failed. Please try again.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Payment Initiation Failed',
+          text: 'Payment initiation failed. Please try again.',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#d33'
+        });
         submitButton.disabled = false;
         submitButton.textContent = 'Place Order';
       }
@@ -547,24 +608,202 @@ document.addEventListener('DOMContentLoaded', () => {
         if (response.ok && data.success) {
           window.location.href = data.redirect;
         } else {
-          alert(data.error || 'Failed to place order. Please try again.');
+          Swal.fire({
+            icon: 'error',
+            title: 'Order Failed',
+            text: data.error || 'Failed to place order. Please try again.',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#d33'
+          });
           submitButton.disabled = false;
           submitButton.textContent = 'Place Order';
         }
       } catch (err) {
-        alert('Failed to place order. Please try again.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Order Error',
+          text: 'Failed to place order. Please try again.',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#d33'
+        });
         submitButton.disabled = false;
         submitButton.textContent = 'Place Order';
       }
     }
   });
 
+  // Address Form Validation System
   const addressForm = document.getElementById('addressForm');
   if (addressForm) {
+    const submitButton = addressForm.querySelector('button[type="submit"]');
+    
+    // Validation rules
+    const validationRules = {
+      name: {
+        required: true,
+        minLength: 2,
+        pattern: /^[a-zA-Z\s]+$/,
+        message: 'Name must contain only letters and spaces (minimum 2 characters)'
+      },
+      phone: {
+        required: true,
+        pattern: /^[6-9]\d{9}$/,
+        message: 'Phone number must be 10 digits starting with 6, 7, 8, or 9'
+      },
+      address: {
+        required: true,
+        minLength: 10,
+        message: 'Address must be at least 10 characters long'
+      },
+      district: {
+        required: true,
+        minLength: 2,
+        pattern: /^[a-zA-Z\s]+$/,
+        message: 'District must contain only letters and spaces (minimum 2 characters)'
+      },
+      state: {
+        required: true,
+        minLength: 2,
+        pattern: /^[a-zA-Z\s]+$/,
+        message: 'State must contain only letters and spaces (minimum 2 characters)'
+      },
+      city: {
+        required: true,
+        minLength: 2,
+        pattern: /^[a-zA-Z\s]+$/,
+        message: 'City must contain only letters and spaces (minimum 2 characters)'
+      },
+      pinCode: {
+        required: true,
+        pattern: /^[1-9][0-9]{5}$/,
+        message: 'Pin code must be 6 digits and cannot start with 0'
+      }
+    };
+
+    // Validate individual field
+    function validateField(fieldName, value) {
+      const rules = validationRules[fieldName];
+      if (!rules) return { isValid: true, message: '' };
+
+      // Check required
+      if (rules.required && (!value || value.trim() === '')) {
+        return { isValid: false, message: `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required` };
+      }
+
+      // Check minimum length
+      if (rules.minLength && value.trim().length < rules.minLength) {
+        return { isValid: false, message: rules.message };
+      }
+
+      // Check pattern
+      if (rules.pattern && !rules.pattern.test(value.trim())) {
+        return { isValid: false, message: rules.message };
+      }
+
+      return { isValid: true, message: '' };
+    }
+
+    // Display error message
+    function showError(fieldName, message) {
+      const field = document.getElementById(fieldName);
+      const errorElement = document.getElementById(fieldName + 'Error');
+      
+      if (field) {
+        field.classList.add('error');
+        field.classList.remove('valid');
+      }
+      
+      if (errorElement) {
+        errorElement.textContent = message;
+      }
+    }
+
+    // Clear error message
+    function clearError(fieldName) {
+      const field = document.getElementById(fieldName);
+      const errorElement = document.getElementById(fieldName + 'Error');
+      
+      if (field) {
+        field.classList.remove('error');
+        field.classList.add('valid');
+      }
+      
+      if (errorElement) {
+        errorElement.textContent = '';
+      }
+    }
+
+    // Validate all fields
+    function validateAllFields() {
+      let isFormValid = true;
+      const formData = new FormData(addressForm);
+      
+      for (const [fieldName] of formData.entries()) {
+        const value = formData.get(fieldName);
+        const validation = validateField(fieldName, value);
+        
+        if (!validation.isValid) {
+          showError(fieldName, validation.message);
+          isFormValid = false;
+        } else {
+          clearError(fieldName);
+        }
+      }
+      
+      // Update submit button state
+      if (submitButton) {
+        submitButton.disabled = !isFormValid;
+      }
+      
+      return isFormValid;
+    }
+
+    // Add real-time validation to all form fields
+    Object.keys(validationRules).forEach(fieldName => {
+      const field = document.getElementById(fieldName);
+      if (field) {
+        // Validate on blur
+        field.addEventListener('blur', () => {
+          const validation = validateField(fieldName, field.value);
+          if (!validation.isValid) {
+            showError(fieldName, validation.message);
+          } else {
+            clearError(fieldName);
+          }
+          validateAllFields(); // Re-validate entire form
+        });
+
+        // Clear errors on input
+        field.addEventListener('input', () => {
+          if (field.classList.contains('error')) {
+            const validation = validateField(fieldName, field.value);
+            if (validation.isValid) {
+              clearError(fieldName);
+              validateAllFields(); // Re-validate entire form
+            }
+          }
+        });
+      }
+    });
+
+    // Handle form submission
     addressForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      
+      // Validate all fields before submission
+      if (!validateAllFields()) {
+        return;
+      }
+
       const formData = new FormData(addressForm);
       const action = addressForm.action;
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      
+      // Disable submit button and show loading state
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving...';
+      }
 
       try {
         const response = await fetch(action, {
@@ -577,13 +816,41 @@ document.addEventListener('DOMContentLoaded', () => {
         if (data.success) {
           window.location.reload();
         } else {
-          alert(data.message || 'Failed to save address');
+          // Handle backend validation errors
+          if (data.errors && typeof data.errors === 'object') {
+            Object.keys(data.errors).forEach(fieldName => {
+              showError(fieldName, data.errors[fieldName]);
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Address Save Failed',
+              text: data.message || 'Failed to save address',
+              confirmButtonText: 'OK',
+              confirmButtonColor: '#d33'
+            });
+          }
         }
       } catch (error) {
         console.error('Error saving address:', error);
-        alert('Failed to save address. Please try again.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Address Save Error',
+          text: 'Failed to save address. Please try again.',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#d33'
+        });
+      } finally {
+        // Re-enable submit button
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Save Changes';
+        }
       }
     });
+
+    // Initial validation state
+    validateAllFields();
   }
 
   document.addEventListener('click', function(event) {

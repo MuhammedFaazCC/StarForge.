@@ -33,7 +33,7 @@ router.post("/products/add", adminAuth, upload.fields([{ name: 'mainImage', maxC
 router.get("/products/view/:id", adminAuth, productController.viewProduct);
 router.get("/products/edit/:id", adminAuth, productController.editProduct);
 router.post('/products/edit/:id', adminAuth, upload.fields([ { name: 'mainImage', maxCount: 1 }, { name: 'additionalImages', maxCount: 5 } ]), productController.productEdit);
-router.delete("/products/delete/:id", adminAuth, productController.softDeleteProduct);
+router.delete("/products/delete/:id", adminAuth, productController.deleteProduct);
 router.patch('/products/toggle-listing/:id', adminAuth, productController.toggleListing);
 
 router.get('/orders', adminAuth, adminController.getAdminOrdersPage);
@@ -49,8 +49,10 @@ router.post('/order/return/decline/:id', adminAuth, adminController.declineRetur
 router.post('/order/:orderId/item/:productId/return/accept', adminAuth, adminController.acceptItemReturnRequest);
 router.post('/order/:orderId/item/:productId/return/decline', adminAuth, adminController.declineItemReturnRequest);
 router.get('/coupons', adminAuth, adminController.couponsPage);
-router.get('/coupons/create', adminAuth, adminController.getCreateCouponPage);
+
 router.post('/coupons/create', adminAuth, adminController.postCreateCoupon);
+router.get('/coupons/:id', adminAuth, adminController.getCoupon);
+router.put('/coupons/:id', adminAuth, adminController.updateCoupon);
 router.delete('/coupons/delete/:id', adminAuth, adminController.deleteCoupon);
 router.patch('/coupons/soft-delete/:id', adminAuth, adminController.softDeleteCoupon);
 router.patch('/coupons/reactivate/:id', adminAuth, adminController.reactivateCoupon);
@@ -85,5 +87,8 @@ router.get('/offers/edit/:id', adminAuth, offerController.getEditOffer);
 router.post('/offers/edit/:id', adminAuth, offerController.updateOffer);
 router.delete('/offers/delete/:id', adminAuth, offerController.deleteOffer);
 router.patch('/offers/toggle/:id', adminAuth, offerController.toggleOfferStatus);
+
+router.get('/referral-settings', adminAuth, adminController.getReferralSettings);
+router.post('/referral-settings', adminAuth, adminController.updateReferralSettings);
 
 module.exports = router;

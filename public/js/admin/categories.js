@@ -15,10 +15,22 @@ document.addEventListener("DOMContentLoaded", () => {
                     btn.classList.toggle("active", data.isActive);
                     btn.classList.toggle("inactive", !data.isActive);
                 } else {
-                    alert("Failed to toggle status");
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Toggle Failed',
+                      text: 'Failed to toggle status',
+                      confirmButtonText: 'OK',
+                      confirmButtonColor: '#d33'
+                    });
                 }
             } catch (err) {
-                alert("Error toggling status");
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Toggle Error',
+                  text: 'Error toggling status',
+                  confirmButtonText: 'OK',
+                  confirmButtonColor: '#d33'
+                });
             }
             btn.disabled = false;
         });
@@ -58,10 +70,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.success) {
                     location.reload();
                 } else {
-                    alert("Failed to remove offer");
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Remove Failed',
+                      text: 'Failed to remove offer',
+                      confirmButtonText: 'OK',
+                      confirmButtonColor: '#d33'
+                    });
                 }
             } catch (err) {
-                alert("Error removing offer");
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Remove Error',
+                  text: 'Error removing offer',
+                  confirmButtonText: 'OK',
+                  confirmButtonColor: '#d33'
+                });
             }
             btn.disabled = false;
         });
@@ -82,10 +106,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.success) {
                     location.reload();
                 } else {
-                    alert("Failed to delete category");
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Delete Failed',
+                      text: 'Failed to delete category',
+                      confirmButtonText: 'OK',
+                      confirmButtonColor: '#d33'
+                    });
                 }
             } catch (err) {
-                alert("Error deleting category");
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Delete Error',
+                  text: 'Error deleting category',
+                  confirmButtonText: 'OK',
+                  confirmButtonColor: '#d33'
+                });
             }
             btn.disabled = false;
         });

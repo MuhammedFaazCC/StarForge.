@@ -14,7 +14,7 @@
     <div class="customers-section">
       <div class="section-header">
         <h2>Coupons</h2>
-        <a href="/admin/coupons/create" class="btn-primary">Create Coupon</a>
+        <button type="button" class="btn-primary" onclick="openAddCouponModal()">Create Coupon</button>
       </div>
 
       <div id="notification-container" class="notification-container"></div>
@@ -67,6 +67,7 @@
               <td><%= coupon.expiry %></td>
               <td><span class="status <%= coupon.status.toLowerCase() %>"><%= coupon.status %></span></td>
               <td>
+                <button class="btn-action btn-edit" onclick="openEditCouponModal('<%= coupon.id %>')">Edit</button>
                 <% if (coupon.status === 'Inactive') { %>
                   <button class="btn-action btn-reactivate" onclick="reactivateCoupon('<%= coupon.id %>')">Reactivate</button>
                 <% } %>
@@ -98,6 +99,94 @@
         </div>
 
         <% } %>
+    </div>
+  </div>
+
+  <!-- Add Coupon Modal -->
+  <div id="add-coupon-modal" class="confirmation-modal">
+    <div class="confirmation-content" style="max-width: 500px; width: 90%;">
+      <h3>Create New Coupon</h3>
+      <form id="add-coupon-form">
+        <div class="form-group">
+          <label for="modal-code">Coupon Code *</label>
+          <input type="text" id="modal-code" name="code" required placeholder="e.g., SAVE10">
+          <span class="error-message" id="code-error"></span>
+        </div>
+        
+        <div class="form-group">
+          <label for="modal-discount">Discount (%) *</label>
+          <input type="number" id="modal-discount" name="discount" min="0" max="100" required placeholder="0-100">
+          <span class="error-message" id="discount-error"></span>
+        </div>
+        
+        <div class="form-group">
+          <label for="modal-expiryDate">Expiry Date *</label>
+          <input type="date" id="modal-expiryDate" name="expiryDate" required>
+          <span class="error-message" id="expiryDate-error"></span>
+        </div>
+        
+        <div class="form-group">
+          <label for="modal-usageLimit">Usage Limit *</label>
+          <input type="number" id="modal-usageLimit" name="usageLimit" min="1" required placeholder="e.g., 1">
+          <span class="error-message" id="usageLimit-error"></span>
+        </div>
+        
+        <div class="form-group">
+          <label for="modal-minimumAmount">Minimum Order Amount (₹)</label>
+          <input type="number" id="modal-minimumAmount" name="minimumAmount" min="0" placeholder="0 (no minimum)" step="0.01">
+          <span class="error-message" id="minimumAmount-error"></span>
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" class="confirmation-btn cancel" onclick="closeAddCouponModal()">Cancel</button>
+          <button type="submit" class="confirmation-btn confirm">Create Coupon</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Coupon Modal -->
+  <div id="edit-coupon-modal" class="confirmation-modal">
+    <div class="confirmation-content" style="max-width: 500px; width: 90%;">
+      <h3>Edit Coupon</h3>
+      <form id="edit-coupon-form">
+        <input type="hidden" id="edit-coupon-id" name="couponId">
+        
+        <div class="form-group">
+          <label for="edit-modal-code">Coupon Code *</label>
+          <input type="text" id="edit-modal-code" name="code" required placeholder="e.g., SAVE10">
+          <span class="error-message" id="edit-code-error"></span>
+        </div>
+        
+        <div class="form-group">
+          <label for="edit-modal-discount">Discount (%) *</label>
+          <input type="number" id="edit-modal-discount" name="discount" min="0" max="100" required placeholder="0-100">
+          <span class="error-message" id="edit-discount-error"></span>
+        </div>
+        
+        <div class="form-group">
+          <label for="edit-modal-expiryDate">Expiry Date *</label>
+          <input type="date" id="edit-modal-expiryDate" name="expiryDate" required>
+          <span class="error-message" id="edit-expiryDate-error"></span>
+        </div>
+        
+        <div class="form-group">
+          <label for="edit-modal-usageLimit">Usage Limit *</label>
+          <input type="number" id="edit-modal-usageLimit" name="usageLimit" min="1" required placeholder="e.g., 1">
+          <span class="error-message" id="edit-usageLimit-error"></span>
+        </div>
+        
+        <div class="form-group">
+          <label for="edit-modal-minimumAmount">Minimum Order Amount (₹)</label>
+          <input type="number" id="edit-modal-minimumAmount" name="minimumAmount" min="0" placeholder="0 (no minimum)" step="0.01">
+          <span class="error-message" id="edit-minimumAmount-error"></span>
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" class="confirmation-btn cancel" onclick="closeEditCouponModal()">Cancel</button>
+          <button type="submit" class="confirmation-btn confirm">Update Coupon</button>
+        </div>
+      </form>
     </div>
   </div>
 

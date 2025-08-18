@@ -97,6 +97,47 @@
       display: flex;
       gap: 0.5rem;
       flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .status-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .status-badge.cancelled {
+      background-color: #ffebee;
+      color: #d32f2f;
+    }
+
+    .status-badge.return-requested {
+      background-color: #fff3e0;
+      color: #f57c00;
+    }
+
+    .status-badge.returned {
+      background-color: #fce4ec;
+      color: #c2185b;
+    }
+
+    .cancel-item-btn, .return-item-btn {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+
+    .cancel-item-btn:hover {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .return-item-btn:hover {
+      background-color: #ffc107;
+      color: white;
     }
 
     .order-id {
@@ -525,14 +566,52 @@
               <tbody class="order-box">
                 <tr>
                   <td>
-                    <ul>
+                    <ul class="product-list">
                       <% order.items.forEach(item => { %>
-                        <li>
-                          <%= item.productId?.name || 'Not Available' %> × <%= item.quantity %>
-                          <span class="orderStatus <%= item.status ? item.status.toLowerCase().replace(' ', '-') : 'unknown' %>">
-                            <%= item.status || 'Unknown' %>
-                          </span>
-                          
+                        <li class="product-item" data-product-id="<%= item.productId?._id %>">
+                          <div class="product-info">
+                            <div class="product-name"><%= item.productId?.name || 'Not Available' %> × <%= item.quantity %></div>
+                            <span class="orderStatus <%= item.status ? item.status.toLowerCase().replace(' ', '-') : 'unknown' %>">
+                              <%= item.status || 'Placed' %>
+                            </span>
+                          </div>
+                          <div class="product-actions">
+                            <% 
+                              const itemStatus = item.status || 'Placed';
+                              const cancellableStatuses = ['Placed', 'Ordered', 'Processing', 'Shipped'];
+                              const canCancelItem = cancellableStatuses.includes(itemStatus) && order.status !== 'Cancelled';
+                              
+                              // Return logic with time limit check
+                              const RETURN_DAYS_LIMIT = 7;
+                              const deliveryDate = item.deliveredAt || order.deliveredAt;
+                              let canReturnItem = false;
+                              
+                              if (itemStatus === 'Delivered' && deliveryDate) {
+                                const daysSinceDelivery = Math.floor((new Date() - new Date(deliveryDate)) / (1000 * 60 * 60 * 24));
+                                canReturnItem = daysSinceDelivery <= RETURN_DAYS_LIMIT;
+                              }
+                            %>
+                            
+                            <% if (itemStatus === 'Cancelled') { %>
+                              <span class="status-badge cancelled">❌ Cancelled</span>
+                            <% } else if (itemStatus === 'Return Requested') { %>
+                              <span class="status-badge return-requested">🔄 Return Requested</span>
+                            <% } else if (itemStatus === 'Returned') { %>
+                              <span class="status-badge returned">↩️ Returned</span>
+                            <% } else if (canCancelItem) { %>
+                              <button class="btn btn-sm btn-outline-danger cancel-item-btn" 
+                                      onclick="cancelItem('<%= order._id %>', '<%= item.productId._id %>')">
+                                Cancel
+                              </button>
+                            <% } %>
+                            
+                            <% if (canReturnItem) { %>
+                              <button class="btn btn-sm btn-outline-warning return-item-btn" 
+                                      onclick="returnItem('<%= order._id %>', '<%= item.productId._id %>')">
+                                Return
+                              </button>
+                            <% } %>
+                          </div>
                         </li>
                       <% }); %>
                     </ul>
@@ -919,14 +998,29 @@
           });
           const data = await response.json();
           
-          if (data.message) {
+          if (data.success) {
             await Swal.fire({
               title: 'Item Cancelled!',
               text: data.message,
               icon: 'success',
               confirmButtonColor: '#28a745'
             });
-            window.location.reload();
+            
+            // Update UI instantly without page reload
+            const productItem = document.querySelector(`[data-product-id="${productId}"]`);
+            if (productItem) {
+              const actionsDiv = productItem.querySelector('.product-actions');
+              if (actionsDiv) {
+                actionsDiv.innerHTML = '<span class="status-badge cancelled">❌ Cancelled</span>';
+              }
+              
+              // Update status in product info
+              const statusSpan = productItem.querySelector('.orderStatus');
+              if (statusSpan) {
+                statusSpan.textContent = 'Cancelled';
+                statusSpan.className = 'orderStatus cancelled';
+              }
+            }
           } else {
             throw new Error(data.error || 'Failed to cancel item');
           }
@@ -934,6 +1028,70 @@
           await Swal.fire({
             title: 'Error!',
             text: error.message || 'Something went wrong while cancelling the item.',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+          });
+        }
+      }
+    }
+
+    // Function for returning items from the main orders list
+    async function returnItem(orderId, productId) {
+      const { value: reason } = await Swal.fire({
+        title: 'Request Item Return',
+        text: 'Please provide a reason for returning this item:',
+        input: 'textarea',
+        inputPlaceholder: 'Enter your reason for return...',
+        inputAttributes: {
+          'aria-label': 'Return reason'
+        },
+        showCancelButton: true,
+        confirmButtonColor: '#ffc107',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Submit Return Request',
+        cancelButtonText: 'Cancel',
+        inputValidator: (value) => {
+          if (!value || value.trim().length < 10) {
+            return 'Please provide a detailed reason (at least 10 characters)';
+          }
+        }
+      });
+
+      if (reason) {
+        try {
+          const response = await fetch(`/returnItem/${orderId}/${productId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ reason: reason.trim() })
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            await Swal.fire({
+              title: 'Return Request Submitted!',
+              text: data.message,
+              icon: 'success',
+              confirmButtonColor: '#28a745'
+            });
+            
+            // Update UI instantly without page reload
+            const productItem = document.querySelector(`[data-product-id="${productId}"]`);
+            if (productItem) {
+              const actionsDiv = productItem.querySelector('.product-actions');
+              if (actionsDiv) {
+                actionsDiv.innerHTML = '<span class="status-badge return-requested">🔄 Return Requested</span>';
+              }
+            }
+          } else {
+            throw new Error(data.message || 'Failed to submit return request');
+          }
+        } catch (error) {
+          await Swal.fire({
+            title: 'Error!',
+            text: error.message || 'Something went wrong while submitting the return request.',
             icon: 'error',
             confirmButtonColor: '#dc3545'
           });

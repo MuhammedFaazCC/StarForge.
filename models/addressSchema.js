@@ -13,6 +13,13 @@ const addressSchema = new mongoose.Schema({
     maxLength: 100
   },
 
+  phone: {
+    type: String,
+    required: true,
+    match: [/^[6-9]\d{9}$/, 'Phone number must be 10 digits starting with 6, 7, 8, or 9'],
+    maxLength: 10
+  },
+
   address: {
     type: String,
     required: true,

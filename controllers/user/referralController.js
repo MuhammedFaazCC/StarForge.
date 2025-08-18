@@ -1,5 +1,6 @@
 const User = require('../../models/userSchema');
 const Coupon = require('../../models/couponSchema');
+const Config = require('../../models/configSchema');
 const crypto = require('crypto');
 
 const generateReferralToken = () => {
@@ -69,41 +70,56 @@ const processReferralSignup = async (referralIdentifier, newUserId) => {
             throw new Error('Invalid referral identifier');
         }
 
+        // Check if new user already has a referrer (prevent multiple referrals)
+        const newUser = await User.findById(newUserId);
+        if (newUser.referredBy) {
+            throw new Error('User already has a referrer');
+        }
+
+        // Get referral configuration
+        const referrerBonusConfig = await Config.findOne({ key: 'referrer_bonus_amount' });
+        const newUserBonusConfig = await Config.findOne({ key: 'new_user_bonus_amount' });
+        
+        const referrerBonus = referrerBonusConfig ? referrerBonusConfig.value : 100;
+        const newUserBonus = newUserBonusConfig ? newUserBonusConfig.value : 50;
+
+        // Update new user with referrer info and add signup bonus
         await User.findByIdAndUpdate(newUserId, {
-            referredBy: referringUser._id
+            referredBy: referringUser._id,
+            $inc: { 'wallet.balance': newUserBonus },
+            $push: {
+                'wallet.transactions': {
+                    amount: newUserBonus,
+                    type: 'credit',
+                    description: 'Signup Bonus - Welcome bonus for joining through referral',
+                    date: new Date()
+                }
+            }
         });
 
-        referringUser.referralPoints = (referringUser.referralPoints || 0) + 50;
-
-        const couponCode = generateCouponCode();
-        const expiryDate = new Date();
-        expiryDate.setMonth(expiryDate.getMonth() + 3);
-        const coupon = new Coupon({
-            code: couponCode,
-            discount: 10,
-            expiryDate,
-            status: 'Active',
-            usageLimit: 1,
-            minimumAmount: 500,
-            usedBy: []
+        // Add referrer bonus to referring user
+        await User.findByIdAndUpdate(referringUser._id, {
+            $inc: { 
+                'wallet.balance': referrerBonus,
+                'referralPoints': 50
+            },
+            $push: {
+                'wallet.transactions': {
+                    amount: referrerBonus,
+                    type: 'credit',
+                    description: `Referral Bonus - Earned for referring ${newUser.fullName}`,
+                    date: new Date()
+                }
+            }
         });
 
-        await coupon.save();
-
-        referringUser.referralRewards.push({
-            couponCode: couponCode,
-            issuedAt: new Date(),
-            isUsed: false
-        });
-
-        await referringUser.save();
-
-        console.log(`Referral processed: ${referringUser.email} referred new user, earned 50 points and coupon ${couponCode}`);
+        console.log(`Referral processed: ${referringUser.email} referred ${newUser.email}, earned ₹${referrerBonus} wallet bonus`);
 
         return {
             success: true,
             referringUser: referringUser._id,
-            couponCode,
+            referrerBonus,
+            newUserBonus,
             pointsEarned: 50
         };
 
@@ -162,7 +178,8 @@ const getReferralDashboard = async (req, res) => {
 
         if (!user) {
             return res.status(404).render('user/referralDashboard', {
-                error: 'User not found'
+                error: 'User not found',
+                user: req.session.user
             });
         }
 
@@ -171,31 +188,59 @@ const getReferralDashboard = async (req, res) => {
             await user.save();
         }
 
+        // Get referral configuration
+        const referrerBonusConfig = await Config.findOne({ key: 'referrer_bonus_amount' });
+        const newUserBonusConfig = await Config.findOne({ key: 'new_user_bonus_amount' });
+        
+        const referrerBonus = referrerBonusConfig ? referrerBonusConfig.value : 100;
+        const newUserBonus = newUserBonusConfig ? newUserBonusConfig.value : 50;
+
         const referralCount = await User.countDocuments({ referredBy: userId });
         const referredUsers = await User.find({ referredBy: userId })
             .select('fullName email createdAt')
             .sort({ createdAt: -1 })
             .limit(10);
 
-        const unusedRewards = user.referralRewards.filter(reward => !reward.isUsed);
+        // Calculate total earnings from referrals
+        const referralTransactions = user.wallet.transactions.filter(
+            transaction => transaction.type === 'credit' && 
+            transaction.description.includes('Referral Bonus')
+        );
+        const totalEarnings = referralTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
 
         const dashboardData = {
-            user,
+            user: req.session.user,
             referralCode: user.referralCode,
             referralToken: user.referralToken,
             referralPoints: user.referralPoints,
             referralCount,
             referredUsers,
-            unusedRewards,
-            referralUrl: `${req.protocol}://${req.get('host')}/signup?ref=${user.referralToken}`
+            totalEarnings,
+            referrerBonus,
+            newUserBonus,
+            walletBalance: user.wallet.balance,
+            referralUrl: `${req.protocol}://${req.get('host')}/signup?ref=${user.referralToken}`,
+            currentPage: 'referral',
+            cartCount: 0
         };
 
-        res.render('user/referralDashboard', dashboardData);
+        res.render('referralDashboard', dashboardData);
 
     } catch (error) {
         console.error('Error loading referral dashboard:', error);
-        res.status(500).render('user/referralDashboard', {
-            error: 'Failed to load referral dashboard'
+        res.status(500).render('referralDashboard', {
+            error: 'Failed to load referral dashboard',
+            user: req.session.user,
+            cartCount: 0,
+            referralCount: 0,
+            referralPoints: 0,
+            totalEarnings: 0,
+            referrerBonus: 100,
+            newUserBonus: 50,
+            walletBalance: 0,
+            referredUsers: [],
+            referralUrl: '',
+            currentPage: 'referral'
         });
     }
 };

@@ -6,9 +6,10 @@
   <title>My Wallet - StarForge</title>
   <link rel="stylesheet" href="/css/user/profileDashboard.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     .wallet-balance-card {
-      background: linear-gradient(135deg, #fca120 0%, #e8940f 100%);
+      background:#fca120;
       border-radius: 16px;
       padding: 2rem;
       margin-bottom: 2rem;
@@ -563,7 +564,16 @@
   const amountInput = document.getElementById("amount");
   const amount = parseFloat(amountInput.value);
 
-  if (!amount || amount <= 0) return alert("Enter valid amount");
+  if (!amount || amount <= 0) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Invalid Amount',
+      text: 'Enter valid amount',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#d33'
+    });
+    return;
+  }
 
   if (submitButton) {
     submitButton.disabled = true;
@@ -579,7 +589,13 @@
 
     const data = await res.json();
     if (!data.success) {
-      alert(data.error || "Failed to initiate payment");
+      Swal.fire({
+        icon: 'error',
+        title: 'Payment Failed',
+        text: data.error || "Failed to initiate payment",
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#d33'
+      });
       if (submitButton) {
         submitButton.disabled = false;
         submitButton.textContent = "Add Money";
@@ -588,7 +604,13 @@
     }
 
     if (typeof Razorpay === 'undefined') {
-      alert("Payment system is not loaded. Please refresh the page and try again.");
+      Swal.fire({
+        icon: 'error',
+        title: 'System Error',
+        text: "Payment system is not loaded. Please refresh the page and try again.",
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#d33'
+      });
       if (submitButton) {
         submitButton.disabled = false;
         submitButton.textContent = "Add Money";
@@ -615,7 +637,15 @@
           }),
         });
 
-        alert("Wallet credited successfully!");
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: 'Wallet credited successfully!',
+          timer: 2000,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          confirmButtonColor: '#28a745'
+        });
         window.location.reload();
       },
       prefill: {
@@ -638,7 +668,13 @@
 
   } catch (error) {
     console.error("Wallet Razorpay error:", error);
-    alert("Something went wrong while processing payment.");
+    Swal.fire({
+      icon: 'error',
+      title: 'Payment Error',
+      text: 'Something went wrong while processing payment.',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#d33'
+    });
     if (submitButton) {
       submitButton.disabled = false;
       submitButton.textContent = "Add Money";

@@ -12,30 +12,49 @@
   <div class="main-content">
     <div class="form-container">
       <h2>Add New Category</h2>
-      <form action="/admin/categories/add" method="POST" enctype="multipart/form-data">
+      <% if (message) { %>
+        <div class="alert alert-<%= message.type %>">
+          <%= message.text %>
+          <button class="alert-close" onclick="this.parentElement.style.display='none'">×</button>
+        </div>
+      <% } %>
+      <form id="categoryForm" action="/admin/categories/add" method="POST" enctype="multipart/form-data">
             <div class="form-group">
-                <label for="name">Category Name</label>
+                <label for="name">Category Name *</label>
                 <input type="text" name="name" id="name" class="form-control" required>
+                <div class="error-message" id="nameError"></div>
+                <div class="validation-hint">Only letters, numbers, spaces, and hyphens allowed (2-50 characters)</div>
             </div>
             <div class="form-group">
                 <label for="description">Description</label>
-                <textarea name="description" id="description" class="form-control"></textarea>
+                <textarea name="description" id="description" class="form-control" maxlength="500"></textarea>
+                <div class="error-message" id="descriptionError"></div>
+                <div class="char-count">
+                    <span id="descriptionCount">0</span>/500 characters
+                </div>
             </div>
             <div class="form-group">
                 <label for="image">Category Image</label>
-                <input type="file" name="image" id="image" class="form-control">
+                <input type="file" name="image" id="image" class="form-control" accept="image/*">
                 <div id="imagePreview"></div>
+                <div class="error-message" id="imageError"></div>
             </div>
             <div class="form-group">
                 <label for="offer">Offer Percentage (%)</label>
                 <input type="number" name="offer" id="offer" class="form-control" min="0" max="100" step="0.01" value="0">
+                <div class="error-message" id="offerError"></div>
             </div>
             <div class="form-group">
                 <label for="isActive">Active Status</label>
                 <input type="checkbox" name="isActive" id="isActive" checked>
             </div>
             <div class="form-group">
-                <button type="submit" class="btn btn-primary">Add Category</button>
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <span class="btn-text">Add Category</span>
+                    <span class="btn-loading" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i> Adding...
+                    </span>
+                </button>
                 <a href="/admin/categories" class="btn btn-secondary">Cancel</a>
             </div>
         </form>

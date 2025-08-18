@@ -298,6 +298,21 @@ footer p {
     font-size: 0.8rem;
 }
 
+/* Search highlighting styles */
+mark {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: 500;
+}
+
+/* Loading state for table */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
 @media (max-width: 768px) {
     .main-content {
         margin-left: 180px;

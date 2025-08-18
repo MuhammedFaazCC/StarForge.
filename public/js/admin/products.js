@@ -20,19 +20,19 @@ document.querySelectorAll(".side-panel a").forEach((link) => {
 
 function deleteProduct(productId) {
   Swal.fire({
-    title: 'Are you sure?',
-    text: "You won't be able to revert this!",
+    title: 'Are you absolutely sure?',
+    text: "This will permanently delete the product from the database. This action cannot be undone!",
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: '#ef4444',
+    confirmButtonColor: '#dc2626',
     cancelButtonColor: '#6b7280',
-    confirmButtonText: 'Yes, delete it!',
+    confirmButtonText: 'Yes, delete permanently!',
     cancelButtonText: 'Cancel'
   }).then((result) => {
     if (result.isConfirmed) {
       Swal.fire({
         title: 'Deleting...',
-        text: 'Please wait while we delete the product.',
+        text: 'Please wait while we permanently delete the product.',
         allowOutsideClick: false,
         allowEscapeKey: false,
         showConfirmButton: false,
@@ -43,16 +43,14 @@ function deleteProduct(productId) {
 
       fetch(`/admin/products/delete/${productId}`, {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" }
       })
         .then((res) => {
           if (res.ok) {
             Swal.fire({
               icon: 'success',
               title: 'Deleted!',
-              text: 'Product has been deleted successfully.',
+              text: 'Product has been permanently deleted.',
               timer: 2000,
               showConfirmButton: false
             }).then(() => {
@@ -76,6 +74,7 @@ function deleteProduct(productId) {
     }
   });
 }
+
 
 function toggleProductListing(productId, checkbox) {
   const isChecked = checkbox.checked;

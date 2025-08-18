@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Payment Failed - StarForge</title>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -347,7 +348,13 @@
         retryBtn.textContent = 'Retry Payment';
         loading.style.display = 'none';
 
-        alert(error.message || 'Unable to retry payment. Please try again later.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Retry Failed',
+          text: error.message || 'Unable to retry payment. Please try again later.',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#d33'
+        });
       }
     }
 

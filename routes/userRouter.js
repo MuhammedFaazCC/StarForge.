@@ -81,6 +81,6 @@ router.post('/address/edit/:id', checkoutController.editAddress);
 
 router.get('/referral', userAuth, referralController.getReferralDashboard);
 router.get('/referral/info', userAuth, referralController.getReferralInfo);
-router.get('/referral/validate/:identifier', referralController.validateReferral);
+router.get('/referral/validate/:id', referralController.validateReferral);
 
 module.exports = router;

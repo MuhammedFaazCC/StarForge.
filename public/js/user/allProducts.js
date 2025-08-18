@@ -108,7 +108,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const maxPrice = parseInt(maxPriceInput.value);
         
         if (minPrice >= maxPrice) {
-          alert('Minimum price must be less than maximum price');
+          Swal.fire({
+            icon: 'warning',
+            title: 'Invalid Price Range',
+            text: 'Minimum price must be less than maximum price',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#ffc107'
+          });
           return;
         }
         
@@ -170,7 +176,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const maxPrice = parseInt(maxPriceInput.value);
         
         if (minPrice >= maxPrice) {
-          alert('Minimum price must be less than maximum price');
+          Swal.fire({
+            icon: 'warning',
+            title: 'Invalid Price Range',
+            text: 'Minimum price must be less than maximum price',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#ffc107'
+          });
           return;
         }
         
@@ -188,7 +200,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const maxPrice = parseInt(this.value);
         
         if (minPrice >= maxPrice) {
-          alert('Minimum price must be less than maximum price');
+          Swal.fire({
+            icon: 'warning',
+            title: 'Invalid Price Range',
+            text: 'Minimum price must be less than maximum price',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#ffc107'
+          });
           return;
         }
         

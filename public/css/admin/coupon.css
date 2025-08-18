@@ -341,6 +341,50 @@ body {
   background-color: rgba(255, 255, 255, 0.4);
 }
 
+/* Modal Form Styles */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.error-message {
+  display: block;
+  color: #dc2626;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  min-height: 1rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
 /* Confirmation Modal */
 .confirmation-modal {
   position: fixed;
@@ -772,4 +816,46 @@ footer p {
   .modal-content {
     width: 90%;
   }
+}
+
+/* Action Button Styles */
+.btn-action {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-right: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-edit {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-edit:hover {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.btn-reactivate {
+  background-color: #10b981;
+  color: white;
+}
+
+.btn-reactivate:hover {
+  background-color: #059669;
+  transform: translateY(-1px);
+}
+
+.btn-block {
+  background-color: #ef4444;
+  color: white;
+}
+
+.btn-block:hover {
+  background-color: #dc2626;
+  transform: translateY(-1px);
 }

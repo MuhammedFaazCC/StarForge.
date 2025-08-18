@@ -33,6 +33,7 @@
                     <tr>
                         <th class="sortable" data-sort="fullName">Name <span class="sort-icon"></span></th>
                         <th class="sortable" data-sort="email">Email <span class="sort-icon"></span></th>
+                        <th class="sortable" data-sort="mobile">Phone <span class="sort-icon"></span></th>
                         <th class="sortable" data-sort="createdAt">Registered <span class="sort-icon"></span></th>
                         <th class="sortable" data-sort="orders">Orders <span class="sort-icon"></span></th>
                         <th>Status</th>
@@ -45,6 +46,7 @@
                             <tr data-id="<%= customer._id %>">
                                 <td><%= customer.fullName %></td>
                                 <td><%= customer.email %></td>
+                                <td><%= customer.mobile || 'N/A' %></td>
                                 <td><%= new Date(customer.createdAt).toLocaleDateString() %></td>
                                 <td><%= customer.orders || 0 %></td>
                                 <td>
@@ -63,7 +65,7 @@
                         <% }) %>
                     <% } else { %>
                         <tr class="no-results">
-                            <td colspan="6">No customers found</td>
+                            <td colspan="7">No customers found</td>
                         </tr>
                     <% } %>
                 </tbody>

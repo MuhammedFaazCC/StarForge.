@@ -644,4 +644,312 @@ function updateCouponRowStatus(couponId, newStatus) {
   }
 }
 
+// Add Coupon Modal Functions
+function openAddCouponModal() {
+  const modal = document.getElementById('add-coupon-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    // Clear form and errors
+    clearModalForm();
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('modal-expiryDate').setAttribute('min', today);
+  }
+}
+
+function closeAddCouponModal() {
+  const modal = document.getElementById('add-coupon-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    clearModalForm();
+  }
+}
+
+function clearModalForm() {
+  const form = document.getElementById('add-coupon-form');
+  if (form) {
+    form.reset();
+    // Clear all error messages
+    document.querySelectorAll('.error-message').forEach(error => {
+      error.textContent = '';
+    });
+  }
+}
+
+// Form validation functions
+function validateCouponForm(formData) {
+  const errors = {};
+  
+  // Validate coupon code
+  if (!formData.code || formData.code.trim().length === 0) {
+    errors.code = 'Coupon code is required';
+  } else if (formData.code.trim().length < 3) {
+    errors.code = 'Coupon code must be at least 3 characters';
+  }
+  
+  // Validate discount
+  if (!formData.discount || isNaN(formData.discount)) {
+    errors.discount = 'Discount is required and must be a number';
+  } else if (formData.discount < 0 || formData.discount > 100) {
+    errors.discount = 'Discount must be between 0 and 100';
+  }
+  
+  // Validate expiry date
+  if (!formData.expiryDate) {
+    errors.expiryDate = 'Expiry date is required';
+  } else if (new Date(formData.expiryDate) <= new Date()) {
+    errors.expiryDate = 'Expiry date must be in the future';
+  }
+  
+  // Validate usage limit
+  if (!formData.usageLimit || isNaN(formData.usageLimit)) {
+    errors.usageLimit = 'Usage limit is required and must be a number';
+  } else if (formData.usageLimit < 1) {
+    errors.usageLimit = 'Usage limit must be at least 1';
+  }
+  
+  // Validate minimum amount (optional)
+  if (formData.minimumAmount && (isNaN(formData.minimumAmount) || formData.minimumAmount < 0)) {
+    errors.minimumAmount = 'Minimum amount must be a positive number';
+  }
+  
+  return errors;
+}
+
+function displayValidationErrors(errors) {
+  // Clear previous errors
+  document.querySelectorAll('.error-message').forEach(error => {
+    error.textContent = '';
+  });
+  
+  // Display new errors
+  Object.keys(errors).forEach(field => {
+    const errorElement = document.getElementById(`${field}-error`);
+    if (errorElement) {
+      errorElement.textContent = errors[field];
+    }
+  });
+}
+
+// Handle Add Coupon Form Submission
+const addCouponForm = document.getElementById('add-coupon-form');
+if (addCouponForm) {
+  addCouponForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(addCouponForm);
+    const couponData = {
+      code: formData.get('code'),
+      discount: formData.get('discount'),
+      expiryDate: formData.get('expiryDate'),
+      usageLimit: formData.get('usageLimit'),
+      minimumAmount: formData.get('minimumAmount') || 0
+    };
+    
+    // Frontend validation
+    const errors = validateCouponForm(couponData);
+    if (Object.keys(errors).length > 0) {
+      displayValidationErrors(errors);
+      return;
+    }
+    
+    try {
+      const response = await fetch('/admin/coupons/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(couponData)
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        notificationManager.show('Coupon created successfully!', 'success');
+        closeAddCouponModal();
+        // Refresh the page to show the new coupon
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        // Handle server-side validation errors
+        if (result.message) {
+          notificationManager.show(result.message, 'error');
+        }
+      }
+    } catch (error) {
+      console.error('Error creating coupon:', error);
+      notificationManager.show('Failed to create coupon. Please try again.', 'error');
+    }
+  });
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', (e) => {
+  const addCouponModal = document.getElementById('add-coupon-modal');
+  if (e.target === addCouponModal) {
+    closeAddCouponModal();
+  }
+  
+  const editCouponModal = document.getElementById('edit-coupon-modal');
+  if (e.target === editCouponModal) {
+    closeEditCouponModal();
+  }
+});
+
+// Edit Coupon Modal Functions
+async function openEditCouponModal(couponId) {
+  try {
+    // Fetch coupon data
+    const response = await fetch(`/admin/coupons/${couponId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch coupon data');
+    }
+
+    const data = await response.json();
+    if (!data.success) {
+      notificationManager.error(data.message || 'Failed to fetch coupon data');
+      return;
+    }
+
+    const coupon = data.coupon;
+    
+    // Pre-fill the form with coupon data
+    document.getElementById('edit-coupon-id').value = coupon._id;
+    document.getElementById('edit-modal-code').value = coupon.code;
+    document.getElementById('edit-modal-discount').value = coupon.discount;
+    
+    // Format date for input field (YYYY-MM-DD)
+    const expiryDate = new Date(coupon.expiryDate);
+    const formattedDate = expiryDate.toISOString().split('T')[0];
+    document.getElementById('edit-modal-expiryDate').value = formattedDate;
+    
+    document.getElementById('edit-modal-usageLimit').value = coupon.usageLimit;
+    document.getElementById('edit-modal-minimumAmount').value = coupon.minimumAmount || '';
+
+    // Clear any previous errors
+    clearEditModalErrors();
+    
+    // Show the modal
+    document.getElementById('edit-coupon-modal').style.display = 'flex';
+  } catch (error) {
+    console.error('Error opening edit modal:', error);
+    notificationManager.error('Failed to open edit modal');
+  }
+}
+
+function closeEditCouponModal() {
+  document.getElementById('edit-coupon-modal').style.display = 'none';
+  clearEditModalForm();
+}
+
+function clearEditModalForm() {
+  document.getElementById('edit-coupon-form').reset();
+  clearEditModalErrors();
+}
+
+function clearEditModalErrors() {
+  const errorElements = document.querySelectorAll('#edit-coupon-modal .error-message');
+  errorElements.forEach(element => {
+    element.textContent = '';
+    element.style.display = 'none';
+  });
+}
+
+function displayEditValidationErrors(errors) {
+  // Clear previous errors
+  clearEditModalErrors();
+  
+  // Display new errors
+  Object.keys(errors).forEach(field => {
+    const errorElement = document.getElementById(`edit-${field}-error`);
+    if (errorElement) {
+      errorElement.textContent = errors[field];
+      errorElement.style.display = 'block';
+    }
+  });
+}
+
+// Handle Edit Coupon Form Submission
+const editCouponForm = document.getElementById('edit-coupon-form');
+if (editCouponForm) {
+  editCouponForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(editCouponForm);
+    const couponId = formData.get('couponId');
+    
+    const couponData = {
+      code: formData.get('code'),
+      discount: formData.get('discount'),
+      expiryDate: formData.get('expiryDate'),
+      usageLimit: formData.get('usageLimit'),
+      minimumAmount: formData.get('minimumAmount')
+    };
+
+    try {
+      const response = await fetch(`/admin/coupons/${couponId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(couponData)
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        notificationManager.success(data.message || 'Coupon updated successfully');
+        closeEditCouponModal();
+        
+        // Update the coupon row in the table
+        updateCouponRow(couponId, data.coupon);
+      } else {
+        if (data.errors) {
+          displayEditValidationErrors(data.errors);
+        } else {
+          notificationManager.error(data.message || 'Failed to update coupon');
+        }
+      }
+    } catch (error) {
+      console.error('Error updating coupon:', error);
+      notificationManager.error('Failed to update coupon');
+    }
+  });
+}
+
+// Helper function to update coupon row in the table
+function updateCouponRow(couponId, updatedCoupon) {
+  const rows = document.querySelectorAll('tbody tr');
+  
+  rows.forEach(row => {
+    const editButton = row.querySelector(`button[onclick="openEditCouponModal('${couponId}')"]`);
+    if (editButton) {
+      // Update the row data
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 5) {
+        cells[0].textContent = updatedCoupon.code; // Coupon Code
+        cells[1].textContent = updatedCoupon.discount; // Discount
+        
+        // Minimum Amount
+        if (updatedCoupon.minimumAmount > 0) {
+          cells[2].innerHTML = `₹${updatedCoupon.minimumAmount.toLocaleString('en-IN')}`;
+        } else {
+          cells[2].innerHTML = '<span style="color: #666;">No minimum</span>';
+        }
+        
+        // Expiry Date
+        const expiryDate = new Date(updatedCoupon.expiryDate);
+        cells[3].textContent = expiryDate.toLocaleDateString('en-GB');
+      }
+    }
+  });
+}
+
 console.log('Coupon management system initialized with custom notifications and soft delete options');

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Order Details</title>
   <link rel="stylesheet" href="/css/admin/profileOrders.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
   <%- include('../partials/admin/navbar') %>
@@ -157,7 +158,13 @@
             } else {
               updateBtn.disabled = true;
               updateBtn.classList.remove('enabled');
-              alert(`Invalid status transition from "${currentStatus}" to "${newStatus}"`);
+              Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Transition',
+                text: `Invalid status transition from "${currentStatus}" to "${newStatus}"`,
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#ffc107'
+              });
               this.value = currentStatus; // Reset to current status
             }
           } else {
@@ -177,7 +184,13 @@
           const currentStatus = dropdown.getAttribute('data-current-status');
           
           if (!newStatus || newStatus === currentStatus) {
-            alert('Please select a different status');
+            Swal.fire({
+              icon: 'warning',
+              title: 'Status Selection',
+              text: 'Please select a different status',
+              confirmButtonText: 'OK',
+              confirmButtonColor: '#ffc107'
+            });
             return;
           }
 
@@ -228,13 +241,25 @@
                 window.location.reload();
               }, 1500);
             } else {
-              alert('Failed to update item status: ' + (data.message || 'Unknown error'));
+              Swal.fire({
+                icon: 'error',
+                title: 'Update Failed',
+                text: 'Failed to update item status: ' + (data.message || 'Unknown error'),
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#d33'
+              });
               this.disabled = false;
               this.textContent = 'Update';
             }
           } catch (error) {
             console.error('Error updating item status:', error);
-            alert('An error occurred while updating the item status.');
+            Swal.fire({
+              icon: 'error',
+              title: 'Update Error',
+              text: 'An error occurred while updating the item status.',
+              confirmButtonText: 'OK',
+              confirmButtonColor: '#d33'
+            });
             this.disabled = false;
             this.textContent = 'Update';
           }
@@ -262,14 +287,33 @@
             const data = await response.json();
             
             if (data.success) {
-              alert('Item marked as delivered successfully!');
+              Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Item marked as delivered successfully!',
+                timer: 2000,
+                timerProgressBar: true,
+                showConfirmButton: false
+              });
               window.location.reload();
             } else {
-              alert('Failed to update item status: ' + (data.message || 'Unknown error'));
+              Swal.fire({
+                icon: 'error',
+                title: 'Update Failed',
+                text: 'Failed to update item status: ' + (data.message || 'Unknown error'),
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#d33'
+              });
             }
           } catch (error) {
             console.error('Error updating item status:', error);
-            alert('An error occurred while updating the item status.');
+            Swal.fire({
+              icon: 'error',
+              title: 'Update Error',
+              text: 'An error occurred while updating the item status.',
+              confirmButtonText: 'OK',
+              confirmButtonColor: '#d33'
+            });
           }
         });
       });

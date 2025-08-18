@@ -12,11 +12,25 @@ document.addEventListener("DOMContentLoaded", () => {
         order: 'desc'
     };
     let searchTimeout = null;
+    let currentSearchTerm = '';
 
-    async function fetchAllCustomers() {
+    async function fetchCustomers(page = 1, searchQuery = '') {
         try {
             tableBody.classList.add('loading');
-            const response = await fetch('/admin/customers', {
+            
+            let url = '/admin/customers';
+            const params = new URLSearchParams();
+            
+            if (searchQuery.trim()) {
+                url = '/admin/customers/search';
+                params.set('q', searchQuery.trim());
+            }
+            
+            params.set('page', page);
+            params.set('sortField', currentSort.field);
+            params.set('sortOrder', currentSort.order);
+            
+            const response = await fetch(`${url}?${params}`, {
                 headers: {
                     'Accept': 'application/json'
                 }
@@ -32,11 +46,13 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             customers = data.customers;
-            sortCustomers();
-            paginateTable();
+            renderTableRows(customers, searchQuery);
+            renderPagination(data.pagination);
+            
         } catch (error) {
             console.error('Error fetching customers:', error);
-                } finally {
+            showToast('error', 'Error', 'Failed to load customers');
+        } finally {
             tableBody.classList.remove('loading');
         }
     }
@@ -159,11 +175,9 @@ document.addEventListener("DOMContentLoaded", () => {
     function performSearch(searchTerm) {
         console.log("Performing search with term:", searchTerm);
         currentPage = 1;
+        currentSearchTerm = searchTerm;
         
-        const filteredCustomers = filterCustomers(searchTerm);
-        console.log(`Found ${filteredCustomers.length} matching customers`);
-        
-        paginateTable(searchTerm);
+        fetchCustomers(1, searchTerm);
         
         const url = new URL(window.location);
         if (searchTerm) {
@@ -174,16 +188,11 @@ document.addEventListener("DOMContentLoaded", () => {
         history.replaceState({}, '', url);
     }
     
-    function filterCustomers(searchTerm) {
-        if (!searchTerm) return customers;
+    function highlightSearchTerm(text, searchTerm) {
+        if (!searchTerm || !text) return text;
         
-        const term = searchTerm.toLowerCase();
-        return customers.filter(customer => {
-            const fullName = (customer.fullName || '').toLowerCase();
-            const email = (customer.email || '').toLowerCase();
-            
-            return fullName.includes(term) || email.includes(term);
-        });
+        const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return text.replace(regex, '<mark>$1</mark>');
     }
 
     if (clearResultsBtn) {
@@ -250,47 +259,34 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    function paginateTable(overrideFilter) {
-        const filter = overrideFilter !== undefined 
-            ? overrideFilter.toLowerCase() 
-            : (searchInput ? searchInput.value.trim().toLowerCase() : '');
-        
-        const filteredCustomers = filterCustomers(filter);
-        console.log(`Pagination: ${filteredCustomers.length} customers after filtering`);
-
-        const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / rowsPerPage));
-        
-        if (currentPage > totalPages) {
-            currentPage = totalPages;
-        }
-        
-        const startIndex = (currentPage - 1) * rowsPerPage;
-        const rows = filteredCustomers.slice(startIndex, startIndex + rowsPerPage);
-        console.log(`Displaying ${rows.length} rows for page ${currentPage}`);
-
-        renderTableRows(rows, filter);
-        renderPagination(totalPages);
-        
-        if (clearResultsBtn) {
-            clearResultsBtn.style.display = filter ? 'inline-block' : 'none';
-        }
+    // This function is no longer needed as pagination is handled by the backend
+    // Keeping for compatibility with sorting functionality
+    function paginateTable() {
+        fetchCustomers(currentPage, currentSearchTerm);
     }
     
-    function renderTableRows(rows, filter) {
+    function renderTableRows(rows, searchTerm = '') {
         tableBody.innerHTML = '';
 
         if (rows.length === 0) {
             const noResultsRow = document.createElement('tr');
             noResultsRow.className = 'no-results';
-            noResultsRow.innerHTML = `<td colspan="6">${filter ? 'No customers match your search' : 'No customers found'}</td>`;
+            noResultsRow.innerHTML = `<td colspan="6">${searchTerm ? 'No customers match your search' : 'No customers found'}</td>`;
             tableBody.appendChild(noResultsRow);
         } else {
             rows.forEach(customer => {
                 const row = document.createElement('tr');
                 row.dataset.id = customer._id;
+                
+                // Apply highlighting if search term exists
+                const highlightedName = highlightSearchTerm(customer.fullName || '', searchTerm);
+                const highlightedEmail = highlightSearchTerm(customer.email || '', searchTerm);
+                const highlightedMobile = highlightSearchTerm(customer.mobile || '', searchTerm);
+                
                 row.innerHTML = `
-                    <td>${customer.fullName || ''}</td>
-                    <td>${customer.email || ''}</td>
+                    <td>${highlightedName}</td>
+                    <td>${highlightedEmail}</td>
+                    <td>${highlightedMobile || 'N/A'}</td>
                     <td>${customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : ''}</td>
                     <td>${customer.orders || 0}</td>
                     <td>
@@ -311,22 +307,25 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
     
-        function renderPagination(totalPages) {
-            paginationContainer.innerHTML = '';
-            
-            if (totalPages <= 1) return;
-            
-            if (currentPage > 1) {
-                addPaginationButton('«', currentPage - 1);
-            }
-            
-            let startPage = Math.max(1, currentPage - 2);
-            let endPage = Math.min(totalPages, startPage + 4);
-            
-            if (endPage - startPage < 4) {
-                startPage = Math.max(1, endPage - 4);
-            }
+    function renderPagination(paginationData) {
+        paginationContainer.innerHTML = '';
         
+        if (!paginationData || paginationData.totalPages <= 1) return;
+        
+        const { currentPage: page, totalPages } = paginationData;
+        currentPage = page;
+        
+        if (currentPage > 1) {
+            addPaginationButton('«', currentPage - 1);
+        }
+        
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, startPage + 4);
+        
+        if (endPage - startPage < 4) {
+            startPage = Math.max(1, endPage - 4);
+        }
+    
         if (startPage > 1) {
             addPaginationButton(1, 1);
             if (startPage > 2) {
@@ -359,7 +358,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.classList.add('btn-arrow');
         btn.addEventListener('click', () => {
             currentPage = page;
-            paginateTable();
+            fetchCustomers(page, currentSearchTerm);
         });
         paginationContainer.appendChild(btn);
     }
@@ -371,5 +370,13 @@ document.addEventListener("DOMContentLoaded", () => {
         paginationContainer.appendChild(span);
     }
 
-    fetchAllCustomers();
+    // Initialize with search term from URL if present
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialSearchTerm = urlParams.get('query') || '';
+    if (initialSearchTerm && searchInput) {
+        searchInput.value = initialSearchTerm;
+        currentSearchTerm = initialSearchTerm;
+    }
+    
+    fetchCustomers(1, currentSearchTerm);
 });

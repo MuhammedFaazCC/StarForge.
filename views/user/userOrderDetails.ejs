@@ -473,11 +473,29 @@
           </div>
           <div class="item-actions" data-product-id="<%= item.productId._id %>">
             <% 
-              const itemStatus = item.status || 'Ordered';
+              const itemStatus = item.status || 'Placed';
               const orderStatus = order.status;
-              const canCancelItem = itemStatus === 'Ordered' && 
-                                   (orderStatus === 'Pending' || orderStatus === 'Placed' || orderStatus === 'Processing') &&
+              
+              // Enhanced cancellation logic - allow for pending, shipped statuses
+              const cancellableStatuses = ['Placed', 'Ordered', 'Processing', 'Shipped'];
+              const canCancelItem = cancellableStatuses.includes(itemStatus) && 
                                    orderStatus !== 'Cancelled';
+              
+              // Return logic with time limit check
+              const RETURN_DAYS_LIMIT = 7;
+              const deliveryDate = item.deliveredAt || order.deliveredAt;
+              let canReturnItem = false;
+              let returnMessage = '';
+              
+              if (itemStatus === 'Delivered' && deliveryDate) {
+                const daysSinceDelivery = Math.floor((new Date() - new Date(deliveryDate)) / (1000 * 60 * 60 * 24));
+                canReturnItem = daysSinceDelivery <= RETURN_DAYS_LIMIT;
+                if (!canReturnItem) {
+                  returnMessage = `Return period expired (${RETURN_DAYS_LIMIT} days limit)`;
+                } else {
+                  returnMessage = `${RETURN_DAYS_LIMIT - daysSinceDelivery} days left to return`;
+                }
+              }
             %>
             
             <% if (itemStatus === 'Cancelled') { %>
@@ -501,10 +519,18 @@
                 Cancel Item
               </button>
             <% } %>
-            <% if ((item.status || 'Ordered') === 'Delivered') { %>
+            
+            <% if (canReturnItem) { %>
               <button class="action-btn btn-return-item" onclick="requestReturnItem('<%= order._id %>', '<%= item.productId._id %>')">
                 Return Item
               </button>
+              <div class="return-info" style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
+                <%= returnMessage %>
+              </div>
+            <% } else if (itemStatus === 'Delivered' && !canReturnItem && returnMessage) { %>
+              <div class="return-expired" style="font-size: 0.8rem; color: #999; margin-top: 0.25rem;">
+                <%= returnMessage %>
+              </div>
             <% } %>
           </div>
         </div>

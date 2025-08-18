@@ -6,7 +6,13 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', (e) => {
         if (password.value !== confirmPassword.value) {
             e.preventDefault();
-            alert("Passwords do not match");
+            Swal.fire({
+              icon: 'error',
+              title: 'Password Mismatch',
+              text: 'Passwords do not match',
+              confirmButtonText: 'OK',
+              confirmButtonColor: '#d33'
+            });
         }
     });
 });

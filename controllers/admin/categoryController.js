@@ -10,8 +10,6 @@ const getAllCategories = async (req, res) => {
             query.name = { $regex: search, $options: 'i' };
         }
         let sortQuery = { createdAt: -1 };
-        if (sort === 'sales_desc') sortQuery = { sales: -1 };
-        if (sort === 'sales_asc') sortQuery = { sales: 1 };
 
         const limit = 6;
         const categories = await Category.find(query)
@@ -41,6 +39,45 @@ const getAllCategories = async (req, res) => {
     }
 };
 
+const validateCategoryName = (name) => {
+    const errors = [];
+    
+    if (!name || !name.trim()) {
+        errors.push("Category name is required");
+        return errors;
+    }
+    
+    const trimmedName = name.trim();
+    
+    if (trimmedName.length < 2) {
+        errors.push("Category name must be at least 2 characters");
+    }
+    
+    if (trimmedName.length > 50) {
+        errors.push("Category name cannot exceed 50 characters");
+    }
+    
+    if (!/^[a-zA-Z0-9\s\-]+$/.test(trimmedName)) {
+        errors.push("Category name can only contain letters, numbers, spaces, and hyphens");
+    }
+    
+    return errors;
+};
+
+const checkDuplicateCategory = async (name, excludeId = null) => {
+    const query = {
+        name: { $regex: new RegExp(`^${name.trim()}$`, 'i') },
+        isDeleted: false
+    };
+    
+    if (excludeId) {
+        query._id = { $ne: excludeId };
+    }
+    
+    const existingCategory = await Category.findOne(query);
+    return existingCategory !== null;
+};
+
 const renderAddCategory = async (req, res) => {
     res.render("addCategory", { message: null });
 };
@@ -49,20 +86,51 @@ const addCategory = async (req, res) => {
     try {
         const { name, description, isActive, offer } = req.body;
         const image = req.file ? req.file.path : null;
-        if (!name) {
-            return res.render("addCategory", {
-                message: { type: "error", text: "Category name is required" }
+        
+        // Validate category name
+        const nameErrors = validateCategoryName(name);
+        if (nameErrors.length > 0) {
+            return res.status(400).json({
+                success: false,
+                errors: { name: nameErrors[0] },
+                formData: { name: name || '', description: description || '', offer: offer || 0 }
             });
         }
+        
+        const trimmedName = name.trim();
+        
+        // Check for duplicate category (case-insensitive)
+        const isDuplicate = await checkDuplicateCategory(trimmedName);
+        if (isDuplicate) {
+            return res.status(400).json({
+                success: false,
+                errors: { name: "Category name already exists" },
+                formData: { name: trimmedName, description: description || '', offer: offer || 0 }
+            });
+        }
+        
+        // Validate offer
         const parsedOffer = offer ? parseFloat(offer) : 0;
         if (isNaN(parsedOffer) || parsedOffer < 0 || parsedOffer > 100) {
-            return res.render("addCategory", {
-                message: { type: "error", text: "Offer percentage must be a number between 0 and 100" }
+            return res.status(400).json({
+                success: false,
+                errors: { offer: "Offer percentage must be a number between 0 and 100" },
+                formData: { name: trimmedName, description: description || '', offer: offer || 0 }
             });
         }
+        
+        // Validate description length
+        if (description && description.trim().length > 500) {
+            return res.status(400).json({
+                success: false,
+                errors: { description: "Description cannot exceed 500 characters" },
+                formData: { name: trimmedName, description: description || '', offer: offer || 0 }
+            });
+        }
+        
         const category = new Category({
-            name,
-            description,
+            name: trimmedName,
+            description: description ? description.trim() : '',
             isActive: isActive === "on",
             image,
             offer: parsedOffer
@@ -70,6 +138,7 @@ const addCategory = async (req, res) => {
 
         await category.save();
         console.log(`Category saved with offer: ${category.offer}`);
+        
         await Product.updateMany({ category: category._id }, { 
             categoryOffer: parsedOffer,
             isListed: category.isActive,
@@ -77,15 +146,30 @@ const addCategory = async (req, res) => {
         });
         console.log(`Updated products for category ${category._id} with categoryOffer: ${parsedOffer}, isListed: ${category.isActive}, isDeleted: false`);
 
-        res.redirect("/admin/categories");
+        res.json({ success: true, message: "Category added successfully" });
     } catch (error) {
-        let errorMessage = error.message;
+        console.error("Error adding category:", error);
+        
+        let errorMessage = "An error occurred while adding the category";
+        let errorField = "general";
+        
         if (error.code === 11000) {
             errorMessage = "Category name already exists";
+            errorField = "name";
+        } else if (error.name === 'ValidationError') {
+            const firstError = Object.values(error.errors)[0];
+            errorMessage = firstError.message;
+            errorField = Object.keys(error.errors)[0];
         }
-        console.error("Error adding category:", error);
-        res.render("addCategory", {
-            message: { type: "error", text: `Error adding category: ${errorMessage}` }
+        
+        res.status(500).json({
+            success: false,
+            errors: { [errorField]: errorMessage },
+            formData: { 
+                name: req.body.name || '', 
+                description: req.body.description || '', 
+                offer: req.body.offer || 0 
+            }
         });
     }
 };
@@ -109,45 +193,101 @@ const updateCategory = async (req, res) => {
         const { id } = req.params;
         const { name, description, isActive, offer } = req.body;
         const image = req.file ? req.file.path : null;
-        if (!name) {
-            return res.render("editCategory", {
-                category: await Category.findById(id),
-                message: { type: "error", text: "Category name is required" }
+        
+        // Check if category exists
+        const existingCategory = await Category.findById(id);
+        if (!existingCategory) {
+            return res.status(404).json({
+                success: false,
+                errors: { general: "Category not found" }
             });
         }
+        
+        // Validate category name
+        const nameErrors = validateCategoryName(name);
+        if (nameErrors.length > 0) {
+            return res.status(400).json({
+                success: false,
+                errors: { name: nameErrors[0] },
+                formData: { name: name || '', description: description || '', offer: offer || 0 }
+            });
+        }
+        
+        const trimmedName = name.trim();
+        
+        // Check for duplicate category (case-insensitive, excluding current category)
+        const isDuplicate = await checkDuplicateCategory(trimmedName, id);
+        if (isDuplicate) {
+            return res.status(400).json({
+                success: false,
+                errors: { name: "Category name already exists" },
+                formData: { name: trimmedName, description: description || '', offer: offer || 0 }
+            });
+        }
+        
+        // Validate offer
         const parsedOffer = offer ? parseFloat(offer) : 0;
         if (isNaN(parsedOffer) || parsedOffer < 0 || parsedOffer > 100) {
-            return res.render("editCategory", {
-                category: await Category.findById(id),
-                message: { type: "error", text: "Offer percentage must be a number between 0 and 100" }
+            return res.status(400).json({
+                success: false,
+                errors: { offer: "Offer percentage must be a number between 0 and 100" },
+                formData: { name: trimmedName, description: description || '', offer: offer || 0 }
             });
         }
+        
+        // Validate description length
+        if (description && description.trim().length > 500) {
+            return res.status(400).json({
+                success: false,
+                errors: { description: "Description cannot exceed 500 characters" },
+                formData: { name: trimmedName, description: description || '', offer: offer || 0 }
+            });
+        }
+        
         const updateData = {
-            name,
-            description,
+            name: trimmedName,
+            description: description ? description.trim() : '',
             isActive: isActive === "on",
             offer: parsedOffer
         };
+        
         if (image) {
             updateData.image = image;
         }
+        
         await Category.findByIdAndUpdate(id, updateData);
         console.log(`Category ${id} updated with offer: ${parsedOffer}, isActive: ${isActive === "on"}`);
+        
         await Product.updateMany({ category: id, isDeleted: false }, { 
             categoryOffer: parsedOffer,
             isListed: isActive === "on"
         });
         console.log(`Updated products for category ${id} with categoryOffer: ${parsedOffer}, isListed: ${isActive === "on"}, isDeleted: false`);
-        res.redirect("/admin/categories");
+        
+        res.json({ success: true, message: "Category updated successfully" });
     } catch (error) {
-        let errorMessage = error.message;
+        console.error("Error updating category:", error);
+        
+        let errorMessage = "An error occurred while updating the category";
+        let errorField = "general";
+        
         if (error.code === 11000) {
             errorMessage = "Category name already exists";
+            errorField = "name";
+        } else if (error.name === 'ValidationError') {
+            const firstError = Object.values(error.errors)[0];
+            errorMessage = firstError.message;
+            errorField = Object.keys(error.errors)[0];
         }
-        console.error("Error updating category:", error);
-        res.render("editCategory", {
-            category: await Category.findById(req.params.id),
-            message: { type: "error", text: `Error updating category: ${errorMessage}` }
+        
+        res.status(500).json({
+            success: false,
+            errors: { [errorField]: errorMessage },
+            formData: { 
+                name: req.body.name || '', 
+                description: req.body.description || '', 
+                offer: req.body.offer || 0 
+            }
         });
     }
 };

@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
   <link rel="stylesheet" href="/css/user/allProducts.css">
   <link rel="stylesheet" href="/css/user/navbar-badges.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body> 
   <%- include('../partials/user/navbar', { minimalNavbar: false }) %>
@@ -146,7 +147,9 @@
               <div class="col">
                 <div class="card product-card h-100">
                   <a href="#" class="wishlist-btn" data-product-id="<%= product._id %>">
-                    <% const inWishlist = userWishlistItems.some(item => item.productId === product._id.toString()); %>
+                    <% const inWishlist = userWishlistItems.some(item => 
+                        (item.productId._id ? item.productId._id.toString() : item.productId.toString()) === product._id.toString()
+                    ); %>
                     <i class="bi <%= inWishlist ? 'bi-heart-fill text-danger' : 'bi-heart' %>"></i>
                   </a>
 

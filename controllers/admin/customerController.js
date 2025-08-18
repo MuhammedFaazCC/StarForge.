@@ -40,6 +40,20 @@ const customersPage = async function customersPage(req, res) {
       };
     }));
 
+    // Check if request expects JSON response
+    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+      return res.status(200).json({
+        success: true,
+        customers: customersWithOrders,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalCustomers,
+          limit
+        }
+      });
+    }
+
     res.render('customers', {
       customers: customersWithOrders,
       pagination: {

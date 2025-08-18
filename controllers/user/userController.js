@@ -867,6 +867,7 @@ const wishlistPage = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
+
 const addToWishlist = async (req, res) => {
   const userId = req.session.user._id;
   const productId = req.params.id;
@@ -892,8 +893,6 @@ const addToWishlist = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
-
-
 
 const removeFromWishlist = async (req, res) => {
   const userId = req.session.user._id;
@@ -1272,11 +1271,15 @@ const cancelSingleItem = async (req, res) => {
     const item = order.items[itemIndex];
     console.log(`Item found: ${item.productId.name}, Current Status: ${item.status || 'Ordered'}`);
     
-    if ((item.status || 'Ordered') !== 'Ordered') {
-      console.error(`Item cannot be cancelled, current status: ${item.status}`);
+    // Enhanced cancellation logic - allow cancellation for pending, shipped, and ordered items
+    const cancellableStatuses = ['Placed', 'Ordered', 'Processing', 'Shipped'];
+    const currentStatus = item.status || 'Placed';
+    
+    if (!cancellableStatuses.includes(currentStatus)) {
+      console.error(`Item cannot be cancelled, current status: ${currentStatus}`);
       return res.status(400).json({ 
         success: false, 
-        error: `Item cannot be cancelled. Current status: ${item.status || 'Ordered'}` 
+        error: `Item cannot be cancelled. Current status: ${currentStatus}` 
       });
     }
 
@@ -1419,6 +1422,24 @@ const requestReturnItem = async (req, res) => {
       return res.status(400).json({ 
         success: false, 
         message: "Item not eligible for return" 
+      });
+    }
+
+    // Check return time limit (7 days from delivery)
+    const RETURN_DAYS_LIMIT = 7;
+    const deliveryDate = item.deliveredAt || order.deliveredAt;
+    if (!deliveryDate) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Delivery date not found for this item" 
+      });
+    }
+
+    const daysSinceDelivery = Math.floor((new Date() - new Date(deliveryDate)) / (1000 * 60 * 60 * 24));
+    if (daysSinceDelivery > RETURN_DAYS_LIMIT) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Return period has expired. Items can only be returned within ${RETURN_DAYS_LIMIT} days of delivery.` 
       });
     }
 
@@ -2384,7 +2405,3 @@ module.exports = {
   removeProfileImage,
   downloadInvoice,
 };
-
-
-
-

@@ -184,15 +184,34 @@ document.addEventListener("DOMContentLoaded", () => {
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          alert(data.message);
+          Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: data.message,
+            timer: 2000,
+            timerProgressBar: true,
+            showConfirmButton: false
+          });
           window.location.href = "/admin/products";
         } else {
-          alert(data.message);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: data.message,
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#d33'
+          });
         }
       })
       .catch(error => {
         console.error("Form submission error:", error);
-        alert("An error occurred while adding the product");
+        Swal.fire({
+          icon: 'error',
+          title: 'Product Addition Failed',
+          text: 'An error occurred while adding the product',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#d33'
+        });
       });
   });
 });
