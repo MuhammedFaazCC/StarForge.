@@ -48,7 +48,17 @@
             <% const itemStatus = item.status || 'Placed'; %>
             <% const isFinalStatus = ['Delivered', 'Returned', 'Cancelled'].includes(itemStatus); %>
             <tr data-item-id="<%= item._id %>">
-              <td><%= item.productId?.name || 'Deleted Product' %></td>
+              <td>
+                <% 
+                  let productName = 'Deleted Product';
+                  if (item.productId && item.productId.name) {
+                    productName = item.productId.name;
+                  } else if (item.name) {
+                    productName = item.name;
+                  }
+                %>
+                <%= productName %>
+              </td>
               <td>
                 <% if (item.productId?.mainImage?.[0]) { %>
                   <img src="<%= item.productId.mainImage %>" alt="Product" width="60">

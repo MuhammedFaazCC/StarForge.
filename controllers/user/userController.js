@@ -1165,19 +1165,24 @@ const getUserOrders = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('items.productId');
+      .populate({
+        path: 'items.productId',
+        select: 'name brand images price salePrice offer',
+        options: { strictPopulate: false }
+      });
 
     orders.forEach(order => {
-      order.items = order.items.filter(item => {
-        if (!item.productId) {
-          console.warn(`Null productId in order ${order._id}, item:`, item);
-          return false;
-        }
+      order.items.forEach(item => {
+        // Set default status if missing
         if (!item.status) {
-          console.warn(`Missing status for item in order ${order._id}, productId: ${item.productId._id}`);
+          console.warn(`Missing status for item in order ${order._id}`);
           item.status = 'Unknown';
         }
-        return true;
+        
+        // Handle deleted products - keep the item but mark productId as null if deleted
+        if (!item.productId) {
+          console.warn(`Product deleted for item in order ${order._id}, using fallback name`);
+        }
       });
     });
 

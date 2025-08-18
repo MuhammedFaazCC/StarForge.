@@ -127,6 +127,11 @@ const getAdminOrdersPage = async (req, res) => {
 
     const orders = await Order.find(query)
       .populate('userId')
+      .populate({
+        path: 'items.productId',
+        select: 'name brand images price salePrice offer',
+        options: { strictPopulate: false }
+      })
       .sort({ createdAt: sort === 'asc' ? 1 : -1 })
       .skip(skip)
       .limit(limit);
@@ -181,7 +186,13 @@ const getInvoicePDF = async (req, res) => {
   try {
     const orderId = req.params.id;
 
-    const order = await Order.findById(orderId).populate("userId");
+    const order = await Order.findById(orderId)
+      .populate("userId")
+      .populate({
+        path: 'items.productId',
+        select: 'name brand images price salePrice offer',
+        options: { strictPopulate: false }
+      });
     if (!order) return res.status(404).send("Order not found");
 
     const filePath = path.join(__dirname, '../../views/admin/invoicePdf.ejs'); // eslint-disable-line no-undef
@@ -868,7 +879,11 @@ const acceptReturnRequest = async (req, res) => {
   try {
     const orderId = req.params.id;
 
-    const order = await Order.findById(orderId).populate('items.productId');
+    const order = await Order.findById(orderId).populate({
+      path: 'items.productId',
+      select: 'name brand images price salePrice offer',
+      options: { strictPopulate: false }
+    });
     if (!order) {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
@@ -961,12 +976,16 @@ const acceptItemReturnRequest = async (req, res) => {
   try {
     const { orderId, productId } = req.params;
 
-    const order = await Order.findById(orderId).populate('items.productId');
+    const order = await Order.findById(orderId).populate({
+      path: 'items.productId',
+      select: 'name brand images price salePrice offer',
+      options: { strictPopulate: false }
+    });
     if (!order) {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    const item = order.items.find(i => i.productId._id.toString() === productId);
+    const item = order.items.find(i => i.productId && i.productId._id.toString() === productId);
     if (!item) {
       return res.status(404).json({ success: false, message: "Item not found in order" });
     }
@@ -1022,12 +1041,16 @@ const declineItemReturnRequest = async (req, res) => {
   try {
     const { orderId, productId } = req.params;
 
-    const order = await Order.findById(orderId).populate('items.productId');
+    const order = await Order.findById(orderId).populate({
+      path: 'items.productId',
+      select: 'name brand images price salePrice offer',
+      options: { strictPopulate: false }
+    });
     if (!order) {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    const item = order.items.find(i => i.productId._id.toString() === productId);
+    const item = order.items.find(i => i.productId && i.productId._id.toString() === productId);
     if (!item) {
       return res.status(404).json({ success: false, message: "Item not found in order" });
     }

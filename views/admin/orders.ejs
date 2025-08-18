@@ -107,7 +107,17 @@
                                                     <% } %>
                                                 </div>
                                                 <div class="item-details">
-                                                    <h5><%= item.productId?.name || 'Deleted Product' %></h5>
+                                                    <h5>
+                                                      <% 
+                                                        let productName = 'Deleted Product';
+                                                        if (item.productId && item.productId.name) {
+                                                          productName = item.productId.name;
+                                                        } else if (item.name) {
+                                                          productName = item.name;
+                                                        }
+                                                      %>
+                                                      <%= productName %>
+                                                    </h5>
                                                     <p class="item-price">$<%= item.salesPrice.toFixed(2) %> × <%= item.quantity %></p>
                                                     <div class="item-status-container">
                                                         <span class="status-badge status-<%= itemStatus.toLowerCase().replace(/\s+/g, '-') %>">

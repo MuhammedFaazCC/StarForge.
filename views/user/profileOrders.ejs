@@ -570,7 +570,17 @@
                       <% order.items.forEach(item => { %>
                         <li class="product-item" data-product-id="<%= item.productId?._id %>">
                           <div class="product-info">
-                            <div class="product-name"><%= item.productId?.name || 'Not Available' %> × <%= item.quantity %></div>
+                            <div class="product-name">
+                              <% 
+                                let productName = 'Deleted Product';
+                                if (item.productId && item.productId.name) {
+                                  productName = item.productId.name;
+                                } else if (item.name) {
+                                  productName = item.name;
+                                }
+                              %>
+                              <%= productName %> × <%= item.quantity %>
+                            </div>
                             <span class="orderStatus <%= item.status ? item.status.toLowerCase().replace(' ', '-') : 'unknown' %>">
                               <%= item.status || 'Placed' %>
                             </span>
@@ -598,14 +608,14 @@
                               <span class="status-badge return-requested">🔄 Return Requested</span>
                             <% } else if (itemStatus === 'Returned') { %>
                               <span class="status-badge returned">↩️ Returned</span>
-                            <% } else if (canCancelItem) { %>
+                            <% } else if (canCancelItem && item.productId) { %>
                               <button class="btn btn-sm btn-outline-danger cancel-item-btn" 
                                       onclick="cancelItem('<%= order._id %>', '<%= item.productId._id %>')">
                                 Cancel
                               </button>
                             <% } %>
                             
-                            <% if (canReturnItem) { %>
+                            <% if (canReturnItem && item.productId) { %>
                               <button class="btn btn-sm btn-outline-warning return-item-btn" 
                                       onclick="returnItem('<%= order._id %>', '<%= item.productId._id %>')">
                                 Return
