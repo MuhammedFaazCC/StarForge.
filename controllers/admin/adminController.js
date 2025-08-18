@@ -129,7 +129,7 @@ const getAdminOrdersPage = async (req, res) => {
       .populate('userId')
       .populate({
         path: 'items.productId',
-        select: 'name brand images price salePrice offer',
+        select: 'name brand mainImage price salePrice offer',
         options: { strictPopulate: false }
       })
       .sort({ createdAt: sort === 'asc' ? 1 : -1 })
@@ -190,7 +190,7 @@ const getInvoicePDF = async (req, res) => {
       .populate("userId")
       .populate({
         path: 'items.productId',
-        select: 'name brand images price salePrice offer',
+        select: 'name brand mainImage price salePrice offer',
         options: { strictPopulate: false }
       });
     if (!order) return res.status(404).send("Order not found");
@@ -881,7 +881,7 @@ const acceptReturnRequest = async (req, res) => {
 
     const order = await Order.findById(orderId).populate({
       path: 'items.productId',
-      select: 'name brand images price salePrice offer',
+      select: 'name brand mainImage price salePrice offer',
       options: { strictPopulate: false }
     });
     if (!order) {
@@ -978,7 +978,7 @@ const acceptItemReturnRequest = async (req, res) => {
 
     const order = await Order.findById(orderId).populate({
       path: 'items.productId',
-      select: 'name brand images price salePrice offer',
+      select: 'name brand mainImage price salePrice offer',
       options: { strictPopulate: false }
     });
     if (!order) {
@@ -1043,7 +1043,7 @@ const declineItemReturnRequest = async (req, res) => {
 
     const order = await Order.findById(orderId).populate({
       path: 'items.productId',
-      select: 'name brand images price salePrice offer',
+      select: 'name brand mainImage price salePrice offer',
       options: { strictPopulate: false }
     });
     if (!order) {
@@ -1070,6 +1070,112 @@ const declineItemReturnRequest = async (req, res) => {
 
   } catch (error) {
     console.error("Error declining item return request:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+const updateOrderStatus = async (req, res) => {
+  try {
+    const orderId = req.params.orderId || req.params.id;
+    const { status } = req.body;
+
+    const order = await Order.findById(orderId).populate('userId');
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    // Check if order status is final
+    const finalStatuses = ['Delivered', 'Returned', 'Cancelled'];
+    if (finalStatuses.includes(order.status)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Cannot change status. Order is already ${order.status}` 
+      });
+    }
+
+    // Validate status transition
+    const validStatuses = ['Pending Payment', 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Placed', 'Return Requested', 'Returned', 'Return Declined', 'Payment Failed'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ success: false, message: "Invalid status" });
+    }
+
+    const oldStatus = order.status;
+    order.status = status;
+
+    // Update all items to match order status, but only if they're not in a final state
+    order.items.forEach(item => {
+      const itemFinalStatuses = ['Delivered', 'Returned', 'Cancelled'];
+      if (!itemFinalStatuses.includes(item.status)) {
+        // Map order status to appropriate item status
+        let itemStatus = status;
+        
+        // Handle special mappings
+        if (status === 'Pending Payment' || status === 'Pending') {
+          itemStatus = 'Placed';
+        } else if (status === 'Processing') {
+          itemStatus = 'Processing';
+        } else if (status === 'Shipped') {
+          itemStatus = 'Shipped';
+        } else if (status === 'Delivered') {
+          itemStatus = 'Delivered';
+        } else if (status === 'Cancelled') {
+          itemStatus = 'Cancelled';
+        }
+        
+        item.status = itemStatus;
+        
+        // Set timestamps for specific statuses
+        if (itemStatus === 'Delivered') {
+          item.deliveredAt = new Date();
+        } else if (itemStatus === 'Cancelled') {
+          item.cancelledAt = new Date();
+        }
+      }
+    });
+
+    // Set order-level timestamps
+    if (status === 'Delivered') {
+      order.deliveredAt = new Date();
+    }
+
+    await order.save();
+
+    // Handle wallet refunds for cancellations
+    if (status === 'Cancelled' && oldStatus !== 'Cancelled') {
+      try {
+        const { refundToWallet } = require('../user/userController');
+        await refundToWallet(order, "Order cancelled by admin");
+      } catch (refundError) {
+        console.error("Error processing refund:", refundError);
+        // Continue with status update even if refund fails
+      }
+    }
+
+    // Handle stock restoration for cancellations
+    if (status === 'Cancelled' && oldStatus !== 'Cancelled') {
+      try {
+        const Product = require("../../models/productSchema");
+        for (const item of order.items) {
+          if (item.productId) {
+            await Product.updateOne(
+              { _id: item.productId },
+              { $inc: { stock: item.quantity } }
+            );
+            console.log(`Stock restored for cancelled item ${item.productId}: +${item.quantity}`);
+          }
+        }
+      } catch (stockError) {
+        console.error("Error restoring stock for cancelled order:", stockError);
+      }
+    }
+
+    res.json({ 
+      success: true, 
+      message: `Order status updated to ${status} successfully`,
+      newStatus: status
+    });
+  } catch (error) {
+    console.error("Error updating order status:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
@@ -1637,13 +1743,23 @@ const updateReferralSettings = async (req, res) => {
 module.exports = {
   loginPage,
   login,
+  logout,
   dashboardPage,
   getAdminOrdersPage,
   getOrderDetails,
   getInvoicePDF,
-  statusUpdate,
   updateItemStatus,
+  updateOrderStatus,
   salesPage,
+  exportSalesReportPDF,
+  exportSalesReportExcel,
+  exportSalesReportCSV,
+  getSalesChartData,
+  getReturnRequestsPage,
+  acceptReturnRequest,
+  declineReturnRequest,
+  acceptItemReturnRequest,
+  declineItemReturnRequest,
   couponsPage,
   postCreateCoupon,
   getCoupon,
@@ -1651,16 +1767,6 @@ module.exports = {
   deleteCoupon,
   softDeleteCoupon,
   reactivateCoupon,
-  logout,
-  getReturnRequestsPage,
-  acceptReturnRequest,
-  declineReturnRequest,
-  acceptItemReturnRequest,
-  declineItemReturnRequest,
-  exportSalesReportPDF,
-  exportSalesReportExcel,
-  exportSalesReportCSV,
-  getSalesChartData,
   getReferralSettings,
   updateReferralSettings
 };

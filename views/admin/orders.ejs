@@ -85,8 +85,36 @@
                                         </div>
                                     </div>
                                     <div class="order-actions">
+                                        <div class="order-status-update">
+                                            <% const isFinalOrderStatus = ['Delivered', 'Returned', 'Cancelled'].includes(order.status); %>
+                                            <% if (!isFinalOrderStatus) { %>
+                                                <select class="order-status-dropdown" data-order-id="<%= order._id %>" data-current-status="<%= order.status %>">
+                                                    <option value="">Update Status</option>
+                                                    <% 
+                                                        const orderStatusOptions = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+                                                        const currentIndex = orderStatusOptions.indexOf(order.status);
+                                                        orderStatusOptions.forEach((status, index) => {
+                                                            if (status !== order.status && 
+                                                                ((status === 'Cancelled') || 
+                                                                 (currentIndex < orderStatusOptions.indexOf('Delivered') && index > currentIndex && status !== 'Cancelled'))) {
+                                                    %>
+                                                        <option value="<%= status %>"><%= status %></option>
+                                                    <% 
+                                                            }
+                                                        });
+                                                    %>
+                                                </select>
+                                                <button class="btn-update-order-status" data-order-id="<%= order._id %>" disabled>
+                                                    <i class="fas fa-sync"></i> Update
+                                                </button>
+                                            <% } else { %>
+                                                <span class="final-order-status">
+                                                    <i class="fas fa-check-circle"></i>
+                                                    Final Status
+                                                </span>
+                                            <% } %>
+                                        </div>
                                         <a href="/admin/orders/<%= order._id %>" class="action-btn">View Details</a>
-                                        </a>
                                     </div>
                                 </div>
 
@@ -244,6 +272,84 @@
                 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
                 <style>
+                    /* Order Status Update Styles */
+                    .order-status-update {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        margin-bottom: 0.5rem;
+                    }
+
+                    .order-status-dropdown {
+                        padding: 0.4rem 0.6rem;
+                        border: 2px solid #e5e7eb;
+                        border-radius: 6px;
+                        font-size: 0.85rem;
+                        background: white;
+                        min-width: 140px;
+                        transition: all 0.3s ease;
+                    }
+
+                    .order-status-dropdown:focus {
+                        outline: none;
+                        border-color: #fca120;
+                        box-shadow: 0 0 0 3px rgba(252, 161, 32, 0.1);
+                    }
+
+                    .btn-update-order-status {
+                        padding: 0.4rem 0.8rem;
+                        background: #6c757d;
+                        color: white;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 0.85rem;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        display: flex;
+                        align-items: center;
+                        gap: 0.4rem;
+                        white-space: nowrap;
+                    }
+
+                    .btn-update-order-status:enabled.enabled {
+                        background: #fca120;
+                        box-shadow: 0 2px 8px rgba(252, 161, 32, 0.3);
+                        animation: pulse-orange 2s infinite;
+                    }
+
+                    .btn-update-order-status:enabled.enabled:hover {
+                        background: #e8940f;
+                        transform: translateY(-1px);
+                        box-shadow: 0 4px 12px rgba(252, 161, 32, 0.4);
+                    }
+
+                    .btn-update-order-status:disabled {
+                        cursor: not-allowed;
+                        opacity: 0.6;
+                    }
+
+                    .final-order-status {
+                        color: #28a745;
+                        font-weight: 600;
+                        font-size: 0.85rem;
+                        display: flex;
+                        align-items: center;
+                        gap: 0.4rem;
+                    }
+
+                    @keyframes pulse-orange {
+                        0% {
+                            box-shadow: 0 0 0 0 rgba(252, 161, 32, 0.7);
+                        }
+                        70% {
+                            box-shadow: 0 0 0 10px rgba(252, 161, 32, 0);
+                        }
+                        100% {
+                            box-shadow: 0 0 0 0 rgba(252, 161, 32, 0);
+                        }
+                    }
+
                     /* Pagination Styles */
                     .pagination-container {
                         margin-top: 2rem;

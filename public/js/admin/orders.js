@@ -187,31 +187,84 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Legacy order status update (if still needed)
-  document.querySelectorAll('.status-select').forEach(select => {
-    select.addEventListener('change', async function () {
+  // Order status update functionality for listing page
+  document.querySelectorAll('.order-status-dropdown').forEach(dropdown => {
+    dropdown.addEventListener('change', function() {
       const orderId = this.getAttribute('data-order-id');
+      const currentStatus = this.getAttribute('data-current-status');
       const newStatus = this.value;
+      const updateBtn = document.querySelector(`button.btn-update-order-status[data-order-id="${orderId}"]`);
+      
+      if (newStatus && newStatus !== currentStatus) {
+        updateBtn.disabled = false;
+        updateBtn.classList.add('enabled');
+        updateBtn.innerHTML = `<i class="fas fa-sync"></i> Update to ${newStatus}`;
+      } else {
+        updateBtn.disabled = true;
+        updateBtn.classList.remove('enabled');
+        updateBtn.innerHTML = `<i class="fas fa-sync"></i> Update`;
+      }
+    });
+  });
+
+  // Handle order status update button clicks
+  document.querySelectorAll('.btn-update-order-status').forEach(button => {
+    button.addEventListener('click', async function() {
+      const orderId = this.getAttribute('data-order-id');
+      const dropdown = document.querySelector(`select.order-status-dropdown[data-order-id="${orderId}"]`);
+      const newStatus = dropdown.value;
+      const currentStatus = dropdown.getAttribute('data-current-status');
+      
+      if (!newStatus || newStatus === currentStatus) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'No Status Selected',
+          text: 'Please select a different status',
+          confirmButtonColor: '#fca120'
+        });
+        return;
+      }
+
+      // Show confirmation with different messages for critical actions
+      let confirmTitle = 'Update Order Status?';
+      let confirmText = `Change order status from "${currentStatus}" to "${newStatus}"?`;
+      let confirmButtonText = 'Yes, Update';
+      
+      if (newStatus === 'Cancelled') {
+        confirmTitle = 'Cancel Entire Order?';
+        confirmText = 'This will cancel all items in the order and process refunds if applicable. This action cannot be undone.';
+        confirmButtonText = 'Yes, Cancel Order';
+      } else if (newStatus === 'Delivered') {
+        confirmTitle = 'Mark Order as Delivered?';
+        confirmText = 'This will mark all items as delivered and finalize the order. This action cannot be undone.';
+        confirmButtonText = 'Yes, Mark Delivered';
+      }
 
       const result = await Swal.fire({
-        title: 'Confirm Status Change',
-        text: `Change order ${orderId.slice(-8)} status to "${newStatus}"?`,
+        title: confirmTitle,
+        text: confirmText,
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#28a745',
-        cancelButtonColor: '#dc3545',
-        confirmButtonText: 'Yes, update it!',
+        confirmButtonColor: newStatus === 'Cancelled' ? '#dc3545' : '#fca120',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: confirmButtonText,
         cancelButtonText: 'Cancel'
       });
 
       if (!result.isConfirmed) {
-        // Reset to original value
-        this.value = this.getAttribute('data-original-value') || this.options[0].value;
+        dropdown.value = '';
+        this.disabled = true;
+        this.classList.remove('enabled');
+        this.innerHTML = `<i class="fas fa-sync"></i> Update`;
         return;
       }
 
+      // Disable button during request
+      this.disabled = true;
+      this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+
       try {
-        const res = await fetch(`/admin/orders/${orderId}/status`, {
+        const response = await fetch(`/admin/orders/${orderId}/status`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -219,32 +272,62 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify({ status: newStatus })
         });
 
-        const data = await res.json();
+        const data = await response.json();
+        
         if (data.success) {
           await Swal.fire({
             icon: 'success',
             title: 'Status Updated!',
-            text: 'Order status updated successfully.',
-            confirmButtonColor: '#28a745',
+            text: data.message,
+            confirmButtonColor: '#fca120',
             timer: 2000,
             timerProgressBar: true
           });
+
+          // Update the UI without page reload
+          const orderCard = this.closest('.order-card');
           
-          // Update the original value
-          this.setAttribute('data-original-value', newStatus);
+          // Update all item status badges in this order
+          orderCard.querySelectorAll('.status-badge').forEach(badge => {
+            const itemStatus = newStatus === 'Pending' ? 'Placed' : newStatus;
+            badge.className = `status-badge status-${itemStatus.toLowerCase().replace(/\s+/g, '-')}`;
+            badge.textContent = itemStatus;
+          });
+          
+          // Update dropdown current status
+          dropdown.setAttribute('data-current-status', newStatus);
+          dropdown.value = '';
+          
+          // Reset button or replace with final status indicator
+          if (['Delivered', 'Cancelled', 'Returned'].includes(newStatus)) {
+            const orderStatusUpdate = this.closest('.order-status-update');
+            orderStatusUpdate.innerHTML = `
+              <span class="final-order-status">
+                <i class="fas fa-check-circle"></i>
+                Final Status
+              </span>
+            `;
+          } else {
+            this.disabled = true;
+            this.classList.remove('enabled');
+            this.innerHTML = '<i class="fas fa-sync"></i> Update';
+          }
+          
         } else {
           await Swal.fire({
             icon: 'error',
             title: 'Update Failed',
-            text: 'Failed to update order status.',
+            text: data.message || 'Failed to update order status',
             confirmButtonColor: '#dc3545'
           });
           
-          // Reset to original value
-          this.value = this.getAttribute('data-original-value') || this.options[0].value;
+          dropdown.value = '';
+          this.disabled = true;
+          this.classList.remove('enabled');
+          this.innerHTML = '<i class="fas fa-sync"></i> Update';
         }
-      } catch (err) {
-        console.error(err);
+      } catch (error) {
+        console.error('Error updating order status:', error);
         
         await Swal.fire({
           icon: 'error',
@@ -253,13 +336,12 @@ document.addEventListener('DOMContentLoaded', () => {
           confirmButtonColor: '#dc3545'
         });
         
-        // Reset to original value
-        this.value = this.getAttribute('data-original-value') || this.options[0].value;
+        dropdown.value = '';
+        this.disabled = true;
+        this.classList.remove('enabled');
+        this.innerHTML = '<i class="fas fa-sync"></i> Update';
       }
     });
-    
-    // Store original value
-    select.setAttribute('data-original-value', select.value);
   });
 
   // Add smooth animations for status updates
