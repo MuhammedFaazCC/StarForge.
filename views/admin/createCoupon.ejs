@@ -8,8 +8,9 @@
 </head>
 <body>
   <%- include('../partials/admin/navbar') %>
+  <%- include('../partials/admin/sidepanel', { active: 'coupons' }) %>
 
-  <div class="main-content">
+  <div class="main-content" id="main-content">
     <div class="customers-section">
       <div class="section-header">
         <h2>Create Coupon</h2>
@@ -45,10 +46,7 @@
     </div>
   </div>
 
-  <footer>
-    <p>© 2025 Admin Dashboard. All rights reserved.</p>
-  </footer>
-
+  <%- include('../partials/admin/footer') %>
   <script src="/js/admin/coupon.js"></script>
 </body>
 </html>

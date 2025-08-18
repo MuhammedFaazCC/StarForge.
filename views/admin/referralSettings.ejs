@@ -42,25 +42,24 @@
     </style>
 </head>
 <body>
-    <%- include('../partials/admin/navbar', { admin }) %>
-    <%- include('../partials/admin/sidebar', { currentPage: 'referral' }) %>
+    <%- include('../partials/admin/navbar') %>
+    <%- include('../partials/admin/sidepanel', { active: 'dashboard' }) %>
 
-    <div class="main-content">
-        <div class="content-wrapper">
-            <div class="container-fluid">
-                <div class="page-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h1 class="page-title">Referral Settings</h1>
-                            <nav aria-label="breadcrumb">
-                                <ol class="breadcrumb">
-                                    <li class="breadcrumb-item"><a href="/admin/dashboard">Dashboard</a></li>
-                                    <li class="breadcrumb-item active">Referral Settings</li>
-                                </ol>
-                            </nav>
-                        </div>
+    <div class="main-content" id="main-content">
+        <div class="container-fluid">
+            <div class="page-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="page-title">Referral Settings</h1>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="/admin/dashboard">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Referral Settings</li>
+                            </ol>
+                        </nav>
                     </div>
                 </div>
+            </div>
 
                 <% if (success) { %>
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -237,5 +236,15 @@
             }
         });
     </script>
+    {{ ... }}
+                    }
+                });
+                return false;
+            }
+        });
+        </div>
+    </div>
+
+    <%- include('../partials/admin/footer') %>
 </body>
 </html>

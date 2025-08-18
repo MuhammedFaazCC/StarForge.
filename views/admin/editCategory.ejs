@@ -13,8 +13,9 @@
 </head>
 <body>
   <%- include('../partials/admin/navbar') %>
+  <%- include('../partials/admin/sidepanel', { active: 'categories' }) %>
 
-  <div class="main-content">
+  <div class="main-content" id="main-content">
     <div class="form-container">
       <h2>Edit Category</h2>
       <% if (message) { %>

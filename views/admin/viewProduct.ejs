@@ -7,7 +7,9 @@
 </head>
 <body>
   <%- include('../partials/admin/navbar') %>
+  <%- include('../partials/admin/sidepanel', { active: 'products' }) %>
 
+  <div class="main-content" id="main-content">
 <section class="product-view-section">
   <div class="product-header">
     <div class="main-image-container">
@@ -50,7 +52,5 @@
 
 </section>
 <%- include('../partials/admin/footer') %>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html>

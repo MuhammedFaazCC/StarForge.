@@ -9,6 +9,10 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
+  <%- include('../partials/admin/navbar') %>
+  <%- include('../partials/admin/sidepanel', { active: 'products' }) %>
+
+  <div class="main-content" id="main-content">
   <div class="container">
     <h2>Add New Product</h2>
 
@@ -120,5 +124,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
   <script src="/js/admin/addProducts.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  </div>
+
+  <%- include('../partials/admin/footer') %>
 </body>
 </html>

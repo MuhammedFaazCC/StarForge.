@@ -151,12 +151,26 @@
 </head>
 <body>
   <%- include('../partials/admin/navbar') %>
-  <div class="view-order-container">
-    <div class="view-order-container">
-      <h2 class="view-order-title">Order Details - <%= order._id %></h2>
-      
-      <div class="view-order-info">
-        <p><strong>Customer:</strong> <%= order.userId.fullName || order.userId.email %></p>
+  <%- include('../partials/admin/sidepanel', { active: 'orders' }) %>
+
+  <div class="main-content" id="main-content">
+    <div class="container">
+      <div class="view-order-container">
+        <h2 class="view-order-title">Order Details - <%= order._id %></h2>
+        
+        <div class="view-order-info">
+          <p><strong>Customer:</strong> <%= order.userId.fullName || order.userId.email %></p>
+          <p><strong>Date:</strong> <%= order.createdAt.toDateString() %></p>
+          <p><strong>Payment Method:</strong> 
+            <% if (order.paymentMethod === 'Online') { %>
+              Razorpay
+            <% } else if (order.paymentMethod === 'COD') { %>
+              Cash on Delivery
+            <% } else if (order.paymentMethod === 'Wallet') { %>
+              Wallet
+            <% } else { %>
+              <%= order.paymentMethod || 'Unknown' %>
+            <% } %>
         <p><strong>Date:</strong> <%= order.createdAt.toDateString() %></p>
         <p><strong>Payment Method:</strong> 
           <% if (order.paymentMethod === 'Online') { %>
@@ -490,5 +504,8 @@
       });
     });
   </script>
+  </div>
+
+  <%- include('../partials/admin/footer') %>
 </body>
 </html>

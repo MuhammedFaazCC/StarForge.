@@ -15,6 +15,7 @@ document.querySelectorAll(".side-panel a").forEach((link) => {
       .querySelectorAll(".side-panel a")
       .forEach((l) => l.classList.remove("active"));
     link.classList.add("active");
+    window.location.href = link.href;
   });
 });
 
