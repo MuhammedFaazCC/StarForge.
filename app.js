@@ -56,7 +56,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// Add cart and wishlist counts to all views
 app.use(cartWishlistCount);
 
 app.use("/", userRouter);

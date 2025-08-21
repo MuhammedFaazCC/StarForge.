@@ -195,7 +195,7 @@ const getInvoicePDF = async (req, res) => {
       });
     if (!order) return res.status(404).send("Order not found");
 
-    const filePath = path.join(__dirname, '../../views/admin/invoicePdf.ejs'); // eslint-disable-line no-undef
+    const filePath = path.join(__dirname, '../../views/admin/invoicePdf.ejs');
 
     ejs.renderFile(filePath, {
       order,
@@ -263,10 +263,8 @@ const updateItemStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Item not found' });
     }
 
-    // Update the item status
     item.status = status;
     
-    // If marking as delivered, set delivered timestamp
     if (status === 'Delivered') {
       item.deliveredAt = new Date();
     }
@@ -295,7 +293,6 @@ const salesPage = async (req, res) => {
     const limit = 10;
     const query = {};
 
-    // Build date query
     const now = new Date();
     let dateQuery = {};
 
@@ -329,7 +326,6 @@ const salesPage = async (req, res) => {
 
     Object.assign(query, dateQuery);
 
-    // Search by customer name
     if (search) {
       const users = await User.find({
         $or: [
@@ -340,23 +336,18 @@ const salesPage = async (req, res) => {
       query.userId = { $in: users.map(u => u._id) };
     }
 
-    // Filter by status
     if (status && status !== 'all') {
       query.status = status;
     }
 
-    // Filter by payment method
     if (paymentMethod && paymentMethod !== '') {
       query.paymentMethod = paymentMethod;
     }
 
-    // Get all orders for analytics (before pagination)
     const allMatchingOrders = await Order.find(query)
       .populate('userId', 'fullName')
       .populate('items.productId', 'name');
 
-    // Calculate comprehensive analytics
-    // Include all successful orders (exclude cancelled, payment failed)
     const successfulOrders = allMatchingOrders.filter(order => 
       !['Cancelled', 'Payment Failed'].includes(order.status)
     );
@@ -382,7 +373,6 @@ const salesPage = async (req, res) => {
       averageOrderValue: successfulOrders.length > 0 ? Math.round(totalSales / successfulOrders.length) : 0
     };
 
-    // Apply sorting
     let sortCriteria = {};
     switch (sort) {
       case 'date_asc':
@@ -401,7 +391,6 @@ const salesPage = async (req, res) => {
         sortCriteria = { orderDate: -1 };
     }
 
-    // Get paginated orders
     const orders = await Order.find(query)
       .populate('userId', 'fullName')
       .populate('items.productId', 'name')
@@ -409,16 +398,15 @@ const salesPage = async (req, res) => {
       .skip((page - 1) * limit)
       .limit(limit);
 
-    // Format sales data for display
     const sales = orders.map(order => ({
       id: order._id.toString(),
       orderDate: order.orderDate.toISOString().split('T')[0],
       customerName: order.userId?.fullName || 'Unknown',
       paymentMethod: order.paymentMethod,
       couponUsed: order.coupon?.code || 'N/A',
-      totalAmount: order.totalAmount + (order.coupon?.discountAmount || 0), // Original amount before discount
+      totalAmount: order.totalAmount + (order.coupon?.discountAmount || 0),
       discount: order.coupon?.discountAmount || 0,
-      netPaidAmount: order.totalAmount, // Amount actually paid
+      netPaidAmount: order.totalAmount,
       orderStatus: order.status,
       productsList: order.items.map(item => ({
         name: item.productId?.name || item.name,
@@ -568,13 +556,11 @@ const updateCoupon = async (req, res) => {
       return res.json({ success: false, message: "All required fields must be filled" });
     }
 
-    // Check if coupon exists
     const existingCoupon = await Coupon.findById(id);
     if (!existingCoupon) {
       return res.json({ success: false, message: "Coupon not found" });
     }
 
-    // Check if code already exists (excluding current coupon)
     const duplicateCoupon = await Coupon.findOne({ 
       code: code.toUpperCase(), 
       _id: { $ne: id } 
@@ -600,7 +586,6 @@ const updateCoupon = async (req, res) => {
       return res.json({ success: false, message: "Minimum amount cannot be negative" });
     }
 
-    // Update coupon
     const updatedCoupon = await Coupon.findByIdAndUpdate(id, {
       code: code.toUpperCase(),
       discount: parseFloat(discount),
@@ -623,9 +608,8 @@ const updateCoupon = async (req, res) => {
 const deleteCoupon = async (req, res) => {
   try {
     const { id } = req.params;
-    const { force } = req.query; // Check if force delete is requested
+    const { force } = req.query;
     
-    // Validate the coupon ID format
     if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ success: false, message: "Invalid coupon ID" });
     }
@@ -636,7 +620,6 @@ const deleteCoupon = async (req, res) => {
       return res.status(404).json({ success: false, message: "Coupon not found" });
     }
 
-    // Check if coupon is currently being used in any active orders
     const Order = require("../../models/orderSchema");
     const ordersUsingCoupon = await Order.countDocuments({ 
       'coupon.code': coupon.code,
@@ -651,12 +634,10 @@ const deleteCoupon = async (req, res) => {
       });
     }
 
-    // Check if coupon has been used by users (has usage history)
     const totalUsageCount = coupon.usedBy.reduce((total, usage) => total + usage.usedCount, 0);
     const hasUsageHistory = totalUsageCount > 0;
 
     if (hasUsageHistory && force !== 'true') {
-      // Offer soft delete option for coupons with usage history
       return res.status(400).json({ 
         success: false, 
         message: `Coupon "${coupon.code}" has been used ${totalUsageCount} time(s). You can either permanently delete it (losing usage history) or deactivate it to preserve the data.`,
@@ -666,7 +647,6 @@ const deleteCoupon = async (req, res) => {
     }
 
     if (force === 'true') {
-      // Force delete - permanently remove the coupon
       await Coupon.findByIdAndDelete(id);
       console.log(`Coupon force deleted: ${coupon.code} (ID: ${id})`);
       res.status(200).json({ 
@@ -674,7 +654,6 @@ const deleteCoupon = async (req, res) => {
         message: `Coupon "${coupon.code}" permanently deleted` 
       });
     } else {
-      // Regular delete for unused coupons
       await Coupon.findByIdAndDelete(id);
       console.log(`Coupon deleted successfully: ${coupon.code} (ID: ${id})`);
       res.status(200).json({ 
@@ -686,7 +665,6 @@ const deleteCoupon = async (req, res) => {
   } catch (error) {
     console.error("Error deleting coupon:", error);
     
-    // Handle specific MongoDB errors
     if (error.name === 'CastError') {
       return res.status(400).json({ success: false, message: "Invalid coupon ID format" });
     }
@@ -702,7 +680,6 @@ const softDeleteCoupon = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Validate the coupon ID format
     if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ success: false, message: "Invalid coupon ID" });
     }
@@ -720,7 +697,6 @@ const softDeleteCoupon = async (req, res) => {
       });
     }
 
-    // Soft delete by setting status to Inactive
     coupon.status = 'Inactive';
     coupon.deactivatedAt = new Date();
     await coupon.save();
@@ -734,7 +710,6 @@ const softDeleteCoupon = async (req, res) => {
   } catch (error) {
     console.error("Error soft deleting coupon:", error);
     
-    // Handle specific MongoDB errors
     if (error.name === 'CastError') {
       return res.status(400).json({ success: false, message: "Invalid coupon ID format" });
     }
@@ -750,7 +725,6 @@ const reactivateCoupon = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Validate the coupon ID format
     if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ success: false, message: "Invalid coupon ID" });
     }
@@ -775,7 +749,6 @@ const reactivateCoupon = async (req, res) => {
       });
     }
 
-    // Check if coupon has expired
     if (coupon.expiryDate < new Date()) {
       return res.status(400).json({ 
         success: false, 
@@ -783,10 +756,8 @@ const reactivateCoupon = async (req, res) => {
       });
     }
 
-    // Reactivate by setting status to Active
     coupon.status = 'Active';
     coupon.reactivatedAt = new Date();
-    // Remove deactivatedAt field if it exists
     if (coupon.deactivatedAt) {
       coupon.deactivatedAt = undefined;
     }
@@ -801,7 +772,6 @@ const reactivateCoupon = async (req, res) => {
   } catch (error) {
     console.error("Error reactivating coupon:", error);
     
-    // Handle specific MongoDB errors
     if (error.name === 'CastError') {
       return res.status(400).json({ success: false, message: "Invalid coupon ID format" });
     }
@@ -1084,7 +1054,6 @@ const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    // Check if order status is final
     const finalStatuses = ['Delivered', 'Returned', 'Cancelled'];
     if (finalStatuses.includes(order.status)) {
       return res.status(400).json({ 
@@ -1093,7 +1062,6 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
-    // Validate status transition
     const validStatuses = ['Pending Payment', 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Placed', 'Return Requested', 'Returned', 'Return Declined', 'Payment Failed'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ success: false, message: "Invalid status" });
@@ -1102,14 +1070,11 @@ const updateOrderStatus = async (req, res) => {
     const oldStatus = order.status;
     order.status = status;
 
-    // Update all items to match order status, but only if they're not in a final state
     order.items.forEach(item => {
       const itemFinalStatuses = ['Delivered', 'Returned', 'Cancelled'];
       if (!itemFinalStatuses.includes(item.status)) {
-        // Map order status to appropriate item status
         let itemStatus = status;
         
-        // Handle special mappings
         if (status === 'Pending Payment' || status === 'Pending') {
           itemStatus = 'Placed';
         } else if (status === 'Processing') {
@@ -1124,7 +1089,6 @@ const updateOrderStatus = async (req, res) => {
         
         item.status = itemStatus;
         
-        // Set timestamps for specific statuses
         if (itemStatus === 'Delivered') {
           item.deliveredAt = new Date();
         } else if (itemStatus === 'Cancelled') {
@@ -1133,25 +1097,21 @@ const updateOrderStatus = async (req, res) => {
       }
     });
 
-    // Set order-level timestamps
     if (status === 'Delivered') {
       order.deliveredAt = new Date();
     }
 
     await order.save();
 
-    // Handle wallet refunds for cancellations
     if (status === 'Cancelled' && oldStatus !== 'Cancelled') {
       try {
         const { refundToWallet } = require('../user/userController');
         await refundToWallet(order, "Order cancelled by admin");
       } catch (refundError) {
         console.error("Error processing refund:", refundError);
-        // Continue with status update even if refund fails
       }
     }
 
-    // Handle stock restoration for cancellations
     if (status === 'Cancelled' && oldStatus !== 'Cancelled') {
       try {
         const Product = require("../../models/productSchema");
@@ -1193,7 +1153,6 @@ const exportSalesReportPDF = async (req, res) => {
     
     const query = {};
 
-    // Build date query
     const now = new Date();
     let dateQuery = {};
 
@@ -1250,7 +1209,6 @@ const exportSalesReportPDF = async (req, res) => {
       .populate('items.productId', 'name')
       .sort({ orderDate: -1 });
 
-    // Calculate comprehensive analytics
     const successfulOrders = orders.filter(order => 
       !['Cancelled', 'Payment Failed'].includes(order.status)
     );
@@ -1286,7 +1244,7 @@ const exportSalesReportPDF = async (req, res) => {
       status: order.status
     }));
 
-    const filePath = path.join(__dirname, '../../views/admin/salesReportPdf.ejs'); // eslint-disable-line no-undef
+    const filePath = path.join(__dirname, '../../views/admin/salesReportPdf.ejs');
 
     ejs.renderFile(filePath, {
       sales,
@@ -1342,7 +1300,6 @@ const exportSalesReportExcel = async (req, res) => {
     
     const query = {};
 
-    // Build date query
     const now = new Date();
     let dateQuery = {};
 
@@ -1399,7 +1356,6 @@ const exportSalesReportExcel = async (req, res) => {
       .populate('items.productId', 'name')
       .sort({ orderDate: -1 });
 
-    // Calculate comprehensive analytics
     const successfulOrders = orders.filter(order => 
       !['Cancelled', 'Payment Failed'].includes(order.status)
     );
@@ -1447,7 +1403,6 @@ const exportSalesReportExcel = async (req, res) => {
       });
     });
 
-    // Add summary section
     worksheet.addRow({});
     worksheet.addRow({ id: 'SALES SUMMARY', customer: '', paymentMethod: '', couponCode: '', totalAmount: '', discount: '', netPaidAmount: '', status: '', productsList: '' });
     worksheet.addRow({ id: 'Total Sales:', customer: `₹${totalSales.toLocaleString('en-IN')}`, paymentMethod: '', couponCode: '', totalAmount: '', discount: '', netPaidAmount: '', status: '', productsList: '' });
@@ -1489,7 +1444,6 @@ const exportSalesReportCSV = async (req, res) => {
     
     const query = {};
 
-    // Build date query
     const now = new Date();
     let dateQuery = {};
 
@@ -1546,7 +1500,6 @@ const exportSalesReportCSV = async (req, res) => {
       .populate('items.productId', 'name')
       .sort({ orderDate: -1 });
 
-    // Calculate analytics
     const successfulOrders = orders.filter(order => 
       !['Cancelled', 'Payment Failed'].includes(order.status)
     );
@@ -1561,7 +1514,6 @@ const exportSalesReportCSV = async (req, res) => {
     const totalReturns = returnedOrders.reduce((sum, order) => sum + order.totalAmount, 0);
     const netRevenue = totalSales - totalReturns;
 
-    // Prepare CSV data
     const csvData = orders.map(order => ({
       'Order ID': order._id.toString(),
       'Order Date': order.orderDate.toISOString().split('T')[0],
@@ -1577,7 +1529,6 @@ const exportSalesReportCSV = async (req, res) => {
       ).join('; ')
     }));
 
-    // Add summary rows
     csvData.push({});
     csvData.push({ 'Order ID': 'SALES SUMMARY' });
     csvData.push({ 'Order ID': 'Total Sales', 'Customer Name': `₹${totalSales.toLocaleString('en-IN')}` });
@@ -1669,11 +1620,9 @@ const getReferralSettings = async (req, res) => {
     const referrerBonus = referrerBonusConfig ? referrerBonusConfig.value : 100;
     const newUserBonus = newUserBonusConfig ? newUserBonusConfig.value : 50;
 
-    // Get referral statistics
     const totalReferrals = await User.countDocuments({ referredBy: { $exists: true, $ne: null } });
     const totalReferrers = await User.countDocuments({ referralCode: { $exists: true, $ne: null } });
     
-    // Calculate total bonuses paid
     const users = await User.find({});
     let totalBonusPaid = 0;
     
