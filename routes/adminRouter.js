@@ -6,6 +6,10 @@ const categoryController = require("../controllers/admin/categoryController");
 const productController = require('../controllers/admin/adminProductController');
 const customerController = require('../controllers/admin/customerController');
 const offerController = require('../controllers/admin/offerController');
+const couponController = require('../controllers/admin/couponController');
+const referralController = require('../controllers/admin/referralController');
+const returnController = require('../controllers/admin/returnController');
+const salesController = require('../controllers/admin/salesController');
 const { adminAuth } = require("../middlewares/auth");
 
 router.get("/", function(req, res, next) {
@@ -42,20 +46,19 @@ router.get("/orders/:id/invoice", adminAuth, adminController.getInvoicePDF);
 router.post('/orders/:orderId/status', adminAuth, adminController.updateOrderStatus);
 router.post('/orders/:orderId/items/:itemId/status', adminAuth, adminController.updateItemStatus);
 
-router.get('/returns', adminAuth, adminController.getReturnRequestsPage);
-router.post('/order/return/accept/:id', adminAuth, adminController.acceptReturnRequest);
-router.post('/order/return/decline/:id', adminAuth, adminController.declineReturnRequest);
+router.get('/returns', adminAuth, returnController.getReturnRequestsPage);
+router.post('/order/return/accept/:id', adminAuth, returnController.acceptReturnRequest);
+router.post('/order/return/decline/:id', adminAuth, returnController.declineReturnRequest);
+router.post('/order/:orderId/item/:productId/return/accept', adminAuth, returnController.acceptItemReturnRequest);
+router.post('/order/:orderId/item/:productId/return/decline', adminAuth, returnController.declineItemReturnRequest);
 
-router.post('/order/:orderId/item/:productId/return/accept', adminAuth, adminController.acceptItemReturnRequest);
-router.post('/order/:orderId/item/:productId/return/decline', adminAuth, adminController.declineItemReturnRequest);
-router.get('/coupons', adminAuth, adminController.couponsPage);
-
-router.post('/coupons/create', adminAuth, adminController.postCreateCoupon);
-router.get('/coupons/:id', adminAuth, adminController.getCoupon);
-router.put('/coupons/:id', adminAuth, adminController.updateCoupon);
-router.delete('/coupons/delete/:id', adminAuth, adminController.deleteCoupon);
-router.patch('/coupons/soft-delete/:id', adminAuth, adminController.softDeleteCoupon);
-router.patch('/coupons/reactivate/:id', adminAuth, adminController.reactivateCoupon);
+router.get('/coupons', adminAuth, couponController.couponsPage);
+router.post('/coupons/create', adminAuth, couponController.postCreateCoupon);
+router.get('/coupons/:id', adminAuth, couponController.getCoupon);
+router.put('/coupons/:id', adminAuth, couponController.updateCoupon);
+router.delete('/coupons/delete/:id', adminAuth, couponController.deleteCoupon);
+router.patch('/coupons/soft-delete/:id', adminAuth, couponController.softDeleteCoupon);
+router.patch('/coupons/reactivate/:id', adminAuth, couponController.reactivateCoupon);
 
 router.get("/customers", adminAuth, customerController.customersPage);
 router.post('/customers/clear', adminAuth, customerController.customerClear);
@@ -64,11 +67,11 @@ router.get('/customers/search', adminAuth, customerController.searchCustomers);
 router.get('/customers/:id', adminAuth, customerController.getCustomerById);
 router.patch('/customers/:id/:action', adminAuth, customerController.customerToggleBlock);
 
-router.get("/sales", adminAuth, adminController.salesPage);
-router.get("/sales/export/pdf", adminAuth, adminController.exportSalesReportPDF);
-router.get("/sales/export/excel", adminAuth, adminController.exportSalesReportExcel);
-router.get("/sales/export/csv", adminAuth, adminController.exportSalesReportCSV);
-router.get("/sales/chart-data", adminAuth, adminController.getSalesChartData);
+router.get("/sales", adminAuth, salesController.salesPage);
+router.get("/sales/export/pdf", adminAuth, salesController.exportSalesReportPDF);
+router.get("/sales/export/excel", adminAuth, salesController.exportSalesReportExcel);
+router.get("/sales/export/csv", adminAuth, salesController.exportSalesReportCSV);
+router.get("/sales/chart-data", adminAuth, salesController.getSalesChartData);
 
 router.get('/categories', adminAuth, categoryController.getAllCategories);
 router.get('/categories/add', adminAuth, categoryController.renderAddCategory);
@@ -88,7 +91,7 @@ router.post('/offers/edit/:id', adminAuth, offerController.updateOffer);
 router.delete('/offers/delete/:id', adminAuth, offerController.deleteOffer);
 router.patch('/offers/toggle/:id', adminAuth, offerController.toggleOfferStatus);
 
-router.get('/referral-settings', adminAuth, adminController.getReferralSettings);
-router.post('/referral-settings', adminAuth, adminController.updateReferralSettings);
+router.get('/referral-settings', adminAuth, referralController.getReferralSettings);
+router.post('/referral-settings', adminAuth, referralController.updateReferralSettings);
 
 module.exports = router;

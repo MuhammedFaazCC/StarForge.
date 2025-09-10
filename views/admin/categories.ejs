@@ -28,15 +28,6 @@
                 </form>
             </div>
 
-            <div class="sort-bar">
-                <label for="sortSelect">Sort:</label>
-                <select id="sortSelect" onchange="location = this.value">
-                    <option value="/admin/categories?sort=desc<%= search ? '&search=' + encodeURIComponent(search) : '' %>" <%= sortOption === 'desc' ? 'selected' : '' %>>
-                        Last added first
-                    </option>
-                </select>
-            </div>
-
             <table class="categories-table" id="categoriesTable">
                 <thead>
                     <tr>

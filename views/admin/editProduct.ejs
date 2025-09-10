@@ -9,7 +9,6 @@
 <body>
 
   <%- include('../partials/admin/navbar') %>
-  <%- include('../partials/admin/sidepanel', { active: 'products' }) %>
 
   <div class="main-content" id="main-content">
     <div class="container">
@@ -86,7 +85,7 @@
       </form>
     </div>
       </div>
-    <% } %>
+
     <form id="editProductForm" action="/admin/products/edit/<%= product._id %>" method="POST" enctype="multipart/form-data">
       <div class="form-group">
         <label for="name">Product Name</label>

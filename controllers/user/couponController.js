@@ -1,3 +1,6 @@
+const Cart = require("../../models/cartSchema");
+const Coupon = require("../../models/couponSchema");
+
 const applyCoupon = async (req, res) => {
   try {
     if (!req.session.user) {
@@ -50,9 +53,9 @@ const applyCoupon = async (req, res) => {
 
     res.json({
       success: true,
-      subtotal: subtotal.toLocaleString('en-IN'),
-      discount: discountAmount.toLocaleString('en-IN'),
-      grandTotal: grandTotal.toLocaleString('en-IN'),
+      subtotal,
+      discount: discountAmount,
+      grandTotal,
       coupon: { code: coupon.code, discount: coupon.discount },
       message: `Coupon "${coupon.code}" applied successfully! You saved ₹${discountAmount.toLocaleString('en-IN')}`
     });
@@ -80,9 +83,9 @@ const removeCoupon = async (req, res) => {
 
     res.json({
       success: true,
-      subtotal: subtotal.toLocaleString('en-IN'),
-      discount: '0',
-      grandTotal: subtotal.toLocaleString('en-IN')
+      subtotal,
+      discount: 0,
+      grandTotal: subtotal
     });
   } catch (error) {
     console.error("Remove coupon error:", error);

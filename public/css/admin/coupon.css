@@ -54,68 +54,6 @@ body {
     color: #ffffff;
 }
 
-.toggle-btn {
-    background: none;
-    border: none;
-    color: #ffffff;
-    font-size: 1.2rem;
-    cursor: pointer;
-    display: none;
-}
-
-.side-panel {
-    width: 220px;
-    background-color: #808080;
-    color: #ffffff;
-    padding: 20px 15px;
-    position: fixed;
-    top: 50px;
-    bottom: 0;
-    overflow-y: auto;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-}
-
-.side-panel.hidden {
-    transform: translateX(0);
-}
-
-.side-panel.visible {
-    transform: translateX(0);
-}
-
-.side-panel ul {
-    list-style: none;
-}
-
-.side-panel li {
-    margin: 8px 0;
-}
-
-.side-panel a {
-    display: flex;
-    align-items: center;
-    padding: 10px 14px;
-    text-decoration: none;
-    color: #ffffff;
-    border-radius: 5px;
-    border-bottom: 1px solid #909090;
-    transition: background-color 0.3s, padding-left 0.3s;
-    font-size: 0.95rem;
-    font-weight: 500;
-}
-
-.side-panel a:hover {
-    background-color: #909090;
-    padding-left: 18px;
-}
-
-.side-panel a.active {
-    background-color: #FCA120;
-    color: #1a1a1a;
-    font-weight: 600;
-}
-
 .main-content {
   margin-left: 220px;
   margin-top: 50px;

@@ -5,7 +5,6 @@ const Address = require('../../models/addressSchema');
 const Coupon = require("../../models/couponSchema");
 const User = require("../../models/userSchema");
 const Razorpay = require('razorpay');
-const crypto = require('crypto');
 
 
 // -------------------- Helpers -------------------- //
@@ -137,7 +136,9 @@ const getCheckoutPage = async (req, res) => {
       return usedCount < coupon.usageLimit;
     });
 
-    const errorMessage = getPaymentErrorMessage(req.query.error);
+const errorMessage = req.query.error 
+  ? getPaymentErrorMessage(req.query.error) 
+  : null;
 
     res.render("checkout", {
       user: { ...req.session.user, walletBalance },
@@ -493,7 +494,7 @@ const paymentFailure = async (req, res) => {
       
       if (order) {
         const orderAge = Date.now() - order.createdAt.getTime();
-        canRetry = orderAge <= 24 * 60 * 60 * 1000; // 24 hours
+        canRetry = orderAge <= 24 * 60 * 60 * 1000;
         console.log("Order age check:", { orderAge, canRetry });
       }
     }

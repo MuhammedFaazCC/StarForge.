@@ -1,5 +1,7 @@
 const Order = require("../../models/orderSchema");
 const Cart = require("../../models/cartSchema");
+const Product = require("../../models/productSchema");
+const Coupon = require("../../models/couponSchema");
 
 const getCartCount = async (userId) => {
   try {
