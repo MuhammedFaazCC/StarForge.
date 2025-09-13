@@ -68,6 +68,7 @@ router.get('/customers/:id', adminAuth, customerController.getCustomerById);
 router.patch('/customers/:id/:action', adminAuth, customerController.customerToggleBlock);
 
 router.get("/sales", adminAuth, salesController.salesPage);
+router.get('/sales/data', salesController.getSalesData);
 router.get("/sales/export/pdf", adminAuth, salesController.exportSalesReportPDF);
 router.get("/sales/export/excel", adminAuth, salesController.exportSalesReportExcel);
 router.get("/sales/export/csv", adminAuth, salesController.exportSalesReportCSV);

@@ -163,6 +163,152 @@ const salesPage = async (req, res) => {
   }
 };
 
+const getSalesData = async (req, res) => {
+  try {
+    const { 
+      page = 1, 
+      search = '', 
+      status = '', 
+      sort = 'date_desc',
+      dateFilter = '',
+      startDate = '',
+      endDate = '',
+      paymentMethod = ''
+    } = req.query;
+    
+    const limit = 10;
+    const query = {};
+
+    const now = new Date();
+    let dateQuery = {};
+
+    switch (dateFilter) {
+      case 'today':
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+        dateQuery = { orderDate: { $gte: startOfDay, $lt: endOfDay } };
+        break;
+      case 'week':
+        const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+        startOfWeek.setHours(0, 0, 0, 0);
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 7);
+        dateQuery = { orderDate: { $gte: startOfWeek, $lt: endOfWeek } };
+        break;
+      case 'month':
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        dateQuery = { orderDate: { $gte: startOfMonth, $lt: endOfMonth } };
+        break;
+      case 'custom':
+        if (startDate && endDate) {
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          dateQuery = { orderDate: { $gte: start, $lte: end } };
+        }
+        break;
+    }
+
+    Object.assign(query, dateQuery);
+
+    if (search) {
+      const users = await User.find({
+        $or: [
+          { fullName: new RegExp(search, 'i') },
+          { email: new RegExp(search, 'i') }
+        ]
+      }).select('_id fullName');
+      query.userId = { $in: users.map(u => u._id) };
+    }
+
+    if (status && status !== 'all') {
+      query.status = status;
+    }
+
+    if (paymentMethod && paymentMethod !== '') {
+      query.paymentMethod = paymentMethod;
+    }
+
+    const allMatchingOrders = await Order.find(query)
+      .populate('userId', 'fullName')
+      .populate('items.productId', 'name');
+
+    const successfulOrders = allMatchingOrders.filter(order => 
+      !['Cancelled', 'Payment Failed'].includes(order.status)
+    );
+    const returnedOrders = allMatchingOrders.filter(order => order.status === 'Returned');
+    
+    const totalProductsSold = successfulOrders.reduce((sum, order) => {
+      return sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0);
+    }, 0);
+
+    const totalDiscounts = successfulOrders.reduce((sum, order) => sum + (order.coupon?.discountAmount || 0), 0);
+    const totalSales = successfulOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+    const totalReturns = returnedOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+    const netRevenue = totalSales - totalReturns;
+
+    const analytics = {
+      totalSales: totalSales,
+      totalOrders: successfulOrders.length,
+      totalProductsSold: totalProductsSold,
+      totalDiscounts: totalDiscounts,
+      totalReturns: totalReturns,
+      netRevenue: netRevenue,
+      returnedOrdersCount: returnedOrders.length,
+      averageOrderValue: successfulOrders.length > 0 ? Math.round(totalSales / successfulOrders.length) : 0
+    };
+
+    let sortCriteria = {};
+    switch (sort) {
+      case 'date_asc':
+        sortCriteria = { orderDate: 1 };
+        break;
+      case 'date_desc':
+        sortCriteria = { orderDate: -1 };
+        break;
+      case 'amount_asc':
+        sortCriteria = { totalAmount: 1 };
+        break;
+      case 'amount_desc':
+        sortCriteria = { totalAmount: -1 };
+        break;
+      default:
+        sortCriteria = { orderDate: -1 };
+    }
+
+    const orders = await Order.find(query)
+      .populate('userId', 'fullName')
+      .populate('items.productId', 'name')
+      .sort(sortCriteria)
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    const sales = orders.map(order => ({
+      id: order._id.toString(),
+      orderDate: order.orderDate.toISOString().split('T')[0],
+      customerName: order.userId?.fullName || 'Unknown',
+      paymentMethod: order.paymentMethod,
+      couponUsed: order.coupon?.code || 'N/A',
+      totalAmount: order.totalAmount + (order.coupon?.discountAmount || 0),
+      discount: order.coupon?.discountAmount || 0,
+      netPaidAmount: order.totalAmount,
+      orderStatus: order.status,
+      productsList: order.items.map(item => ({
+        name: item.productId?.name || item.name,
+        quantity: item.quantity,
+        price: item.salesPrice
+      }))
+    }));
+
+    const data = await buildSalesData(req.query);
+    res.json({ success: true, ...data });
+  } catch (error) {
+    console.error("Error fetching sales data:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
 const exportSalesReportPDF = async (req, res) => {
   try {
     const { 
@@ -637,6 +783,7 @@ const getSalesChartData = async (req, res) => {
 
 module.exports = {
     salesPage,
+    getSalesData,
     exportSalesReportPDF,
     exportSalesReportExcel,
     exportSalesReportCSV,

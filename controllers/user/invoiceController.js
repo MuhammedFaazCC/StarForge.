@@ -1,4 +1,5 @@
 const pdf = require("html-pdf");
+const Order = require("../../models/orderSchema");
 
 const downloadInvoice = async (req, res) => {
   try {
@@ -17,9 +18,6 @@ const downloadInvoice = async (req, res) => {
       });
     }
 
-    // Debug logging to see the actual order structure
-    console.log('Order items structure:', JSON.stringify(order.items, null, 2));
-
     // Calculate totals
     const discountAmount = order?.coupon?.discountAmount || 0;
     const totalSales = order.items.reduce((sum, item) => {
@@ -28,13 +26,6 @@ const downloadInvoice = async (req, res) => {
 
     // Calculate adjusted prices for items (considering coupon discount)
     const itemsWithAdjustedPrice = order.items.map(item => {
-      // Debug each item
-      console.log('Processing item:', {
-        name: item.name,
-        quantity: item.quantity,
-        salesPrice: item.salesPrice,
-        productId: item.productId
-      });
 
       const itemTotal = (item.salesPrice || 0) * (item.quantity || 0);
       const shareOfDiscount = totalSales > 0 ? (itemTotal / totalSales) * discountAmount : 0;

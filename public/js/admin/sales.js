@@ -281,16 +281,23 @@ function renderChart(data, dateFormat) {
     });
 }
 
-document.getElementById('filterForm')?.addEventListener('submit', function(e) {
-    const submitBtn = this.querySelector('.filter-btn');
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Applying...';
-        
-        setTimeout(() => {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Apply Filters';
-        }, 5000);
+document.getElementById('filterForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault(); // stop full reload
+    
+    const formData = new FormData(this);
+    const params = new URLSearchParams(formData);
+
+    try {
+        const response = await fetch(`/admin/sales/data?${params.toString()}`);
+        const data = await response.json();
+
+        if (data.success) {
+            renderSalesTable(data.sales);
+            renderSummary(data.analytics);
+            renderPagination(data.currentPage, data.totalPages, params);
+        }
+    } catch (err) {
+        console.error("Error loading sales data:", err);
     }
 });
 

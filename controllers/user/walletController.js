@@ -49,34 +49,34 @@ const getWallet = async (req, res) => {
   }
 };
 
-// const updateWallet = async (userId, amount, description, type) => {
-//   try {
-//     const user = await User.findById(userId);
-//     if (!user) throw new Error("User not found");
+const updateWallet = async (userId, amount, description, type) => {
+  try {
+    const user = await User.findById(userId);
+    if (!user) throw new Error("User not found");
     
-//     if (!user.wallet) {
-//       user.wallet = { balance: 0, transactions: [] };
-//     }
+    if (!user.wallet) {
+      user.wallet = { balance: 0, transactions: [] };
+    }
     
-//     const currentBalance = user.wallet.balance || 0;
-//     const transactionAmount = type === "Credit" || type === "credit" ? amount : -amount;
-//     user.wallet.balance = currentBalance + transactionAmount;
+    const currentBalance = user.wallet.balance || 0;
+    const transactionAmount = type === "Credit" || type === "credit" ? amount : -amount;
+    user.wallet.balance = currentBalance + transactionAmount;
     
-//     user.wallet.transactions.push({
-//       amount: Math.abs(amount),
-//       type: type.toLowerCase(),
-//       description: description,
-//       date: new Date()
-//     });
+    user.wallet.transactions.push({
+      amount: Math.abs(amount),
+      type: type.toLowerCase(),
+      description: description,
+      date: new Date()
+    });
     
-//     await user.save();
+    await user.save();
     
-//     console.log(`Wallet updated for user ${userId}: ${type} ₹${amount} - ${description}`);
-//   } catch (error) {
-//     console.error("Error updating wallet:", error);
-//     throw error;
-//   }
-// };
+    console.log(`Wallet updated for user ${userId}: ${type} ₹${amount} - ${description}`);
+  } catch (error) {
+    console.error("Error updating wallet:", error);
+    throw error;
+  }
+};
 
 const createWalletOrder = async (req, res) => {
     
@@ -136,35 +136,35 @@ const verifyAndCreditWallet = async (req, res) => {
   }
 };
 
-// const refundToWallet = async (order, reason = "Refund") => {
-//   try {
-//     const eligibleForRefund = 
-//       order.paymentMethod === "Wallet" ||
-//       order.paymentMethod === "Online" ||
-//       (order.paymentMethod === "COD" && order.status === "Returned");
+const refundToWallet = async (order, reason = "Refund") => {
+  try {
+    const eligibleForRefund = 
+      order.paymentMethod === "Wallet" ||
+      order.paymentMethod === "Online" ||
+      (order.paymentMethod === "COD" && order.status === "Returned");
 
-//     if (!eligibleForRefund) return;
+    if (!eligibleForRefund) return;
 
-//     const refundAmount = order.totalAmount;
-//     if (!refundAmount || refundAmount <= 0) return;
+    const refundAmount = order.totalAmount;
+    if (!refundAmount || refundAmount <= 0) return;
 
-//     await updateWallet(
-//       order.userId,
-//       refundAmount,
-//       `${reason} - Order #${order._id}`,
-//       "Credit"
-//     );
-//   } catch (err) {
-//     console.error("Refund to wallet failed:", err);
-//   }
-// };
+    await updateWallet(
+      order.userId,
+      refundAmount,
+      `${reason} - Order #${order._id}`,
+      "Credit"
+    );
+  } catch (err) {
+    console.error("Refund to wallet failed:", err);
+  }
+};
 
 
 
 module.exports = {
     getWallet,
-    // updateWallet,
+    updateWallet,
     createWalletOrder,
     verifyAndCreditWallet,
-    // refundToWallet
+    refundToWallet
   }
