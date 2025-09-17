@@ -1,7 +1,7 @@
 <style>
-  .profile-sidebar {
+  .profile-sidebar1 {
   position: fixed;
-  top: 70px;
+  top: 58px;
   left: 0;
   width: 280px;
   height: calc(100vh - 70px);
@@ -15,7 +15,7 @@
   flex-direction: column;
 }
 
-.sidebar-header {
+.sidebar-header1 {
   background: linear-gradient(135deg, #fca120 0%, #e8940f 100%);
   padding: 2rem 1.5rem;
   display: flex;
@@ -28,7 +28,7 @@
   overflow: hidden;
 }
 
-.sidebar-header::before {
+.sidebar-header1::before {
   content: '';
   position: absolute;
   top: -50%;
@@ -40,23 +40,23 @@
   transform: rotate(45deg);
 }
 
-.sidebar-nav {
+.sidebar-nav1 {
   padding: 0;
   flex: 1;
   overflow-y: auto;
 }
 
-.nav-list {
+.nav-list1 {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.nav-item {
+.nav-item1 {
   margin: 0;
 }
 
-.nav-link {
+.nav-link1 {
   display: flex;
   align-items: center;
   padding: 1rem 1.5rem;
@@ -71,7 +71,7 @@
   margin: 0.25rem 0;
 }
 
-.nav-link:hover {
+.nav-link1:hover {
   background: linear-gradient(90deg, rgba(252, 161, 32, 0.08) 0%, rgba(252, 161, 32, 0.04) 100%);
   color: #fca120;
   border-left-color: #fca120;
@@ -80,7 +80,7 @@
   box-shadow: 0 2px 8px rgba(252, 161, 32, 0.15);
 }
 
-.nav-link.active {
+.nav-link1.active1 {
   background: linear-gradient(90deg, rgba(252, 161, 32, 0.12) 0%, rgba(252, 161, 32, 0.06) 100%);
   color: #fca120;
   font-weight: 600;
@@ -89,7 +89,7 @@
   box-shadow: 0 4px 12px rgba(252, 161, 32, 0.2);
 }
 
-.active-indicator {
+.active-indicator1 {
   position: absolute;
   right: 1.5rem;
   top: 50%;
@@ -99,12 +99,10 @@
   background: #fca120;
   border-radius: 50%;
   box-shadow: 0 0 0 2px rgba(252, 161, 32, 0.3);
-  animation: pulse-active 2s infinite;
+  animation: pulse-active1 2s infinite;
 }
 
-
-
-@keyframes pulse-active {
+@keyframes pulse-active1 {
   0%, 100% { 
     transform: translateY(-50%) scale(1);
     opacity: 1;
@@ -115,7 +113,7 @@
   }
 }
 
-.nav-icon {
+.nav-icon1 {
   width: 18px;
   height: 18px;
   margin-right: 1rem;
@@ -125,11 +123,11 @@
   color: currentColor;
 }
 
-.nav-text {
+.nav-text1 {
   flex: 1;
 }
 
-.logout-link:hover {
+.logout-link1:hover {
   background: linear-gradient(90deg, rgba(239, 68, 68, 0.08) 0%, rgba(239, 68, 68, 0.04) 100%);
   color: #ef4444;
   border-left-color: #ef4444;
@@ -137,19 +135,19 @@
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
 }
 
-.nav-divider {
+.nav-divider1 {
   margin: 0.5rem 0;
   padding: 0;
 }
 
-.sidebar-divider {
+.sidebar-divider1 {
   border: none;
   height: 1px;
   background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
   margin: 0.5rem 1.5rem;
 }
 
-.sidebar-toggle {
+.sidebar-toggle1 {
   position: fixed;
   top: 80px;
   left: 15px;
@@ -167,12 +165,12 @@
   transition: all 0.3s ease;
 }
 
-.sidebar-toggle:hover {
+.sidebar-toggle1:hover {
   background: #e8940f;
   transform: scale(1.05);
 }
 
-.sidebar-overlay {
+.sidebar-overlay1 {
   position: fixed;
   top: 0;
   left: 0;
@@ -185,134 +183,127 @@
   transition: all 0.3s ease;
 }
 
-.sidebar-overlay.show {
+.sidebar-overlay1.show1 {
   opacity: 1;
   visibility: visible;
 }
-
-
-
 </style>
 
-<aside class="profile-sidebar" id="profileSidebar">
-    <div class="sidebar-header">
-        <div class="profile-avatar">
+<aside class="profile-sidebar1" id="profileSidebar1">
+    <div class="sidebar-header1">
+        <div class="profile-avatar1">
             <% if (user.profileImage) { %>
-                <img src="/uploads/profiles/<%= user.profileImage %>" alt="Profile Picture" class="profile-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="profile-initials" style="display: none;"><%= user.fullName.split(' ').map(n => n[0]).join('') %></div>
+                <img src="/uploads/profiles/<%= user.profileImage %>" alt="Profile Picture" class="profile-image1" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="profile-initials1" style="display: none;"><%= user.fullName.split(' ').map(n => n[0]).join('') %></div>
             <% } else { %>
-                <div class="profile-initials"><%= user.fullName.split(' ').map(n => n[0]).join('') %></div>
+                <div class="profile-initials1"><%= user.fullName.split(' ').map(n => n[0]).join('') %></div>
             <% } %>
         </div>
-        <div class="profile-info">
-            <h3 class="profile-name"><%= user.fullName %></h3>
-            <p class="profile-email"><%= user.email %></p>
-            <div class="profile-status">
-                <span class="status-indicator active"></span>
-                <span class="status-text">Active</span>
-            </div>
+        <div class="profile-info1">
+            <h3 class="profile-name1"><%= user.fullName %></h3>
+            <p class="profile-email1"><%= user.email %></p>
         </div>
     </div>
 
-    <nav class="sidebar-nav">
-        <ul class="nav-list">
-            <li class="nav-item">
-                <a href="/LoadProfile" class="nav-link <%= currentPage === 'profile' ? 'active' : '' %>" data-page="profile">
-                    <i class="nav-icon fas fa-user"></i>
-                    <span class="nav-text">My Profile</span>
+    <nav class="sidebar-nav1">
+        <ul class="nav-list1">
+            <li class="nav-item1">
+                <a href="/LoadProfile" class="nav-link1 <%= currentPage === 'profile' ? 'active1' : '' %>" data-page="profile">
+                    <i class="nav-icon1 fas fa-user"></i>
+                    <span class="nav-text1">My Profile</span>
                     <% if (currentPage === 'profile') { %>
-                        <span class="active-indicator"></span>
+                        <span class="active-indicator1"></span>
                     <% } %>
                 </a>
             </li>
 
-            <li class="nav-item">
-                <a href="/address" class="nav-link <%= currentPage === 'address' ? 'active' : '' %>" data-page="address">
-                    <i class="nav-icon fas fa-map-marker-alt"></i>
-                    <span class="nav-text">My Addresses</span>
+            <li class="nav-item1">
+                <a href="/address" class="nav-link1 <%= currentPage === 'address' ? 'active1' : '' %>" data-page="address">
+                    <i class="nav-icon1 fas fa-map-marker-alt"></i>
+                    <span class="nav-text1">My Addresses</span>
                     <% if (currentPage === 'address') { %>
-                        <span class="active-indicator"></span>
+                        <span class="active-indicator1"></span>
                     <% } %>
                 </a>
             </li>
 
-            <li class="nav-item">
-                <a href="/orders" class="nav-link <%= currentPage === 'orders' ? 'active' : '' %>" data-page="orders">
-                    <i class="nav-icon fas fa-shopping-bag"></i>
-                    <span class="nav-text">My Orders</span>
+            <li class="nav-item1">
+                <a href="/orders" class="nav-link1 <%= currentPage === 'orders' ? 'active1' : '' %>" data-page="orders">
+                    <i class="nav-icon1 fas fa-shopping-bag"></i>
+                    <span class="nav-text1">My Orders</span>
                     <% if (currentPage === 'orders') { %>
-                        <span class="active-indicator"></span>
+                        <span class="active-indicator1"></span>
                     <% } %>
                 </a>
             </li>
 
-            <li class="nav-item">
-                <a href="/wishlist" class="nav-link <%= currentPage === 'wishlist' ? 'active' : '' %>" data-page="wishlist">
-                    <i class="nav-icon fas fa-heart"></i>
-                    <span class="nav-text">My Wishlist</span>
+            <li class="nav-item1">
+                <a href="/wishlist" class="nav-link1 <%= currentPage === 'wishlist' ? 'active1' : '' %>" data-page="wishlist">
+                    <i class="nav-icon1 fas fa-heart"></i>
+                    <span class="nav-text1">My Wishlist</span>
                     <% if (currentPage === 'wishlist') { %>
-                        <span class="active-indicator"></span>
+                        <span class="active-indicator1"></span>
                     <% } %>
                 </a>
             </li>
 
-            <li class="nav-item">
-                <a href="/wallet" class="nav-link <%= currentPage === 'wallet' ? 'active' : '' %>" data-page="wallet">
-                    <i class="nav-icon fas fa-wallet"></i>
-                    <span class="nav-text">My Wallet</span>
+            <li class="nav-item1">
+                <a href="/wallet" class="nav-link1 <%= currentPage === 'wallet' ? 'active1' : '' %>" data-page="wallet">
+                    <i class="nav-icon1 fas fa-wallet"></i>
+                    <span class="nav-text1">My Wallet</span>
                     <% if (currentPage === 'wallet') { %>
-                        <span class="active-indicator"></span>
+                        <span class="active-indicator1"></span>
                     <% } %>
                 </a>
             </li>
             
-            <li class="nav-item">
-                <a href="/referral" class="nav-link <%= currentPage === 'referral' ? 'active' : '' %>" data-page="referral">
-                    <i class="nav-icon fas fa-users"></i>
-                    <span class="nav-text">Referral Program</span>
+            <li class="nav-item1">
+                <a href="/referral" class="nav-link1 <%= currentPage === 'referral' ? 'active1' : '' %>" data-page="referral">
+                    <i class="nav-icon1 fas fa-users"></i>
+                    <span class="nav-text1">Referral Program</span>
                     <% if (currentPage === 'referral') { %>
-                        <span class="active-indicator"></span>
+                        <span class="active-indicator1"></span>
                     <% } %>
                 </a>
             </li>
 
-            <li class="nav-item nav-divider">
-                <hr class="sidebar-divider">
+            <li class="nav-item1 nav-divider1">
+                <hr class="sidebar-divider1">
             </li>
             
-            <li class="nav-item">
-                <a href="/changePassword" class="nav-link <%= currentPage === 'password' ? 'active' : '' %>" data-page="password">
-                    <i class="nav-icon fas fa-lock"></i>
-                    <span class="nav-text">Change Password</span>
+            <li class="nav-item1">
+                <a href="/changePassword" class="nav-link1 <%= currentPage === 'password' ? 'active1' : '' %>" data-page="password">
+                    <i class="nav-icon1 fas fa-lock"></i>
+                    <span class="nav-text1">Change Password</span>
                     <% if (currentPage === 'password') { %>
-                        <span class="active-indicator"></span>
+                        <span class="active-indicator1"></span>
                     <% } %>
                 </a>
             </li>
 
-            <li class="nav-item">
-                <a href="#" id="logout-btn" class="nav-link logout-link">
-                    <i class="nav-icon fas fa-sign-out-alt"></i>
-                    <span class="nav-text">Logout</span>
+            <li class="nav-item1">
+                <a href="#" id="logout-btn1" class="nav-link1 logout-link1">
+                    <i class="nav-icon1 fas fa-sign-out-alt"></i>
+                    <span class="nav-text1">Logout</span>
                 </a>
             </li>
         </ul>
     </nav>
     
     <!-- Mobile Toggle Button -->
-    <button class="sidebar-toggle d-md-none" id="sidebarToggle" aria-label="Toggle Sidebar">
+    <button class="sidebar-toggle1 d-md-none" id="sidebarToggle1" aria-label="Toggle Sidebar">
         <i class="fas fa-bars"></i>
     </button>
 </aside>
 
 <!-- Sidebar Overlay for Mobile -->
-<div class="sidebar-overlay d-md-none" id="sidebarOverlay"></div>
+<div class="sidebar-overlay1 d-md-none" id="sidebarOverlay1"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     // Enhanced logout functionality
-    const logoutBtn = document.getElementById('logout-btn');
+    const logoutBtn = document.getElementById('logout-btn1');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -328,9 +319,9 @@
           cancelButtonText: 'Cancel',
           reverseButtons: true,
           customClass: {
-            popup: 'sidebar-swal-popup',
-            confirmButton: 'sidebar-swal-confirm',
-            cancelButton: 'sidebar-swal-cancel'
+            popup: 'sidebar-swal-popup1',
+            confirmButton: 'sidebar-swal-confirm1',
+            cancelButton: 'sidebar-swal-cancel1'
           }
         }).then((result) => {
           if (result.isConfirmed) {
@@ -344,7 +335,7 @@
               timer: 1500,
               timerProgressBar: true,
               customClass: {
-                popup: 'sidebar-swal-popup'
+                popup: 'sidebar-swal-popup1'
               }
             }).then(() => {
               window.location.href = "/logout";
@@ -355,9 +346,9 @@
     }
     
     // Enhanced mobile sidebar toggle functionality
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const sidebar = document.getElementById('profileSidebar');
-    const overlay = document.getElementById('sidebarOverlay');
+    const sidebarToggle = document.getElementById('sidebarToggle1');
+    const sidebar = document.getElementById('profileSidebar1');
+    const overlay = document.getElementById('sidebarOverlay1');
     
     if (sidebarToggle && sidebar && overlay) {
       // Toggle sidebar
@@ -375,7 +366,7 @@
       // Close sidebar when clicking outside
       document.addEventListener('click', (e) => {
         if (window.innerWidth < 768 && 
-            sidebar.classList.contains('show') && 
+            sidebar.classList.contains('show1') && 
             !sidebar.contains(e.target) && 
             !sidebarToggle.contains(e.target)) {
           closeSidebar();
@@ -384,7 +375,7 @@
       
       // Handle escape key
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && sidebar.classList.contains('show')) {
+        if (e.key === 'Escape' && sidebar.classList.contains('show1')) {
           closeSidebar();
         }
       });
@@ -402,7 +393,7 @@
     });
     
     // Add smooth scroll behavior for navigation links
-    const navLinks = document.querySelectorAll('.nav-link[href^="/"]');
+    const navLinks = document.querySelectorAll('.nav-link1[href^="/"]');
     navLinks.forEach(link => {
       link.addEventListener('click', (e) => {
         // Close mobile sidebar when navigating
@@ -413,9 +404,9 @@
         }
         
         // Add loading state to clicked link
-        const icon = link.querySelector('.nav-icon');
+        const icon = link.querySelector('.nav-icon1');
         const originalClass = icon.className;
-        icon.className = 'nav-icon fas fa-spinner fa-spin';
+        icon.className = 'nav-icon1 fas fa-spinner fa-spin';
         
         // Restore icon after a short delay (in case navigation is instant)
         setTimeout(() => {
@@ -426,7 +417,7 @@
     
     // Helper functions
     function toggleSidebar() {
-      const isOpen = sidebar.classList.contains('show');
+      const isOpen = sidebar.classList.contains('show1');
       if (isOpen) {
         closeSidebar();
       } else {
@@ -435,21 +426,21 @@
     }
     
     function openSidebar() {
-      sidebar.classList.add('show');
-      overlay.classList.add('show');
-      document.body.classList.add('sidebar-open');
+      sidebar.classList.add('show1');
+      overlay.classList.add('show1');
+      document.body.classList.add('sidebar-open1');
       
       // Focus management for accessibility
-      const firstNavLink = sidebar.querySelector('.nav-link');
+      const firstNavLink = sidebar.querySelector('.nav-link1');
       if (firstNavLink) {
         setTimeout(() => firstNavLink.focus(), 300);
       }
     }
     
     function closeSidebar() {
-      sidebar.classList.remove('show');
-      overlay.classList.remove('show');
-      document.body.classList.remove('sidebar-open');
+      sidebar.classList.remove('show1');
+      overlay.classList.remove('show1');
+      document.body.classList.remove('sidebar-open1');
       
       // Return focus to toggle button for accessibility
       if (document.activeElement && sidebar.contains(document.activeElement)) {
@@ -458,23 +449,23 @@
     }
     
     // Add active page indicator animation
-    const activeLink = document.querySelector('.nav-link.active');
+    const activeLink = document.querySelector('.nav-link1.active1');
     if (activeLink) {
       activeLink.style.animationDelay = '0.5s';
-      activeLink.classList.add('fade-in-up');
+      activeLink.classList.add('fade-in-up1');
     }
     
     // Add hover effects for better UX
-    const navItems = document.querySelectorAll('.nav-link');
+    const navItems = document.querySelectorAll('.nav-link1');
     navItems.forEach(item => {
       item.addEventListener('mouseenter', () => {
-        if (!item.classList.contains('active')) {
+        if (!item.classList.contains('active1')) {
           item.style.transform = 'translateX(6px)';
         }
       });
       
       item.addEventListener('mouseleave', () => {
-        if (!item.classList.contains('active')) {
+        if (!item.classList.contains('active1')) {
           item.style.transform = '';
         }
       });
@@ -484,18 +475,18 @@
   // Add custom styles for SweetAlert
   const swalStyles = `
     <style>
-      .sidebar-swal-popup {
+      .sidebar-swal-popup1 {
         border-radius: 16px !important;
         box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25) !important;
       }
-      .sidebar-swal-confirm {
+      .sidebar-swal-confirm1 {
         background: linear-gradient(135deg, #fca120 0%, #e8940f 100%) !important;
         border: none !important;
         border-radius: 8px !important;
         padding: 0.75rem 1.5rem !important;
         font-weight: 600 !important;
       }
-      .sidebar-swal-cancel {
+      .sidebar-swal-cancel1 {
         background: #6c757d !important;
         border: none !important;
         border-radius: 8px !important;
@@ -505,9 +496,9 @@
     </style>
   `;
   
-  if (!document.querySelector('#sidebar-swal-styles')) {
+  if (!document.querySelector('#sidebar-swal-styles1')) {
     const styleElement = document.createElement('div');
-    styleElement.id = 'sidebar-swal-styles';
+    styleElement.id = 'sidebar-swal-styles1';
     styleElement.innerHTML = swalStyles;
     document.head.appendChild(styleElement);
   }

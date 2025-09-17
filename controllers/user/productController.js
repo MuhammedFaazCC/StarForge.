@@ -294,7 +294,6 @@ const Wishlist = require('../../models/wishlistSchema')
   }
 };
 
-
 const getProductDetails = async (req, res) => {
   try {
     const productId = req.params.id;

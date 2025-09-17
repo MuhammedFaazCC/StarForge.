@@ -9,251 +9,39 @@ body {
   color: #ccc;
 }
 
-.navbar {
-  background-color: #000000;
-  color: #ffffff;
-  padding: 10px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: sticky;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  margin-top: 10px;
-}
-
-.logo {
-  font-family: "Inter", sans-serif;
-  font-weight: 600;
-  font-size: 1.5rem;
-  font-style: italic;
+.hero {
   position: relative;
-  left: 60px;
+  height: 100vh;
+  overflow: hidden;
 }
 
-i {
-  font-size: 1.2rem;
-  cursor: pointer;
-}
-.icons a {
-  color: #fff;
-  margin-left: 15px;
-  display: inline;
-  margin-right: 20px;
-  cursor: pointer;
-}
-
-.auth-buttons {
-  display: flex;
-  align-items: center;
-}
-
-.auth-button {
-  font-family: var(--font-primary);
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-decoration: none !important;
-  padding: 8px 16px;
-  border-radius: 4px;
-  transition: var(--transition);
-  margin-left: 0px;
-}
-
-.signup-button,
-.login-button {
-  background-color: var(--primary-color);
-  color: var(--secondary-color);
-  border: 1px solid var(--primary-color);
-}
-.login-button {
-  position: relative;
-  right: -405px;
-}
-
-.signup-button:hover,
-.login-button:hover {
-  color: #ccc;
-}
-
-.nav-buttons {
-  display: flex;
-  align-items: center;
-}
-
-.nav-buttons .nav-link {
-  font-size: 1.2rem;
-  margin-left: 15px;
-  padding: 5px;
-  text-decoration: none !important;
-  color: #fff;
-}
-
-.nav-buttons .nav-link:hover {
-  color: #ccc;
-}
-
-.dropdown {
-  position: relative;
-}
-
-.sidebar-nav ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.sidebar-nav ul li {
-  margin: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-nav ul li a {
-  text-decoration: none;
-  color: #ffffff;
-  display: block;
-  padding: 15px 20px;
-  transition: all 0.3s ease;
-  font-weight: 500;
-  position: relative;
-}
-
-.sidebar-nav ul li a:hover {
-  background-color: rgba(252, 161, 32, 0.1);
-  color: #fca120;
-  padding-left: 25px;
-}
-
-.sidebar-nav ul li a:active {
-  background-color: rgba(252, 161, 32, 0.2);
-}
-
-.sidebar-nav ul ul {
-  background-color: rgba(0, 0, 0, 0.3); 
-  border-left: 3px solid #fca120;
-}
-
-.sidebar-nav ul ul li {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.sidebar-nav ul ul li a {
-  padding: 12px 20px 12px 40px;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.sidebar-nav ul ul li a:hover {
-  color: #fca120;
-  background-color: rgba(252, 161, 32, 0.15);
-  padding-left: 45px;
-}
-
-.sidebar-nav ul li a::before {
-  content: "▶";
-  margin-right: 10px;
-  font-size: 12px;
-  color: #fca120;
-  transition: transform 0.3s ease;
-}
-
-.sidebar-nav ul li a:hover::before {
-  transform: translateX(3px);
-}
-
-.sidebar-nav ul ul li a::before {
-  content: "•";
-  font-size: 16px;
-  color: rgba(252, 161, 32, 0.6);
-}
-
-.sidebar-header h1 {
-  padding: 15.5px;
-  margin: 0;
-  font-size: 26px;
-  font-style: italic;
-  background-color: #f59e0b;
-  color: #000000;
-}
-
-.sidebar-nav h2 {
-  padding: 0 20px;
-  font-size: 18px;
-  color: #ffffff;
-}
-
-.sidebar {
-  position: fixed;
-  top: 0px;
-  left: -250px;
-  width: 250px;
-  height: 100%;
-  background: #000000;
-  transition: left 0.3s ease;
-  z-index: 1002;
-}
-
-.sidebar.open {
-  left: 0;
-}
-
-.profile-dropdown {
-  display: none;
+.background-video {
   position: absolute;
-  top: 40px;
-  right: 0;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  width: 150px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  flex-direction: column;
-  z-index: 1003;
+  top: 2px;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
 }
 
-.sidebar-overlay {
-  position: fixed;
+.hero .overlay {
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1001;
-  display: none;
+  background: rgba(0, 0, 0, 0.9); /* black tint */
+  z-index: -1;
 }
 
-.sidebar-overlay.active {
-  display: block;
-}
-
-.profile-dropdown {
-  display: none;
-  position: absolute;
-  top: 40px;
-  right: 0;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  width: 150px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  flex-direction: column;
-  z-index: 1003;
-}
-
-.sidebar-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1001;
-  display: none;
-}
-
-.sidebar-overlay.active {
-  display: block;
+.hero-content {
+  position: relative;
+  z-index: 1;
+  color: white;
+  text-align: center;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .hero {

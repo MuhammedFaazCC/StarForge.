@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Wallet - StarForge</title>
   <link rel="stylesheet" href="/css/user/profileDashboard.css">
+  <link rel="stylesheet" href="/css/user/navbar-badges.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
@@ -442,8 +444,7 @@
   </style>
 </head>
 <body>
-  <%- include('../partials/user/profileNavbar', { user, cartCount: cartCount || 0 }) %>
-
+  <%- include('../partials/user/navbar', { minimalNavbar: false }) %>
   <%- include('../partials/user/profileSidebar', { user, currentPage: 'wallet' }) %>
 
   <main class="main-content">
@@ -556,6 +557,8 @@
     </div>
   </main>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/js/user/landingPage.js"></script>
   <script>
   document.getElementById("wallet-form").addEventListener("submit", async function (e) {
   e.preventDefault();

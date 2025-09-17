@@ -9,7 +9,7 @@ body {
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   color: #1e293b;
   line-height: 1.6;
-  padding-top: 70px;
+  /* padding-top: 70px; */
 }
 
 .main-content {

@@ -170,8 +170,6 @@ const userDetails = async (req, res) => {
   }
 };
 
-// --------------------------------------------------------------------------------------------------------------------
-
 const logout = async (req, res) => {
   try {
     delete req.session.user;
