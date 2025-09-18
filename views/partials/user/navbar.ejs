@@ -251,6 +251,46 @@
     .sidebar-overlay.active {
     display: block;
     }
+    .profile-container {
+  position: relative;
+  display: inline-block;
+  margin-left: 20px;
+}
+
+.profile-toggle {
+  font-size: 1.5rem;
+  color: #fff;
+  cursor: pointer;
+}
+
+.profile-dropdown {
+  display: none;
+  position: absolute;
+  top: 40px;
+  right: 0;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 150px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  flex-direction: column;
+  z-index: 1001;
+}
+
+.profile-dropdown a {
+  padding: 10px 15px;
+  display: block;
+  color: #333;
+  text-decoration: none;
+}
+
+.profile-dropdown a:hover {
+  background-color: #f5f5f5;
+}
+
+.profile-dropdown.show {
+  display: flex;
+}
 
 </style>
 <header class="navbar">

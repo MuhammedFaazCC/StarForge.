@@ -1,3 +1,6 @@
+const bcrypt = require("bcrypt");
+const User = require("../../models/userSchema");
+
 const otpVerificationPage = async (req, res) => {
   try {
     const otpSession = req.session.otp;

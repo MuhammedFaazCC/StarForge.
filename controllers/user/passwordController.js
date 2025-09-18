@@ -1,3 +1,46 @@
+const nodemailer = require("nodemailer");
+const bcrypt = require("bcrypt");
+const User = require("../../models/userSchema");
+
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+const sendOTP = async (email, otp) => {
+  try {
+    const mailOptions = {
+      from: `"StarForge" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "StarForge OTP Verification",
+      html: `
+        <h2>Your OTP Code</h2>
+        <p>Your one-time password (OTP) is <strong>${otp}</strong>.</p>
+        <p>Please enter this code on the verification page to proceed.</p>
+        <p>This OTP is valid for 5 minutes.</p>
+        <p>If you did not request this, please ignore this email.</p>
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    return info;
+  } catch (error) {
+    console.error("Error sending OTP email:", error.message);
+    throw new Error("Failed to send OTP email");
+  }
+};
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+if (process.env.NODE_ENV === "development") {
+  transporter.verify().then(() => console.log("Mail server ready"));
+}
+
 const forgotPasswordPage = async (req, res) => {
   try {
     const error = req.session.error || null;
@@ -112,66 +155,66 @@ const passwordReset = async (req, res) => {
   }
 };
 
-// const resetPasswordGet = async (req, res) => {
-//   try {
-//     if (!req.session.resetUserId) {
-//       req.session.error = "Reset session expired";
-//       return res.redirect("/forgotPassword");
-//     }
-//     const error = req.session.error || null;
-//     req.session.error = null;
-//     res.render("resetPassword", { error });
-//   } catch (error) {
-//     console.log("Page not found");
-//     res.status(500).send("Server error");
-//   }
-// };
+const resetPasswordGet = async (req, res) => {
+  try {
+    if (!req.session.resetUserId) {
+      req.session.error = "Reset session expired";
+      return res.redirect("/forgotPassword");
+    }
+    const error = req.session.error || null;
+    req.session.error = null;
+    res.render("resetPassword", { error });
+  } catch (error) {
+    console.log("Page not found");
+    res.status(500).send("Server error");
+  }
+};
 
-// const resetPasswordPost = async (req, res) => {
-//   const { password, confirmPassword } = req.body;
+const resetPasswordPost = async (req, res) => {
+  const { password, confirmPassword } = req.body;
 
-//   try {
-//     if (!req.session.resetUserId) {
-//       req.session.error = "Reset session expired";
-//       return res.redirect("/forgotPassword");
-//     }
+  try {
+    if (!req.session.resetUserId) {
+      req.session.error = "Reset session expired";
+      return res.redirect("/forgotPassword");
+    }
 
-//     if (password !== confirmPassword) {
-//       req.session.error = "Passwords do not match";
-//       return res.redirect("/resetPassword");
-//     }
+    if (password !== confirmPassword) {
+      req.session.error = "Passwords do not match";
+      return res.redirect("/resetPassword");
+    }
 
-//     if (password.length < 6) {
-//       req.session.error = "Password must be at least 6 characters";
-//       return res.redirect("/resetPassword");
-//     }
+    if (password.length < 6) {
+      req.session.error = "Password must be at least 6 characters";
+      return res.redirect("/resetPassword");
+    }
 
-//     const user = await User.findById(req.session.resetUserId);
-//     if (!user) {
-//       req.session.error = "User not found";
-//       return res.redirect("/resetPassword");
-//     }
+    const user = await User.findById(req.session.resetUserId);
+    if (!user) {
+      req.session.error = "User not found";
+      return res.redirect("/resetPassword");
+    }
 
-//     const hashedPassword = await bcrypt.hash(password, 10);
-//     user.password = hashedPassword;
-//     await user.save();
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    await user.save();
 
-//     delete req.session.resetUserId;
+    delete req.session.resetUserId;
 
-//     req.session.save((err) => {
-//       if (err) {
-//         console.error("Session save error in resetPasswordPost:", err);
-//       }
-//       req.session.success =
-//         "Password reset successfully. Please login with your new password.";
-//       return res.redirect("/login");
-//     });
-//   } catch (error) {
-//     console.error("Error in resetPasswordPost:", error);
-//     req.session.error = "An error occurred";
-//     res.redirect("/resetPassword");
-//   }
-// };
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error in resetPasswordPost:", err);
+      }
+      req.session.success =
+        "Password reset successfully. Please login with your new password.";
+      return res.redirect("/login");
+    });
+  } catch (error) {
+    console.error("Error in resetPasswordPost:", error);
+    req.session.error = "An error occurred";
+    res.redirect("/resetPassword");
+  }
+};
 
 const getChangePassword = async (req, res) => {
   try {
@@ -234,8 +277,8 @@ module.exports = {
     forgotPassword,
     resetPassword,
     passwordReset,
-    // resetPasswordGet,
-    // resetPasswordPost,
+    resetPasswordGet,
+    resetPasswordPost,
     getChangePassword,
     postChangePassword
 }

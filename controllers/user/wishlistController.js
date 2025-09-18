@@ -1,5 +1,5 @@
-const path = require("path");
-const fs = require("fs");
+// const path = require("path");
+// const fs = require("fs");
 const Wishlist = require("../../models/wishlistSchema");
 const Cart = require("../../models/cartSchema");
 

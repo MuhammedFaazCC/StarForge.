@@ -1,3 +1,45 @@
+const User = require("../../models/userSchema");
+const nodemailer = require("nodemailer");
+
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+if (process.env.NODE_ENV === "development") {
+  transporter.verify().then(() => console.log("Mail server ready"));
+}
+
+const sendOTP = async (email, otp) => {
+  try {
+    const mailOptions = {
+      from: `"StarForge" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "StarForge OTP Verification",
+      html: `
+        <h2>Your OTP Code</h2>
+        <p>Your one-time password (OTP) is <strong>${otp}</strong>.</p>
+        <p>Please enter this code on the verification page to proceed.</p>
+        <p>This OTP is valid for 5 minutes.</p>
+        <p>If you did not request this, please ignore this email.</p>
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    return info;
+  } catch (error) {
+    console.error("Error sending OTP email:", error.message);
+    throw new Error("Failed to send OTP email");
+  }
+};
+
 const signUpPage = async (req, res) => {
   try {
     const error = req.session.error || null;

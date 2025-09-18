@@ -350,26 +350,37 @@ const renderAddOfferForm = async (req, res) => {
 };
 
 const updateCategoryOffer = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { offer } = req.body;
-        const parsedOffer = offer ? parseFloat(offer) : 0;
-        if (isNaN(parsedOffer) || parsedOffer < 0 || parsedOffer > 100) {
-            return res.status(400).send("Offer percentage must be a number between 0 and 100");
-        }
-        const category = await Category.findById(id);
-        if (!category) return res.status(404).send("Category not found");
+try {
+const { id } = req.params;
+const { offer } = req.body;
+const parsedOffer = offer ? parseFloat(offer) : 0;
+if (isNaN(parsedOffer) || parsedOffer < 0 || parsedOffer > 100) {
+return res.status(400).send("Offer percentage must be a number between 0 and 100");
+}
+const category = await Category.findById(id);
+if (!category) return res.status(404).send("Category not found");
 
-        category.offer = parsedOffer;
-        await category.save();
-        console.log(`Updated offer for category ${id} to ${parsedOffer}`);
-        await Product.updateMany({ category: id, isDeleted: false }, { categoryOffer: parsedOffer });
-        console.log(`Updated products for category ${id} with categoryOffer: ${parsedOffer} for non-deleted products`);
-        res.redirect("/admin/categories");
-    } catch (err) {
-        console.error("Error updating category offer:", err);
-        res.status(500).send("Error updating offer");
-    }
+
+category.offer = parsedOffer;
+await category.save();
+
+
+const products = await Product.find({ category: id, isDeleted: false });
+for (let product of products) {
+const effectiveOffer = Math.max(product.offer || 0, parsedOffer);
+product.categoryOffer = parsedOffer;
+product.salesPrice = effectiveOffer > 0
+? product.price - (product.price * effectiveOffer / 100)
+: product.price;
+await product.save();
+}
+
+
+res.redirect("/admin/categories");
+} catch (err) {
+console.error("Error updating category offer:", err);
+res.status(500).send("Error updating offer");
+}
 };
 
 module.exports = {

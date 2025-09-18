@@ -1,10 +1,10 @@
 const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
 const User = require("../../models/userSchema");
-const Review = require('../../models/reviewSchema');
-const Wishlist = require('../../models/wishlistSchema')
+const Review = require("../../models/reviewSchema");
+const Wishlist = require("../../models/wishlistSchema");
 
-  const getAllProduct = async (req, res) => {
+const getAllProduct = async (req, res) => {
   try {
     const user = req.session.user;
     const userData = user ? await User.findOne({ _id: user._id }) : null;
@@ -15,8 +15,8 @@ const Wishlist = require('../../models/wishlistSchema')
 
     const filterQuery = { isListed: true };
 
-    const categoryParam = req.query.category || 'all';
-    if (categoryParam !== 'all') {
+    const categoryParam = req.query.category || "all";
+    if (categoryParam !== "all") {
       const categoryDoc = await Category.findOne({ name: categoryParam });
       if (categoryDoc) {
         filterQuery.category = categoryDoc._id;
@@ -33,26 +33,26 @@ const Wishlist = require('../../models/wishlistSchema')
               then: {
                 $multiply: [
                   "$price",
-                  { $subtract: [1, { $divide: ["$offer", 100] }] }
-                ]
+                  { $subtract: [1, { $divide: ["$offer", 100] }] },
+                ],
               },
-              else: "$price"
-            }
-          }
-        }
+              else: "$price",
+            },
+          },
+        },
       },
       {
         $group: {
           _id: null,
           minPrice: { $min: "$salePrice" },
-          maxPrice: { $max: "$salePrice" }
-        }
-      }
+          maxPrice: { $max: "$salePrice" },
+        },
+      },
     ]);
 
     const priceRange = {
       min: priceStats.length > 0 ? Math.floor(priceStats[0].minPrice) : 0,
-      max: priceStats.length > 0 ? Math.ceil(priceStats[0].maxPrice) : 5000
+      max: priceStats.length > 0 ? Math.ceil(priceStats[0].maxPrice) : 5000,
     };
 
     const minPrice = parseInt(req.query.minPrice);
@@ -76,14 +76,14 @@ const Wishlist = require('../../models/wishlistSchema')
                   then: {
                     $multiply: [
                       "$price",
-                      { $subtract: [1, { $divide: ["$offer", 100] }] }
-                    ]
+                      { $subtract: [1, { $divide: ["$offer", 100] }] },
+                    ],
                   },
-                  else: "$price"
-                }
+                  else: "$price",
+                },
               },
-              salePriceFilter.$gte || 0
-            ]
+              salePriceFilter.$gte || 0,
+            ],
           },
           {
             $lte: [
@@ -93,32 +93,32 @@ const Wishlist = require('../../models/wishlistSchema')
                   then: {
                     $multiply: [
                       "$price",
-                      { $subtract: [1, { $divide: ["$offer", 100] }] }
-                    ]
+                      { $subtract: [1, { $divide: ["$offer", 100] }] },
+                    ],
                   },
-                  else: "$price"
-                }
+                  else: "$price",
+                },
               },
-              salePriceFilter.$lte || 999999
-            ]
-          }
-        ]
+              salePriceFilter.$lte || 999999,
+            ],
+          },
+        ],
       };
     }
 
     const searchTerm = req.query.search?.trim();
     if (searchTerm) {
-      const searchRegex = new RegExp(searchTerm, 'i');
+      const searchRegex = new RegExp(searchTerm, "i");
       filterQuery.$or = [
         { name: searchRegex },
         { brand: searchRegex },
-        { description: searchRegex }
+        { description: searchRegex },
       ];
     }
 
     let sortOption = { createdAt: -1 };
     switch (req.query.sort) {
-      case 'price-low-high':
+      case "price-low-high":
         sortOption = [
           {
             $addFields: {
@@ -128,18 +128,18 @@ const Wishlist = require('../../models/wishlistSchema')
                   then: {
                     $multiply: [
                       "$price",
-                      { $subtract: [1, { $divide: ["$offer", 100] }] }
-                    ]
+                      { $subtract: [1, { $divide: ["$offer", 100] }] },
+                    ],
                   },
-                  else: "$price"
-                }
-              }
-            }
+                  else: "$price",
+                },
+              },
+            },
           },
-          { $sort: { salePrice: 1 } }
+          { $sort: { salePrice: 1 } },
         ];
         break;
-      case 'price-high-low':
+      case "price-high-low":
         sortOption = [
           {
             $addFields: {
@@ -149,33 +149,31 @@ const Wishlist = require('../../models/wishlistSchema')
                   then: {
                     $multiply: [
                       "$price",
-                      { $subtract: [1, { $divide: ["$offer", 100] }] }
-                    ]
+                      { $subtract: [1, { $divide: ["$offer", 100] }] },
+                    ],
                   },
-                  else: "$price"
-                }
-              }
-            }
+                  else: "$price",
+                },
+              },
+            },
           },
-          { $sort: { salePrice: -1 } }
+          { $sort: { salePrice: -1 } },
         ];
         break;
-      case 'name-asc':
+      case "name-asc":
         sortOption = { name: 1 };
         break;
-      case 'name-desc':
+      case "name-desc":
         sortOption = { name: -1 };
         break;
-      case 'popular':
+      case "popular":
         sortOption = { salesCount: -1, createdAt: -1 };
         break;
       default:
         sortOption = { createdAt: -1 };
     }
 
-    let pipeline = [
-      { $match: filterQuery }
-    ];
+    let pipeline = [{ $match: filterQuery }];
 
     if (Array.isArray(sortOption)) {
       pipeline = pipeline.concat(sortOption);
@@ -188,34 +186,41 @@ const Wishlist = require('../../models/wishlistSchema')
 
     pipeline.push({
       $lookup: {
-        from: 'categories',
-        localField: 'category',
-        foreignField: '_id',
-        as: 'category'
-      }
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        as: "category",
+      },
     });
 
     pipeline.push({
       $match: {
-        'category.0': { $exists: true }
-      }
+        "category.0": { $exists: true },
+      },
     });
 
     pipeline.push({
-      $unwind: '$category'
+      $unwind: "$category",
     });
 
     const [products, totalProducts, categories, wishlist] = await Promise.all([
       Product.aggregate(pipeline),
       Product.countDocuments(filterQuery),
       Category.find().lean(),
-      Wishlist.findOne({ userId: user?._id }).populate('items.productId')
+      Wishlist.findOne({ userId: user?._id }).populate("items.productId"),
     ]);
 
     const totalPages = Math.ceil(totalProducts / limit);
 
-    const formattedProducts = products.map(product => {
-      const salePrice = product.offer > 0 ? product.price * (1 - product.offer / 100) : product.price;
+    const formattedProducts = products.map((product) => {
+      const effectiveOffer = Math.max(
+        product.offer || 0,
+        product.categoryOffer || 0
+      );
+      const salePrice =
+        effectiveOffer > 0
+          ? product.price * (1 - effectiveOffer / 100)
+          : product.price;
       return {
         _id: product._id,
         name: product.name,
@@ -223,9 +228,9 @@ const Wishlist = require('../../models/wishlistSchema')
         mainImage: product.mainImage,
         regularPrice: product.price,
         salePrice: Math.floor(salePrice),
-        offer: product.offer || 0,
+        offer: effectiveOffer,
         stock: product.stock,
-        category: product.category
+        category: product.category,
       };
     });
 
@@ -233,8 +238,8 @@ const Wishlist = require('../../models/wishlistSchema')
       category: categoryParam,
       minPrice: !isNaN(minPrice) ? minPrice : priceRange.min,
       maxPrice: !isNaN(maxPrice) ? maxPrice : priceRange.max,
-      sort: req.query.sort || 'latest',
-      search: searchTerm || ''
+      sort: req.query.sort || "latest",
+      search: searchTerm || "",
     };
 
     const buildUrl = (params = {}) => {
@@ -244,27 +249,34 @@ const Wishlist = require('../../models/wishlistSchema')
         maxPrice: filters.maxPrice,
         sort: filters.sort,
         search: filters.search,
-        page: req.query.page || '1'
+        page: req.query.page || "1",
       };
 
       const finalParams = { ...currentParams, ...params };
       const queryParts = [];
 
-      if (finalParams.category !== 'all') queryParts.push(`category=${encodeURIComponent(finalParams.category)}`);
-      if (parseInt(finalParams.minPrice) > priceRange.min) queryParts.push(`minPrice=${finalParams.minPrice}`);
-      if (parseInt(finalParams.maxPrice) < priceRange.max) queryParts.push(`maxPrice=${finalParams.maxPrice}`);
-      if (finalParams.sort !== 'latest') queryParts.push(`sort=${finalParams.sort}`);
-      if (finalParams.search) queryParts.push(`search=${encodeURIComponent(finalParams.search)}`);
-      if (finalParams.page !== '1') queryParts.push(`page=${finalParams.page}`);
+      if (finalParams.category !== "all")
+        queryParts.push(`category=${encodeURIComponent(finalParams.category)}`);
+      if (parseInt(finalParams.minPrice) > priceRange.min)
+        queryParts.push(`minPrice=${finalParams.minPrice}`);
+      if (parseInt(finalParams.maxPrice) < priceRange.max)
+        queryParts.push(`maxPrice=${finalParams.maxPrice}`);
+      if (finalParams.sort !== "latest")
+        queryParts.push(`sort=${finalParams.sort}`);
+      if (finalParams.search)
+        queryParts.push(`search=${encodeURIComponent(finalParams.search)}`);
+      if (finalParams.page !== "1") queryParts.push(`page=${finalParams.page}`);
 
-      return queryParts.length > 0 ? `/products?${queryParts.join('&')}` : '/products';
+      return queryParts.length > 0
+        ? `/products?${queryParts.join("&")}`
+        : "/products";
     };
 
     const wishlistItems = wishlist ? wishlist.items : [];
 
     const initialFilters = {
       minPrice: priceRange.min,
-      maxPrice: priceRange.max
+      maxPrice: priceRange.max,
     };
 
     res.render("allproduct", {
@@ -284,12 +296,12 @@ const Wishlist = require('../../models/wishlistSchema')
           ? `No products found on page ${page}. Try adjusting your filters or navigating to a different page.`
           : formattedProducts.length === 0 && totalProducts === 0
           ? `No products available. Please check back later.`
-          : null
+          : null,
     });
   } catch (error) {
     console.error("Error loading all products page:", error);
     res.status(500).render("error", {
-      message: "Failed to load products. Please try again later."
+      message: "Failed to load products. Please try again later.",
     });
   }
 };
@@ -301,27 +313,37 @@ const getProductDetails = async (req, res) => {
     const userData = user ? await User.findById(user) : null;
 
     const product = await Product.findById(productId)
-      .populate('category')
+      .populate("category")
       .lean();
-
     if (!product || !product.isListed) {
-      return res.status(404).render("page-404", { message: "Product not found" });
+      return res
+        .status(404)
+        .render("page-404", { message: "Product not found" });
     }
 
-    let salePrice = product.price;
-    if (product.offer > 0) {
-      salePrice = product.price * (1 - product.offer / 100);
-    }
+    const effectiveOffer = Math.max(
+      product.offer || 0,
+      product.categoryOffer || 0
+    );
+    let salePrice =
+      effectiveOffer > 0
+        ? product.price * (1 - effectiveOffer / 100)
+        : product.price;
 
-    const reviews = await Review.find({ product: productId }).populate('user').sort({ createdAt: -1 }).lean();
+    const reviews = await Review.find({ product: productId })
+      .populate("user")
+      .sort({ createdAt: -1 })
+      .lean();
 
     const relatedProducts = await Product.find({
       category: product.category._id,
       _id: { $ne: product._id },
-      isListed: true
-    }).limit(4).lean();
+      isListed: true,
+    })
+      .limit(4)
+      .lean();
 
-    res.render('productDetails', {
+    res.render("productDetails", {
       user: userData,
       product: { ...product, salePrice: Math.floor(salePrice) },
       relatedProducts,
@@ -329,7 +351,9 @@ const getProductDetails = async (req, res) => {
     });
   } catch (err) {
     console.error("getProductDetails error:", err);
-    res.status(500).render("pageNotFound", { message: "Failed to load product details." });
+    res
+      .status(500)
+      .render("pageNotFound", { message: "Failed to load product details." });
   }
 };
 
@@ -348,7 +372,7 @@ const postReview = async (req, res) => {
       product: productId,
       user: userId,
       rating,
-      comment
+      comment,
     });
 
     res.redirect(`/product/${productId}`);

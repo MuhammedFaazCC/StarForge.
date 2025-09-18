@@ -7,13 +7,17 @@ const productsPage = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = 8;
     const skip = (page - 1) * limit;
-    const totalProducts = await Product.countDocuments({ isDeleted: false});
-    const products = await Product.find({ isDeleted: false }).populate("category").sort({ _id: -1 }).skip(skip).limit(limit);
+    const totalProducts = await Product.countDocuments({ isDeleted: false });
+    const products = await Product.find({ isDeleted: false })
+      .populate("category")
+      .sort({ _id: -1 })
+      .skip(skip)
+      .limit(limit);
     const totalPages = Math.ceil(totalProducts / limit);
     let message = req.session.message;
     req.session.message = null;
 
-    res.render('products', {
+    res.render("products", {
       products,
       currentPage: page,
       totalPages,
@@ -21,22 +25,22 @@ const productsPage = async (req, res) => {
       hasNextPage: page < totalPages,
       prevPage: page - 1,
       nextPage: page + 1,
-      message 
+      message,
     });
   } catch (err) {
     console.error("Error loading products page:", err);
-    res.render('products', { 
-      products: [], 
+    res.render("products", {
+      products: [],
       currentPage: 1,
       totalPages: 1,
       hasPrevPage: false,
       hasNextPage: false,
       prevPage: 1,
       nextPage: 1,
-      message: { 
-        success: false, 
-        text: 'Error loading products. Please try again.' 
-      }
+      message: {
+        success: false,
+        text: "Error loading products. Please try again.",
+      },
     });
   }
 };
@@ -48,9 +52,9 @@ const addProduct = async (req, res) => {
   } catch (err) {
     console.error("Error loading add product page:", err);
     res.render("addProducts", {
-      message: { 
-        success: false, 
-        text: "Error loading categories. Please refresh and try again." 
+      message: {
+        success: false,
+        text: "Error loading categories. Please refresh and try again.",
       },
       categories: [],
     });
@@ -70,47 +74,66 @@ const productAdd = async (req, res) => {
       rimMaterial,
       finish,
       stock,
-      additionalInfo
+      additionalInfo,
     } = req.body;
 
-    const productSizes = sizes ? sizes.split(",").map((size) => size.trim()) : [];
-    const additionalInfoList = additionalInfo ? additionalInfo.split(",").map((info) => info.trim()) : [];
+    const productSizes = sizes
+      ? sizes.split(",").map((size) => size.trim())
+      : [];
+    const additionalInfoList = additionalInfo
+      ? additionalInfo.split(",").map((info) => info.trim())
+      : [];
 
-    const basePath = '/images/';
+    const basePath = "/images/";
 
-    const mainImage = req.files?.mainImage?.[0] ? basePath + req.files.mainImage[0].filename : '';
-    const additionalImages = req.files?.additionalImages ? req.files.additionalImages.map(file => basePath + file.filename) : [];
+    const mainImage = req.files?.mainImage?.[0]
+      ? basePath + req.files.mainImage[0].filename
+      : "";
+    const additionalImages = req.files?.additionalImages
+      ? req.files.additionalImages.map((file) => basePath + file.filename)
+      : [];
 
     if (!name || !brand || !price || !category || !stock) {
-      const error = "Please fill in all required fields (Name, Brand, Price, Category, Stock)";
+      const error =
+        "Please fill in all required fields (Name, Brand, Price, Category, Stock)";
       return res.status(400).json({ success: false, message: error });
     }
 
     if (parseFloat(price) <= 0) {
-      return res.status(400).json({ success: false, message: "Price must be a positive number" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Price must be a positive number" });
     }
 
     if (parseInt(stock) < 0) {
-      return res.status(400).json({ success: false, message: "Stock cannot be negative" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Stock cannot be negative" });
     }
 
     const parsedPrice = parseFloat(price);
     const parsedOffer = offer ? parseFloat(offer) : 0;
-    const salesPrice = parsedOffer > 0 
-      ? parsedPrice - (parsedPrice * parsedOffer / 100)
-      : parsedPrice;
+    const categoryDoc = await Category.findById(category);
+    const categoryOffer = categoryDoc ? categoryDoc.offer : 0;
+
+    const effectiveOffer = Math.max(parsedOffer, categoryOffer);
+    const salesPrice =
+      effectiveOffer > 0
+        ? parsedPrice - (parsedPrice * effectiveOffer) / 100
+        : parsedPrice;
 
     const newProduct = new Product({
       name: name.trim(),
       brand: brand.trim(),
       price: parsedPrice,
       offer: parsedOffer,
+      categoryOffer,
       salesPrice: parseFloat(salesPrice.toFixed(2)),
-      description: description?.trim() || '',
+      description: description?.trim() || "",
       category,
       sizes: productSizes,
-      rimMaterial: rimMaterial?.trim() || '',
-      finish: finish?.trim() || '',
+      rimMaterial: rimMaterial?.trim() || "",
+      finish: finish?.trim() || "",
       stock: parseInt(stock),
       additionalInfo: additionalInfoList,
       mainImage,
@@ -121,15 +144,14 @@ const productAdd = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: `Product "${name}" has been added successfully!`
+      message: `Product "${name}" has been added successfully!`,
     });
-
   } catch (err) {
     console.error("Error adding product:", err);
     let errorMessage = "Failed to add product. Please try again.";
     if (err.code === 11000) {
       errorMessage = "A product with this name already exists.";
-    } else if (err.name === 'ValidationError') {
+    } else if (err.name === "ValidationError") {
       errorMessage = "Please check your input data and try again.";
     }
     return res.status(500).json({ success: false, message: errorMessage });
@@ -142,7 +164,7 @@ const viewProduct = async (req, res) => {
     if (!product) {
       req.session.message = {
         success: false,
-        text: "Product not found"
+        text: "Product not found",
       };
       return res.redirect("/admin/products");
     }
@@ -151,7 +173,7 @@ const viewProduct = async (req, res) => {
     console.error("Error loading product view page:", error);
     req.session.message = {
       success: false,
-      text: "Error loading product details"
+      text: "Error loading product details",
     };
     res.redirect("/admin/products");
   }
@@ -164,7 +186,7 @@ const editProduct = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(productId)) {
       req.session.message = {
         success: false,
-        text: "Invalid product ID"
+        text: "Invalid product ID",
       };
       return res.redirect("/admin/products");
     }
@@ -175,7 +197,7 @@ const editProduct = async (req, res) => {
     if (!product) {
       req.session.message = {
         success: false,
-        text: "Product not found"
+        text: "Product not found",
       };
       return res.redirect("/admin/products");
     }
@@ -189,7 +211,7 @@ const editProduct = async (req, res) => {
     console.error("Error loading product edit page:", err);
     req.session.message = {
       success: false,
-      text: "Error loading product for editing"
+      text: "Error loading product for editing",
     };
     res.redirect("/admin/products");
   }
@@ -200,10 +222,7 @@ const productEdit = async (req, res) => {
     const productId = req.params.id;
 
     if (!mongoose.Types.ObjectId.isValid(productId)) {
-      req.session.message = {
-        success: false,
-        text: "Invalid product ID"
-      };
+      req.session.message = { success: false, text: "Invalid product ID" };
       return res.redirect("/admin/products");
     }
 
@@ -221,10 +240,7 @@ const productEdit = async (req, res) => {
 
     const product = await Product.findById(productId);
     if (!product) {
-      req.session.message = {
-        success: false,
-        text: "Product not found"
-      };
+      req.session.message = { success: false, text: "Product not found" };
       return res.redirect("/admin/products");
     }
 
@@ -233,10 +249,7 @@ const productEdit = async (req, res) => {
       return res.render("editProduct", {
         product: product.toObject(),
         categories,
-        message: { 
-          success: false, 
-          text: "Please fill in all required fields" 
-        },
+        message: { success: false, text: "Please fill in all required fields" },
       });
     }
 
@@ -245,10 +258,7 @@ const productEdit = async (req, res) => {
       return res.render("editProduct", {
         product: product.toObject(),
         categories,
-        message: { 
-          success: false, 
-          text: "Price must be a positive number" 
-        },
+        message: { success: false, text: "Price must be a positive number" },
       });
     }
 
@@ -257,38 +267,44 @@ const productEdit = async (req, res) => {
       return res.render("editProduct", {
         product: product.toObject(),
         categories,
-        message: { 
-          success: false, 
-          text: "Stock cannot be negative" 
-        },
+        message: { success: false, text: "Stock cannot be negative" },
       });
     }
 
+    // ✅ Only one declaration here
     const parsedPrice = parseFloat(price);
     const parsedOffer = offer ? parseFloat(offer) : 0;
-    const salesPrice = parsedOffer > 0 
-      ? parsedPrice - (parsedPrice * parsedOffer / 100)
-      : parsedPrice;
+    const categoryDoc = await Category.findById(category);
+    const categoryOffer = categoryDoc ? categoryDoc.offer : 0;
 
+    const effectiveOffer = Math.max(parsedOffer, categoryOffer);
+    const salesPrice =
+      effectiveOffer > 0
+        ? parsedPrice - (parsedPrice * effectiveOffer) / 100
+        : parsedPrice;
+
+    // update product
     product.name = name.trim();
     product.brand = brand.trim();
     product.price = parsedPrice;
     product.offer = parsedOffer;
-    product.description = description?.trim() || '';
+    product.categoryOffer = categoryOffer;
+    product.description = description?.trim() || "";
     product.category = category;
     product.stock = parseInt(stock);
     product.sizes = sizes ? sizes.split(",").map((s) => s.trim()) : [];
-    product.rimMaterial = rimMaterial?.trim() || '';
+    product.rimMaterial = rimMaterial?.trim() || "";
     product.salesPrice = parseFloat(salesPrice.toFixed(2));
 
-    const basePath = '/images/';
-
+    const basePath = "/images/";
     if (req.files) {
       if (req.files.mainImage?.[0]) {
         product.mainImage = basePath + req.files.mainImage[0].filename;
       }
       if (req.files.additionalImages?.length > 0) {
-        product.additionalImages = basePath + req.files.additionalImages.map(file => file.filename);
+        product.additionalImages = req.files.additionalImages.map(
+          (file) => basePath + file.filename
+        );
       }
     }
 
@@ -296,18 +312,16 @@ const productEdit = async (req, res) => {
 
     req.session.message = {
       success: true,
-      text: `Product "${name}" has been updated successfully!`
+      text: `Product "${name}" has been updated successfully!`,
     };
-    
     res.redirect("/admin/products");
-
   } catch (err) {
     console.error("Error updating product:", err);
-    
+
     let errorMessage = "Failed to update product. Please try again.";
     if (err.code === 11000) {
       errorMessage = "A product with this name already exists.";
-    } else if (err.name === 'ValidationError') {
+    } else if (err.name === "ValidationError") {
       errorMessage = "Please check your input data and try again.";
     }
 
@@ -317,17 +331,11 @@ const productEdit = async (req, res) => {
       res.render("editProduct", {
         product,
         categories,
-        message: { 
-          success: false, 
-          text: errorMessage 
-        },
+        message: { success: false, text: errorMessage },
       });
     } catch (renderErr) {
       console.error("Error rendering edit page after update failure:", renderErr);
-      req.session.message = {
-        success: false,
-        text: errorMessage
-      };
+      req.session.message = { success: false, text: errorMessage };
       res.redirect("/admin/products");
     }
   }
@@ -339,7 +347,7 @@ const toggleListing = async (req, res) => {
     const { isListed } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid product ID' });
+      return res.status(400).json({ message: "Invalid product ID" });
     }
 
     const updatedProduct = await Product.findByIdAndUpdate(
@@ -349,14 +357,15 @@ const toggleListing = async (req, res) => {
     );
 
     if (!updatedProduct) {
-      return res.status(404).json({ message: 'Product not found' });
+      return res.status(404).json({ message: "Product not found" });
     }
 
     res.json({
-      message: `Product is now ${updatedProduct.isListed ? 'listed' : 'unlisted'}`,
+      message: `Product is now ${
+        updatedProduct.isListed ? "listed" : "unlisted"
+      }`,
       isListed: updatedProduct.isListed,
     });
-
   } catch (err) {
     console.error("Error toggling product listing:", err);
     res.status(500).json({ message: "Server error" });
@@ -370,7 +379,7 @@ const deleteProduct = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid product ID"
+        message: "Invalid product ID",
       });
     }
 
@@ -378,7 +387,7 @@ const deleteProduct = async (req, res) => {
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found"
+        message: "Product not found",
       });
     }
 
@@ -386,14 +395,13 @@ const deleteProduct = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: `Product "${product.name}" has been permanently deleted`
+      message: `Product "${product.name}" has been permanently deleted`,
     });
-
   } catch (error) {
     console.error("Error deleting product:", error);
     res.status(500).json({
       success: false,
-      message: "Failed to delete product. Please try again."
+      message: "Failed to delete product. Please try again.",
     });
   }
 };
