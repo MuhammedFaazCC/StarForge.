@@ -75,51 +75,45 @@ const signUpPage = async (req, res) => {
 };
 
 const signUp = async (req, res) => {
-  const { fullName, email, mobile, password, confirmPassword, referralCode } =
-    req.body;
+  const { fullName, email, mobile, password, confirmPassword, referralCode } = req.body || {};
   try {
-    if (
-      !fullName ||
-      fullName.trim().length < 2 ||
-      fullName.trim().length > 50
-    ) {
-      req.session.error = "Full name must be between 2 and 50 characters";
-      return res.redirect("/signup");
+    // Basic validations
+    if (!fullName || fullName.trim().length < 2 || fullName.trim().length > 50) {
+      return res.json({ success: false, field: 'fullName', message: 'Full name must be between 2 and 50 characters' });
     }
 
     const emailRegex = /^\S+@\S+\.\S+$/;
     if (!email || !emailRegex.test(email)) {
-      req.session.error = "Please provide a valid email address";
-      return res.redirect("/signup");
+      return res.json({ success: false, field: 'email', message: 'Please provide a valid email address' });
     }
 
-    const mobileRegex = /^[0-9]{10}$/;
+    const mobileRegex = /^\d{10}$/;
     if (!mobile || !mobileRegex.test(mobile)) {
-      req.session.error = "Mobile number must be exactly 10 digits";
-      return res.redirect("/signup");
+      return res.json({ success: false, field: 'mobile', message: 'Mobile number must be exactly 10 digits' });
     }
 
     if (!password || password.length < 6) {
-      req.session.error = "Password must be at least 6 characters";
-      return res.redirect("/signup");
+      return res.json({ success: false, field: 'password', message: 'Password must be at least 6 characters' });
     }
 
     if (password !== confirmPassword) {
-      req.session.error = "Passwords do not match";
-      return res.redirect("/signup");
+      return res.json({ success: false, field: 'confirmPassword', message: 'Passwords do not match' });
     }
 
-    const existingUser = await User.findOne({ $or: [{ email }, { mobile }] });
-    if (existingUser) {
-      req.session.error = "Email or mobile number already exists";
-      return res.redirect("/signup");
+    // Uniqueness checks
+    const existingByEmail = await User.findOne({ email });
+    if (existingByEmail) {
+      return res.json({ success: false, field: 'email', message: 'Email already exists' });
+    }
+    const existingByMobile = await User.findOne({ mobile });
+    if (existingByMobile) {
+      return res.json({ success: false, field: 'mobile', message: 'Mobile number already exists' });
     }
 
     if (referralCode) {
       const referringUser = await User.findOne({ referralCode });
       if (!referringUser) {
-        req.session.error = "Invalid referral code";
-        return res.redirect("/signup");
+        return res.json({ success: false, field: 'referralCode', message: 'Invalid referral code' });
       }
     }
 
@@ -128,34 +122,29 @@ const signUp = async (req, res) => {
       code: otp,
       expires: Date.now() + 5 * 60 * 1000,
       userData: { fullName, email, mobile, password, referralCode },
-      action: "signup",
+      action: 'signup',
     };
 
-    req.session.save((err) => {
+    req.session.save(async (err) => {
       if (err) {
-        console.error("Session save error in signUp:", err);
-        req.session.error = "Failed to send OTP. Please try again.";
-        return res.redirect("/signup");
+        console.error('Session save error in signUp:', err);
+        return res.json({ success: false, message: 'Failed to start verification. Please try again.' });
       }
-
-      sendOTP(email, otp)
-        .then(() => {
-          res.redirect("/otp-verification");
-        })
-        .catch((error) => {
-          console.error("Error sending OTP:", error);
-          req.session.error = "Failed to send OTP. Please try again.";
-          res.redirect("/signup");
-        });
+      try {
+        await sendOTP(email, otp);
+        return res.json({ success: true, redirect: '/otp-verification' });
+      } catch (sendErr) {
+        console.error('Error sending OTP:', sendErr);
+        return res.json({ success: false, message: 'Failed to send OTP. Please try again.' });
+      }
     });
   } catch (error) {
-    console.error("Error in signUp:", error.message);
-    req.session.error = "Failed to send OTP. Please try again.";
-    res.redirect("/signup");
+    console.error('Error in signUp:', error.message);
+    return res.json({ success: false, message: 'Server error, try again later' });
   }
 };
 
 module.exports = {
-    signUpPage,
-    signUp
+  signUpPage,
+  signUp
 }

@@ -16,36 +16,36 @@ const addressSchema = new mongoose.Schema({
   phone: {
     type: String,
     required: true,
-    match: [/^[6-9]\d{9}$/, 'Phone number must be 10 digits starting with 6, 7, 8, or 9'],
+    match: [/^\d{10}$/, 'Phone number must be exactly 10 digits'],
     maxLength: 10
   },
 
   address: {
     type: String,
     required: true,
-    placeholder: "House Name, House Number, Locality",
-    maxLength: 255
+    placeholder: "House/Flat No., Building, Street, Locality",
+    maxLength: 200
   },
 
   district: {
     type: String,
     required: true,
     placeholder: "eg: Ernakulam",
-    maxLength: 100
+    maxLength: 50
   },
 
   state: {
     type: String,
     required: true,
     placeholder: "eg: Kerala",
-    maxLength: 100
+    maxLength: 50
   },
 
   city: {
     type: String,
     required: true,
     placeholder: "eg: Hospital",
-    maxLength: 100
+    maxLength: 50
   },
 
   pinCode: {

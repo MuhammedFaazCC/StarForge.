@@ -18,8 +18,7 @@ const userSchema = new mongoose.Schema({
     },
     mobile: {
         type: String,
-        unique: true,
-        sparse: true,
+        default: undefined,
     },
     profileImage: {
         type: String,
@@ -108,5 +107,13 @@ const userSchema = new mongoose.Schema({
 userSchema.methods.isUserBlocked = function() {
     return this.isBlocked;
 };
+
+// Ensure mobile is unique only when present (non-null, exists)
+// Use sparse unique index so only documents that actually have a mobile value are indexed.
+// IMPORTANT: Ensure code never saves mobile: null; leave it undefined when absent.
+userSchema.index(
+  { mobile: 1 },
+  { unique: true, sparse: true, name: 'mobile_1' }
+);
 
 module.exports = mongoose.model('User', userSchema);

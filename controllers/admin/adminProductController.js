@@ -2,6 +2,138 @@ const mongoose = require("mongoose");
 const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
 
+// ------------------------
+// Helper validation utils
+// ------------------------
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+const trimOrEmpty = (v) => (typeof v === "string" ? v.trim() : "");
+
+const parsePositiveNumber = (v) => {
+  const n = parseFloat(v);
+  return Number.isFinite(n) ? n : NaN;
+};
+
+const parseNonNegativeInt = (v) => {
+  const n = parseInt(v, 10);
+  return Number.isFinite(n) ? n : NaN;
+};
+
+const allowedImageExt = new Set([".jpg", ".jpeg", ".png", ".webp"]);
+const getExt = (filename = "") => filename.slice(filename.lastIndexOf(".")).toLowerCase();
+
+const validateImages = (files, { requireMainImage = false } = {}) => {
+  const basePath = "/images/";
+  const mainImage = files?.mainImage?.[0]
+    ? basePath + files.mainImage[0].filename
+    : "";
+  const additionalImages = files?.additionalImages
+    ? files.additionalImages.map((f) => basePath + f.filename)
+    : [];
+
+  if (requireMainImage && !mainImage) {
+    return { ok: false, error: "Main image is required" };
+  }
+
+  // Validate extensions
+  if (mainImage && !allowedImageExt.has(getExt(mainImage))) {
+    return { ok: false, error: "Invalid main image type" };
+  }
+  for (const img of additionalImages) {
+    if (!allowedImageExt.has(getExt(img))) {
+      return { ok: false, error: "Invalid additional image type" };
+    }
+  }
+
+  return { ok: true, mainImage, additionalImages };
+};
+
+const validateAndNormalizePayload = async (payload, { isEdit = false, productId = null } = {}) => {
+  const out = {};
+
+  // Required fields
+  out.name = trimOrEmpty(payload.name);
+  out.brand = trimOrEmpty(payload.brand);
+  out.category = payload.category;
+  out.description = trimOrEmpty(payload.description || "");
+  out.rimMaterial = trimOrEmpty(payload.rimMaterial || "");
+  out.finish = trimOrEmpty(payload.finish || "");
+
+  // Name validations
+  if (!out.name) return { ok: false, error: "Name is required" };
+  if (out.name.length < 2 || out.name.length > 100) {
+    return { ok: false, error: "Name must be between 2 and 100 characters" };
+  }
+
+  // Unique name check (case-insensitive)
+  const nameRegex = new RegExp(`^${out.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
+  const nameQuery = { name: nameRegex };
+  if (isEdit && productId) nameQuery._id = { $ne: productId };
+  const dup = await Product.findOne(nameQuery).lean();
+  if (dup) return { ok: false, error: "A product with this name already exists" };
+
+  // Brand validations
+  if (!out.brand) return { ok: false, error: "Brand is required" };
+  if (out.brand.length < 2 || out.brand.length > 50) {
+    return { ok: false, error: "Brand must be between 2 and 50 characters" };
+  }
+
+  // Price validations
+  const parsedPrice = parsePositiveNumber(payload.price);
+  if (!Number.isFinite(parsedPrice)) return { ok: false, error: "Price is required" };
+  if (parsedPrice <= 0) return { ok: false, error: "Price must be greater than 0" };
+  out.price = parsedPrice;
+
+  // Offer validations (optional)
+  let parsedOffer = payload.offer !== undefined && payload.offer !== null && payload.offer !== ""
+    ? parsePositiveNumber(payload.offer)
+    : 0;
+  if (!Number.isFinite(parsedOffer)) parsedOffer = 0;
+  if (parsedOffer < 0 || parsedOffer > 100) {
+    // Reset invalid offer to 0
+    parsedOffer = 0;
+  }
+  out.offer = parsedOffer;
+
+  // Category validations
+  if (!out.category || !isValidObjectId(out.category)) {
+    return { ok: false, error: "Invalid category selected" };
+  }
+  const categoryDoc = await Category.findById(out.category).lean();
+  if (!categoryDoc) return { ok: false, error: "Invalid category selected" };
+  out.categoryOffer = Number.isFinite(categoryDoc.offer) ? categoryDoc.offer : 0;
+
+  // Stock validations
+  const parsedStock = parseNonNegativeInt(payload.stock);
+  if (!Number.isFinite(parsedStock)) return { ok: false, error: "Stock is required" };
+  if (parsedStock < 0) return { ok: false, error: "Stock cannot be negative" };
+  out.stock = parsedStock;
+
+  // Sizes (optional)
+  out.sizes = Array.isArray(payload.sizes)
+    ? payload.sizes
+    : (payload.sizes ? String(payload.sizes).split(",").map((s) => s.trim()).filter((s) => !!s) : []);
+
+  // Optional fields length constraints
+  if (out.rimMaterial.length > 50) {
+    return { ok: false, error: "Rim material must be at most 50 characters" };
+  }
+  if (out.finish.length > 50) {
+    return { ok: false, error: "Finish must be at most 50 characters" };
+  }
+  if (out.description.length > 500) {
+    return { ok: false, error: "Description must be at most 500 characters" };
+  }
+
+  return { ok: true, data: out };
+};
+
+const computeSalesPrice = (price, productOffer, categoryOffer) => {
+  const effectiveOffer = Math.max(productOffer || 0, categoryOffer || 0);
+  const salesPrice = effectiveOffer > 0 ? price - (price * effectiveOffer) / 100 : price;
+  return { effectiveOffer, salesPrice: parseFloat(salesPrice.toFixed(2)) };
+};
+
 const productsPage = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -63,88 +195,47 @@ const addProduct = async (req, res) => {
 
 const productAdd = async (req, res) => {
   try {
-    const {
-      name,
-      brand,
-      price,
-      offer,
-      description,
-      category,
-      sizes,
-      rimMaterial,
-      finish,
-      stock,
-      additionalInfo,
-    } = req.body;
+    // Validate and normalize core fields
+    const v = await validateAndNormalizePayload(req.body, { isEdit: false });
+    if (!v.ok) {
+      return res.status(400).json({ success: false, message: v.error });
+    }
+    const core = v.data;
 
-    const productSizes = sizes
-      ? sizes.split(",").map((size) => size.trim())
-      : [];
-    const additionalInfoList = additionalInfo
-      ? additionalInfo.split(",").map((info) => info.trim())
-      : [];
-
-    const basePath = "/images/";
-
-    const mainImage = req.files?.mainImage?.[0]
-      ? basePath + req.files.mainImage[0].filename
-      : "";
-    const additionalImages = req.files?.additionalImages
-      ? req.files.additionalImages.map((file) => basePath + file.filename)
-      : [];
-
-    if (!name || !brand || !price || !category || !stock) {
-      const error =
-        "Please fill in all required fields (Name, Brand, Price, Category, Stock)";
-      return res.status(400).json({ success: false, message: error });
+    // Validate images (mainImage required on add)
+    const img = validateImages(req.files, { requireMainImage: true });
+    if (!img.ok) {
+      return res.status(400).json({ success: false, message: img.error });
     }
 
-    if (parseFloat(price) <= 0) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Price must be a positive number" });
-    }
-
-    if (parseInt(stock) < 0) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Stock cannot be negative" });
-    }
-
-    const parsedPrice = parseFloat(price);
-    const parsedOffer = offer ? parseFloat(offer) : 0;
-    const categoryDoc = await Category.findById(category);
-    const categoryOffer = categoryDoc ? categoryDoc.offer : 0;
-
-    const effectiveOffer = Math.max(parsedOffer, categoryOffer);
-    const salesPrice =
-      effectiveOffer > 0
-        ? parsedPrice - (parsedPrice * effectiveOffer) / 100
-        : parsedPrice;
+    // Compute pricing
+    const { effectiveOffer, salesPrice } = computeSalesPrice(core.price, core.offer, core.categoryOffer);
 
     const newProduct = new Product({
-      name: name.trim(),
-      brand: brand.trim(),
-      price: parsedPrice,
-      offer: parsedOffer,
-      categoryOffer,
-      salesPrice: parseFloat(salesPrice.toFixed(2)),
-      description: description?.trim() || "",
-      category,
-      sizes: productSizes,
-      rimMaterial: rimMaterial?.trim() || "",
-      finish: finish?.trim() || "",
-      stock: parseInt(stock),
-      additionalInfo: additionalInfoList,
-      mainImage,
-      additionalImages,
+      name: core.name,
+      brand: core.brand,
+      price: core.price,
+      offer: core.offer,
+      categoryOffer: core.categoryOffer,
+      salesPrice,
+      description: core.description,
+      category: core.category,
+      sizes: core.sizes,
+      rimMaterial: core.rimMaterial,
+      finish: core.finish,
+      stock: core.stock,
+      mainImage: img.mainImage,
+      additionalImages: img.additionalImages,
+      isDeleted: false,
+      isListed: true,
     });
 
     await newProduct.save();
 
     return res.status(200).json({
       success: true,
-      message: `Product "${name}" has been added successfully!`,
+      message: `Product "${core.name}" has been added successfully!`,
+      effectiveOffer,
     });
   } catch (err) {
     console.error("Error adding product:", err);
@@ -226,93 +317,65 @@ const productEdit = async (req, res) => {
       return res.redirect("/admin/products");
     }
 
-    const {
-      name,
-      brand,
-      price,
-      offer,
-      description,
-      category,
-      stock,
-      sizes,
-      rimMaterial,
-    } = req.body;
-
     const product = await Product.findById(productId);
     if (!product) {
       req.session.message = { success: false, text: "Product not found" };
       return res.redirect("/admin/products");
     }
 
-    if (!name || !brand || !price || !category || stock === undefined) {
+    // Validate core fields (edit mode)
+    const v = await validateAndNormalizePayload(req.body, { isEdit: true, productId });
+    if (!v.ok) {
       const categories = await Category.find({ isActive: true }).lean();
       return res.render("editProduct", {
         product: product.toObject(),
         categories,
-        message: { success: false, text: "Please fill in all required fields" },
+        message: { success: false, text: v.error },
       });
     }
+    const core = v.data;
 
-    if (parseFloat(price) <= 0) {
-      const categories = await Category.find({ isActive: true }).lean();
-      return res.render("editProduct", {
-        product: product.toObject(),
-        categories,
-        message: { success: false, text: "Price must be a positive number" },
-      });
-    }
-
-    if (parseInt(stock) < 0) {
-      const categories = await Category.find({ isActive: true }).lean();
-      return res.render("editProduct", {
-        product: product.toObject(),
-        categories,
-        message: { success: false, text: "Stock cannot be negative" },
-      });
-    }
-
-    // ✅ Only one declaration here
-    const parsedPrice = parseFloat(price);
-    const parsedOffer = offer ? parseFloat(offer) : 0;
-    const categoryDoc = await Category.findById(category);
-    const categoryOffer = categoryDoc ? categoryDoc.offer : 0;
-
-    const effectiveOffer = Math.max(parsedOffer, categoryOffer);
-    const salesPrice =
-      effectiveOffer > 0
-        ? parsedPrice - (parsedPrice * effectiveOffer) / 100
-        : parsedPrice;
-
-    // update product
-    product.name = name.trim();
-    product.brand = brand.trim();
-    product.price = parsedPrice;
-    product.offer = parsedOffer;
-    product.categoryOffer = categoryOffer;
-    product.description = description?.trim() || "";
-    product.category = category;
-    product.stock = parseInt(stock);
-    product.sizes = sizes ? sizes.split(",").map((s) => s.trim()) : [];
-    product.rimMaterial = rimMaterial?.trim() || "";
-    product.salesPrice = parseFloat(salesPrice.toFixed(2));
-
-    const basePath = "/images/";
-    if (req.files) {
-      if (req.files.mainImage?.[0]) {
-        product.mainImage = basePath + req.files.mainImage[0].filename;
+    // Validate images if provided (main image optional on edit)
+    let baseMain = product.mainImage;
+    let baseAdditional = product.additionalImages || [];
+    if (req.files && (req.files.mainImage?.[0] || (req.files.additionalImages?.length || 0) > 0)) {
+      const img = validateImages(req.files, { requireMainImage: false });
+      if (!img.ok) {
+        const categories = await Category.find({ isActive: true }).lean();
+        return res.render("editProduct", {
+          product: product.toObject(),
+          categories,
+          message: { success: false, text: img.error },
+        });
       }
-      if (req.files.additionalImages?.length > 0) {
-        product.additionalImages = req.files.additionalImages.map(
-          (file) => basePath + file.filename
-        );
-      }
+      if (img.mainImage) baseMain = img.mainImage;
+      if (img.additionalImages?.length) baseAdditional = img.additionalImages;
     }
+
+    // Compute pricing
+    const { effectiveOffer, salesPrice } = computeSalesPrice(core.price, core.offer, core.categoryOffer);
+
+    // Update product
+    product.name = core.name;
+    product.brand = core.brand;
+    product.price = core.price;
+    product.offer = core.offer;
+    product.categoryOffer = core.categoryOffer;
+    product.description = core.description;
+    product.category = core.category;
+    product.stock = core.stock;
+    product.sizes = core.sizes;
+    product.rimMaterial = core.rimMaterial;
+    product.finish = core.finish;
+    product.salesPrice = salesPrice;
+    product.mainImage = baseMain;
+    product.additionalImages = baseAdditional;
 
     await product.save();
 
     req.session.message = {
       success: true,
-      text: `Product "${name}" has been updated successfully!`,
+      text: `Product "${product.name}" has been updated successfully!`,
     };
     res.redirect("/admin/products");
   } catch (err) {

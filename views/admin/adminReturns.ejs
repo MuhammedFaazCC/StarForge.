@@ -6,6 +6,7 @@
   <title>Return Requests - StarForge Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/admin/common.css">
   <link rel="stylesheet" href="/css/admin/orders.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
@@ -337,7 +338,7 @@
                     </span>
                     <span class="order-total">
                       <i class="fas fa-dollar-sign"></i>
-                      $<%= order.totalAmount.toFixed(2) %>
+                      ₹<%= order.totalAmount.toFixed(2) %>
                     </span>
                   </div>
                 </div>
@@ -419,7 +420,7 @@
                       </span>
                       <span class="item-total">
                         <i class="fas fa-dollar-sign"></i>
-                        $<%= (item.salesPrice * item.quantity).toFixed(2) %>
+                        ₹<%= (item.salesPrice * item.quantity).toFixed(2) %>
                       </span>
                     </div>
                   </div>
@@ -464,7 +465,7 @@
                     <div class="product-details">
                       <h4><%= item.productId?.name || 'Unknown Product' %></h4>
                       <p>Quantity: <%= item.quantity %></p>
-                      <p>Price: $<%= item.salesPrice.toFixed(2) %> each</p>
+                      <p>Price: ₹<%= item.salesPrice.toFixed(2) %> each</p>
                     </div>
                   </div>
                   <div class="return-reason-section">

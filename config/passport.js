@@ -15,15 +15,35 @@ passport.use(new GoogleStrategy({
   }
 
   try {
-    let user = await User.findOne({ email: profile.emails[0].value });
+    const email = (profile.emails[0].value || '').toLowerCase();
+    const googleId = profile.id;
+    const fullName = profile.displayName || `${profile.name?.givenName || ''} ${profile.name?.familyName || ''}`.trim();
+    const avatar = profile.photos?.[0]?.value || null;
 
+    // 1) Try by googleId
+    let user = await User.findOne({ googleId });
+
+    // 2) Fallback to email
+    if (!user) {
+      user = await User.findOne({ email });
+      if (user && !user.googleId) {
+        // Link existing account with Google
+        user.googleId = googleId;
+        if (!user.profileImage && avatar) user.profileImage = avatar;
+        await user.save();
+      }
+    }
+
+    // 3) Create if still not found
     if (!user) {
       user = await User.create({
-        fullName: profile.displayName,
-        email: profile.emails[0].value,
-        googleId: profile.id,
+        fullName: fullName || email.split('@')[0],
+        email,
+        googleId,
+        profileImage: avatar,
         role: 'customer',
         referralCode: Math.random().toString(36).slice(2, 10).toUpperCase()
+        // Do NOT set mobile here; leave undefined so partial unique index doesn't collide
       });
     }
 

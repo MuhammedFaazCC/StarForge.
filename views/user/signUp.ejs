@@ -14,12 +14,12 @@
     <div class="background">
         <div class="login-container">
             <h2>Sign Up</h2>
-            <% if (typeof error !=='undefined' ) { %>
-                <p class="error-message">
-                    <%= error %>
-                </p>
-                <% } %>
-                    <form action="/signup" method="POST">
+            <% if (typeof error !=='undefined' && error) { %>
+                <p class="error-message" id="formError"><%= error %></p>
+            <% } else { %>
+                <p class="error-message" id="formError" style="display:none;"></p>
+            <% } %>
+                    <form id="signupForm" action="/signup" method="POST">
                         <div class="input-group">
                             <label for="fullName">Full Name</label>
                             <div class="input-wrapper">
@@ -27,6 +27,7 @@
                                     aria-describedby="fullName-icon" />
                                 <span class="icon" id="fullName-icon"><i class="fas fa-user"></i></span>
                             </div>
+                            <small class="error-message" id="fullNameError"></small>
                         </div>
 
                         <div class="input-group">
@@ -36,6 +37,7 @@
                                     required aria-describedby="email-icon" />
                                 <span class="icon" id="email-icon"><i class="fas fa-envelope"></i></span>
                             </div>
+                            <small class="error-message" id="emailError"></small>
                         </div>
 
                         <div class="input-group">
@@ -45,6 +47,7 @@
                                     required aria-describedby="mobile-icon" />
                                 <span class="icon" id="mobile-icon"><i class="fas fa-phone"></i></span>
                             </div>
+                            <small class="error-message" id="mobileError"></small>
                         </div>
 
                         <div class="input-group">
@@ -56,6 +59,7 @@
                                     role="button" aria-label="Toggle password visibility"><i
                                         class="fas fa-eye"></i></span>
                             </div>
+                            <small class="error-message" id="passwordError"></small>
                         </div>
 
                         <div class="input-group">
@@ -67,6 +71,7 @@
                                     id="confirm-password-toggle" role="button"
                                     aria-label="Toggle confirm password visibility"><i class="fas fa-eye"></i></span>
                             </div>
+                            <small class="error-message" id="confirmPasswordError"></small>
                         </div>
 
                         <div class="input-group">
@@ -85,6 +90,7 @@
                                     You're signing up through <%= referrerInfo.name %>'s referral! You'll both get exclusive benefits.
                                 </small>
                             <% } %>
+                            <small class="error-message" id="referralCodeError"></small>
                         </div>
 
                         <button type="submit">Sign Up</button>

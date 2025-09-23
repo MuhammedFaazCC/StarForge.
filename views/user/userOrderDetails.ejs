@@ -400,7 +400,7 @@
 
     <% if (order.status === 'Cancelled' || allItemsCancelled) { %>
       <div class="order-cancelled-label">
-        🚫 Order Cancelled
+        Order Cancelled
       </div>
     <% } %>
 
@@ -500,19 +500,19 @@
             
             <% if (itemStatus === 'Cancelled') { %>
               <div class="cancelled-badge">
-                ❌ Cancelled
+                Cancelled
               </div>
             <% } else if (itemStatus === 'Return Requested') { %>
               <div class="cancelled-badge" style="background-color: #fff3e0; color: #f57c00;">
-                🔄 Return Requested
+                Return Requested
               </div>
             <% } else if (itemStatus === 'Returned') { %>
               <div class="cancelled-badge" style="background-color: #fce4ec; color: #c2185b;">
-                ↩️ Returned
+                Returned
               </div>
             <% } else if (itemStatus === 'Return Declined') { %>
               <div class="cancelled-badge">
-                ❌ Return Declined
+                Return Declined
               </div>
             <% } else if (canCancelItem) { %>
               <button class="action-btn btn-cancel-item" onclick="cancelSingleItem('<%= order._id %>', '<%= item.productId._id %>')">
@@ -561,7 +561,7 @@
       <% } %>
       
       <a href="/order/<%= order._id %>/invoice" class="action-btn btn-download" target="_blank">
-        📄 Download Invoice
+        Download Invoice
       </a>
       
       <a href="/orders" class="action-btn btn-back">
@@ -645,7 +645,7 @@
             if (!existingBanner && mainContent) {
               const banner = document.createElement('div');
               banner.className = 'order-cancelled-label';
-              banner.innerHTML = '🚫 Order Cancelled';
+              banner.innerHTML = 'Order Cancelled';
               const h1 = mainContent.querySelector('h1');
               if (h1) {
                 h1.insertAdjacentElement('afterend', banner);
@@ -665,7 +665,7 @@
               if (cancelItemBtn) {
                 itemActions.innerHTML = `
                   <div class="cancelled-badge">
-                    ❌ Cancelled
+                    Cancelled
                   </div>
                 `;
               }
@@ -793,7 +793,7 @@
             if (itemActionsDiv) {
               itemActionsDiv.innerHTML = `
                 <div class="cancelled-badge">
-                  ❌ Cancelled
+                  Cancelled
                 </div>
               `;
               
@@ -827,7 +827,7 @@
               if (!existingBanner && mainContent) {
                 const banner = document.createElement('div');
                 banner.className = 'order-cancelled-label';
-                banner.innerHTML = '🚫 Order Cancelled';
+                banner.innerHTML = 'Order Cancelled';
                 const h1 = mainContent.querySelector('h1');
                 if (h1) {
                   h1.insertAdjacentElement('afterend', banner);

@@ -51,27 +51,38 @@ const addAddress = async (req, res) => {
 
     const validationErrors = {};
 
-    // Validate fields
-    if (!name || name.trim().length < 2 || !/^[a-zA-Z\s]+$/.test(name.trim())) {
-      validationErrors.name = "Name must be at least 2 letters and contain only alphabets";
+    // Helper to title case words
+    const toTitle = (s) => s.replace(/\s+/g, ' ').trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+
+    // Validate fields (server-side rules)
+    const nameVal = (name || '').trim();
+    const phoneVal = (phone || '').trim();
+    const addressVal = (address || '').trim();
+    const districtVal = (district || '').trim();
+    const stateVal = (state || '').trim();
+    const cityVal = (city || '').trim();
+    const pinVal = (pinCode || '').trim();
+
+    if (!nameVal || nameVal.length < 2 || nameVal.length > 100 || !/^[A-Za-z .]+$/.test(nameVal)) {
+      validationErrors.name = "Full name must be 2-100 characters and contain only letters, spaces, or dots";
     }
-    if (!phone || !/^[6-9]\d{9}$/.test(phone.trim())) {
-      validationErrors.phone = "Phone number must be 10 digits starting with 6, 7, 8, or 9";
+    if (!phoneVal || !/^\d{10}$/.test(phoneVal)) {
+      validationErrors.phone = "Phone number must be exactly 10 digits";
     }
-    if (!address || address.trim().length < 10) {
-      validationErrors.address = "Address must be at least 10 characters long";
+    if (!addressVal || addressVal.length < 5 || addressVal.length > 200) {
+      validationErrors.address = "Address must be between 5 and 200 characters";
     }
-    if (!district || district.trim().length < 2 || !/^[a-zA-Z\s]+$/.test(district.trim())) {
-      validationErrors.district = "District must contain only letters and be at least 2 characters long";
+    if (!districtVal || districtVal.length < 2 || districtVal.length > 50 || !/^[A-Za-z ]+$/.test(districtVal)) {
+      validationErrors.district = "District must be 2-50 letters (letters and spaces only)";
     }
-    if (!state || state.trim().length < 2 || !/^[a-zA-Z\s]+$/.test(state.trim())) {
-      validationErrors.state = "State must contain only letters and be at least 2 characters long";
+    if (!stateVal || stateVal.length < 2 || stateVal.length > 50 || !/^[A-Za-z ]+$/.test(stateVal)) {
+      validationErrors.state = "State must be 2-50 letters (letters and spaces only)";
     }
-    if (!city || city.trim().length < 2 || !/^[a-zA-Z\s]+$/.test(city.trim())) {
-      validationErrors.city = "City must contain only letters and be at least 2 characters long";
+    if (!cityVal || cityVal.length < 2 || cityVal.length > 50 || !/^[A-Za-z ]+$/.test(cityVal)) {
+      validationErrors.city = "City must be 2-50 letters (letters and spaces only)";
     }
-    if (!pinCode || !/^[1-9][0-9]{5}$/.test(pinCode.trim())) {
-      validationErrors.pinCode = "Pin code must be 6 digits and cannot start with 0";
+    if (!pinVal || !/^\d{6}$/.test(pinVal)) {
+      validationErrors.pinCode = "Pin code must be exactly 6 digits";
     }
 
     if (Object.keys(validationErrors).length > 0) {
@@ -79,7 +90,7 @@ const addAddress = async (req, res) => {
     }
 
     // Prevent duplicate phone
-    const existingPhone = await Address.findOne({ userId, phone: phone.trim() });
+    const existingPhone = await Address.findOne({ userId, phone: phoneVal });
     if (existingPhone) {
       return res.status(400).json({ 
         success: false, 
@@ -94,13 +105,13 @@ const addAddress = async (req, res) => {
 
     const newAddress = new Address({
       userId,
-      name: name.trim(),
-      phone: phone.trim(),
-      address: address.trim(),
-      district: district.trim(),
-      state: state.trim(),
-      city: city.trim(),
-      pinCode: pinCode.trim(),
+      name: toTitle(nameVal),
+      phone: phoneVal,
+      address: addressVal,
+      district: toTitle(districtVal),
+      state: toTitle(stateVal),
+      city: toTitle(cityVal),
+      pinCode: pinVal,
       isDefault: isDefault === "true" || isDefault === true
     });
 

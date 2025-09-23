@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin/common.css">
     <link rel="stylesheet" href="/css/admin/orders.css">
 </head>
 
@@ -80,7 +81,7 @@
                                             </span>
                                             <span class="order-total">
                                                 <i class="fas fa-dollar-sign"></i>
-                                                $<%= order.totalAmount.toFixed(2) %>
+                                                ₹<%= order.totalAmount.toFixed(2) %>
                                             </span>
                                         </div>
                                     </div>
@@ -146,7 +147,7 @@
                                                       %>
                                                       <%= productName %>
                                                     </h5>
-                                                    <p class="item-price">$<%= item.salesPrice.toFixed(2) %> × <%= item.quantity %></p>
+                                                    <p class="item-price">₹<%= item.salesPrice.toFixed(2) %> × <%= item.quantity %></p>
                                                     <div class="item-status-container">
                                                         <span class="status-badge status-<%= itemStatus.toLowerCase().replace(/\s+/g, '-') %>">
                                                             <%= itemStatus %>

@@ -1,5 +1,6 @@
 const Return = require("../../models/returnSchema");
 const Order = require("../../models/orderSchema");
+const { handleItemReturnWithCoupon, areAllItemsReturned } = require("../../util/couponRefundHandler");
 
 const getReturnRequestsPage = async (req, res) => {
   try {
@@ -80,48 +81,34 @@ const acceptReturnRequest = async (req, res) => {
       return res.status(400).json({ success: false, message: "Order is not in return requested status" });
     }
 
-    order.status = "Returned";
-    await order.save();
+    // Build itemsToReturn as all items that are not cancelled/returned
+    const itemsToReturn = order.items
+      .filter(i => (i.status !== 'Cancelled' && i.status !== 'Returned'))
+      .map(i => ({
+        productId: (i.productId && i.productId._id) ? i.productId._id : i.productId,
+        name: i.productId?.name || i.name,
+        salesPrice: i.salesPrice,
+        quantity: i.quantity
+      }));
+
+    const couponResult = await handleItemReturnWithCoupon(order, itemsToReturn, order.userId, {
+      refundReason: `Refund for returned order #${order._id}`
+    });
 
     await Return.findOneAndUpdate(
       { orderId },
       { status: "Approved", updatedAt: new Date() }
     );
 
-    try {
-      const Product = require("../../models/productSchema");
-      for (const item of order.items) {
-        await Product.updateOne(
-          { _id: item.productId._id || item.productId },
-          { $inc: { stock: item.quantity } }
-        );
-        console.log(`Stock restored for product ${item.productId._id || item.productId}: +${item.quantity}`);
-      }
-    } catch (stockError) {
-      console.error("Error restoring stock for returned order:", stockError);
-    }
-
-    if (order.paymentMethod === 'Online' || order.paymentMethod === 'Wallet') {
-      try {
-        const { updateWallet } = require("../user/walletController");
-        await updateWallet(
-          order.userId,
-          order.totalAmount,
-          `Refund for returned order #${order._id}`,
-          "Credit"
-        );
-      } catch (refundError) {
-        console.error("Refund error:", refundError);
-      }
-    }
-
     res.json({ 
       success: true, 
       message: "Return request accepted successfully" + 
         (order.paymentMethod !== 'COD' ? ". Refund has been processed to customer's wallet." : "") +
-        ". Product stock has been restored."
+        ". Product stock has been restored.",
+      refundAmount: couponResult.totalRefundAmount,
+      couponRemoved: !!couponResult.couponRemoved,
+      newOrderTotal: couponResult.newOrderTotal
     });
-
   } catch (error) {
     console.error("Error accepting return request:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
@@ -182,43 +169,26 @@ const acceptItemReturnRequest = async (req, res) => {
       return res.status(400).json({ success: false, message: "Item is not in return requested status" });
     }
 
-    item.status = "Returned";
-    item.returnApprovedAt = new Date();
-    await order.save();
+    const itemsToReturn = [{
+      productId: item.productId._id,
+      name: item.productId.name,
+      salesPrice: item.salesPrice,
+      quantity: item.quantity
+    }];
 
-    try {
-      const Product = require("../../models/productSchema");
-      await Product.updateOne(
-        { _id: item.productId._id },
-        { $inc: { stock: item.quantity } }
-      );
-      console.log(`Stock restored for returned item ${item.productId._id}: +${item.quantity}`);
-    } catch (stockError) {
-      console.error("Error restoring stock for returned item:", stockError);
-    }
-
-    if (order.paymentMethod === 'Online' || order.paymentMethod === 'Wallet') {
-      try {
-        const { updateWallet } = require("../user/walletController");
-        const refundAmount = item.salesPrice * item.quantity;
-        await updateWallet(
-          order.userId,
-          refundAmount,
-          `Refund for returned item ${item.productId.name} from order #${order._id}`,
-          "Credit"
-        );
-      } catch (refundError) {
-        console.error("Refund error for item return:", refundError);
-      }
-    }
+    const couponResult = await handleItemReturnWithCoupon(order, itemsToReturn, order.userId, {
+      refundReason: `Refund for returned item ${item.productId.name} from order #${order._id}`
+    });
 
     res.json({ 
       success: true, 
       message: "Item return request accepted successfully" + 
         (order.paymentMethod !== 'COD' ? ". Refund has been processed to customer's wallet." : "") +
-        ". Product stock has been restored."
+        ". Product stock has been restored.",
+      refundAmount: couponResult.totalRefundAmount,
+      couponRemoved: !!couponResult.couponRemoved,
+      newOrderTotal: couponResult.newOrderTotal
     });
-
   } catch (error) {
     console.error("Error accepting item return request:", error);
     res.status(500).json({ success: false, message: "Internal server error" });

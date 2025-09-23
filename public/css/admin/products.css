@@ -12,57 +12,6 @@ body {
     background-color: #f8fafc;
 }
 
-.navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color: #1a1a1a;
-    color: #ffffff;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.logo {
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    font-size: 1.5rem;
-    color: #ffffff;
-    letter-spacing: 0.5px;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.user-info img {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    border: 2px solid #FCA120;
-}
-
-.user-info span {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #ffffff;
-}
-
-.main-content {
-    margin-left: 220px;
-    margin-top: 50px;
-    padding: 20px;
-    flex-grow: 1;
-    overflow-y: auto;
-    background-color: #f8fafc;
-}
-
 .products-section {
     background: #e5e7eb;
     padding: 20px;
