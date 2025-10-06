@@ -311,10 +311,16 @@ const toggleCategoryStatus = async (req, res) => {
         const category = await Category.findById(id);
         if (!category) return res.status(404).json({ status: "error", message: "Category not found" });
 
-        category.isActive = !category.isActive;
+        const newStatus = !category.isActive;
+        category.isActive = newStatus;
         await category.save();
-        await Product.updateMany({ category: id }, { isDeleted: true, isListed: false });
-        console.log(`Toggled category ${id} status to isActive: ${category.isActive}, updated products isListed: ${category.isActive} for non-deleted products`);
+
+        // Only toggle listing status for non-deleted products. Never delete here.
+        await Product.updateMany(
+            { category: id, isDeleted: false },
+            { $set: { isListed: newStatus } }
+        );
+        console.log(`Toggled category ${id} status to isActive: ${newStatus}. Updated products isListed to ${newStatus} for non-deleted products`);
 
         res.json({ status: "success", isActive: category.isActive });
     } catch (err) {

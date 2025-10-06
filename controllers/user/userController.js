@@ -173,8 +173,13 @@ const userDetails = async (req, res) => {
 const logout = async (req, res) => {
   try {
     delete req.session.user;
-    res.clearCookie("connect.sid");
-    res.redirect("/login");
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Error destroying user session during logout:", err);
+      }
+      res.clearCookie("user_session");
+      return res.redirect("/login");
+    });
   } catch (error) {
     console.error("Error during logout:", error);
     res.status(500).send("Server error");

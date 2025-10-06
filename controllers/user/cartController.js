@@ -92,9 +92,17 @@ const addToCart = async (req, res) => {
     }
 
     await cart.save();
-    
+    // compute updated counts
+    const updatedCart = await Cart.findOne({ userId });
+    const cartCount = updatedCart && updatedCart.items ? updatedCart.items.length : 0;
+    let wishlistCount;
+    if (source === 'wishlist') {
+      const updatedWishlist = await Wishlist.findOne({ userId });
+      wishlistCount = updatedWishlist && updatedWishlist.items ? updatedWishlist.items.length : 0;
+    }
+
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
-      return res.json({ success: true, message: 'Product added to cart successfully' });
+      return res.json({ success: true, message: 'Product added to cart successfully', cartCount, ...(typeof wishlistCount !== 'undefined' ? { wishlistCount } : {}) });
     }
     
     res.redirect('/cart');
@@ -183,7 +191,10 @@ const removeFromCart = async (req, res) => {
       { userId: req.session.user._id },
       { $pull: { items: { _id: cartItemId } } }
     );
-    res.json({ success: true });
+    // compute updated cart count
+    const updatedCart = await Cart.findOne({ userId: req.session.user._id });
+    const cartCount = updatedCart && updatedCart.items ? updatedCart.items.length : 0;
+    res.json({ success: true, cartCount });
   } catch (error) {
     console.error('Error in removeFromCart:', error);
     res.status(500).json({ error: 'Internal server error' });

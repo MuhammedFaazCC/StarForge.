@@ -48,6 +48,11 @@ async function handleMoveToCart(e) {
 
     const data = await response.json();
 
+    if (response.status === 401 || data.redirect) {
+      window.location.href = data.redirect || '/login';
+      return;
+    }
+
     if (data.success) {
       await Swal.fire({
         icon: 'success',
@@ -67,6 +72,9 @@ async function handleMoveToCart(e) {
           updateWishlistCount();
           checkEmptyWishlist();
         }, 300);
+      }
+      if (window.updateNavbarCounts) {
+        window.updateNavbarCounts({ cartCount: data.cartCount, wishlistCount: data.wishlistCount });
       }
     } else {
       let errorTitle = 'Error';
@@ -145,6 +153,7 @@ async function handleRemoveFromWishlist(e) {
     });
 
     if (response.ok) {
+      const data = await response.json();
       await Swal.fire({
         icon: 'success',
         title: 'Removed!',
@@ -163,6 +172,9 @@ async function handleRemoveFromWishlist(e) {
           updateWishlistCount();
           checkEmptyWishlist();
         }, 300);
+      }
+      if (window.updateNavbarCounts && typeof data.wishlistCount !== 'undefined') {
+        window.updateNavbarCounts({ wishlistCount: data.wishlistCount });
       }
     } else {
       throw new Error('Failed to remove from wishlist');
@@ -244,6 +256,9 @@ async function handleWishlistIconClick(e) {
           checkEmptyWishlist();
         }, 300);
       }
+      if (window.updateNavbarCounts && typeof data.wishlistCount !== 'undefined') {
+        window.updateNavbarCounts({ wishlistCount: data.wishlistCount });
+      }
     } else {
       throw new Error('Failed to remove from wishlist');
     }
@@ -270,13 +285,9 @@ function updateWishlistCount() {
     }
   }
 
-  const navbarBadge = document.querySelector('#wishlist-badge');
+  const navbarBadge = document.getElementById('wishlistCount');
   if (navbarBadge) {
-    if (remainingItems > 0) {
-      navbarBadge.textContent = remainingItems;
-    } else {
-      navbarBadge.remove();
-    }
+    navbarBadge.textContent = String(remainingItems);
   }
 }
 

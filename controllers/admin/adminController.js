@@ -77,9 +77,14 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    delete req.session.user;
-    res.clearCookie("connect.sid");
-    res.redirect("/login");
+    delete req.session.admin;
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Error destroying admin session during logout:", err);
+      }
+      res.clearCookie("admin_session");
+      return res.redirect("/admin");
+    });
   } catch (error) {
     console.error("Error during logout:", error);
     res.status(500).send("Server error");

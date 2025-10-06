@@ -31,6 +31,7 @@ router.get("/pageNotFound", userAuth, userController.pageNotFound);
 router.get("/", userAuth, userController.loadHomepage);
 router.get("/logout", userAuth, userController.logout);
 router.get("/LoadProfile", userAuth, userController.userDetails);
+router.get('/profile', userAuth, profileController.getProfilePage);
 
 router.get("/products", userAuth, productController.getAllProduct);
 router.get("/product/:id", userAuth, productController.getProductDetails);
@@ -59,6 +60,8 @@ router.get('/referral/validate/:id', referralController.validateReferral);
 router.get("/wishlist", userAuth, wishlistController.wishlistPage);
 router.post('/wishlist/add/:id', wishlistController.addToWishlist);
 router.post('/wishlist/remove', wishlistController.removeFromWishlist);
+// AJAX toggle wishlist endpoint (adds if missing, removes if present)
+router.post('/toggle-wishlist/:id', wishlistController.addToWishlist);
 
 router.get('/address', userAuth, addressController.getAddressList);
 router.get("/address/add", userAuth, addressController.getAddAddress);
@@ -90,6 +93,7 @@ router.post('/changePassword', userAuth, passwordController.postChangePassword);
 
 router.get("/otp-verification", otpController.otpVerificationPage);
 router.post("/otp-verification", otpController.verifyOTP);
+router.post("/resend-otp", otpController.resendOTP);
 
 router.get("/signup", signUpController.signUpPage);
 router.post("/signup", signUpController.signUp);

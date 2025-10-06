@@ -183,6 +183,10 @@ function removeFromCart(cartItemId) {
         .then((response) => response.json())
         .then((data) => {
           if (data.success) {
+            // Update navbar cart count instantly if helper exists
+            if (window.updateNavbarCounts && typeof data.cartCount !== 'undefined') {
+              window.updateNavbarCounts({ cartCount: data.cartCount });
+            }
             Swal.fire('Removed!', 'Item has been removed from cart.', 'success')
               .then(() => window.location.reload());
           } else {

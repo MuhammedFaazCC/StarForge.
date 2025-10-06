@@ -77,6 +77,13 @@ const signUpPage = async (req, res) => {
 const signUp = async (req, res) => {
   const { fullName, email, mobile, password, confirmPassword, referralCode } = req.body || {};
   try {
+    // Prevent duplicate OTP sends within a short window (e.g., double-click)
+    const now = Date.now();
+    const lastSend = req.session._otp_sending_ts || 0;
+    if (now - lastSend < 4000) {
+      return res.json({ success: false, message: 'Please wait a moment before retrying.' });
+    }
+
     // Basic validations
     if (!fullName || fullName.trim().length < 2 || fullName.trim().length > 50) {
       return res.json({ success: false, field: 'fullName', message: 'Full name must be between 2 and 50 characters' });
@@ -124,6 +131,9 @@ const signUp = async (req, res) => {
       userData: { fullName, email, mobile, password, referralCode },
       action: 'signup',
     };
+
+    // mark sending timestamp to prevent immediate duplicates
+    req.session._otp_sending_ts = Date.now();
 
     req.session.save(async (err) => {
       if (err) {

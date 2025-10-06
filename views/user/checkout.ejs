@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Checkout</title>
   <link rel="stylesheet" href="/css/user/checkout.css">
+  <link rel="stylesheet" href="/css/user/navbar-badges.css">
   <link rel="stylesheet" href="/css/user/checkout-coupon.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     /* Modal Overlay */
@@ -248,12 +250,7 @@
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
-  <nav class="top-navbar">
-    <a href="/" class="navbar-brand">StarForge</a>
-    <div class="navbar-user">
-      Welcome, <%= user?.name || 'Guest' %>
-    </div>
-  </nav>
+  <%- include('../partials/user/navbar', { minimalNavbar: false }) %>
 
   <div class="checkout-container">
     <h2>Checkout</h2>

@@ -56,6 +56,14 @@ const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
   try {
+    // Prevent duplicate OTP sends within a short window (e.g., double-click)
+    const now = Date.now();
+    const lastSend = req.session._otp_sending_ts || 0;
+    if (now - lastSend < 4000) {
+      req.session.error = "Please wait a moment before requesting another OTP.";
+      return res.redirect("/forgotPassword");
+    }
+
     const user = await User.findOne({ email });
     if (!user) {
       req.session.error = "Email not found";
@@ -74,6 +82,9 @@ const forgotPassword = async (req, res) => {
       userId: user._id,
       action: "forgotPassword",
     };
+
+    // mark sending timestamp to prevent immediate duplicates
+    req.session._otp_sending_ts = Date.now();
 
     req.session.save((err) => {
       if (err) {

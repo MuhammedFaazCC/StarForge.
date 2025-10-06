@@ -310,7 +310,7 @@ const getProductDetails = async (req, res) => {
   try {
     const productId = req.params.id;
     const user = req.session.user;
-    const userData = user ? await User.findById(user) : null;
+    const userData = user ? await User.findById(user._id) : null;
 
     const product = await Product.findById(productId)
       .populate("category")
@@ -343,11 +343,21 @@ const getProductDetails = async (req, res) => {
       .limit(4)
       .lean();
 
+    // Check wishlist membership
+    let isInWishlist = false;
+    if (user && user._id) {
+      const wishlist = await Wishlist.findOne({ userId: user._id }, { items: 1 }).lean();
+      if (wishlist && Array.isArray(wishlist.items)) {
+        isInWishlist = wishlist.items.some(it => String(it.productId) === String(product._id));
+      }
+    }
+
     res.render("productDetails", {
       user: userData,
       product: { ...product, salePrice: Math.floor(salePrice) },
       relatedProducts,
       reviews,
+      isInWishlist,
     });
   } catch (err) {
     console.error("getProductDetails error:", err);

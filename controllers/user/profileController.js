@@ -63,7 +63,6 @@ const sendOtpEmail = async (email, otp) => {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,
-    subject: "Profile Update Verification OTP",
     text: `Your OTP for updating your profile is: ${otp}`,
   };
   await transporter.sendMail(mailOptions);
@@ -72,10 +71,12 @@ const sendOtpEmail = async (email, otp) => {
 const getProfilePage = async (req, res) => {
   try {
     const user = await User.findById(req.session.user._id);
-    res.render("profile", {
+    res.render("userProfile", {
       user,
       error: req.flash("error"),
       success: req.flash("success"),
+      orderCount: 0,
+      wishlistCount: 0,
     });
   } catch (err) {
     console.error("Error loading profile:", err);
@@ -123,7 +124,7 @@ const postEditProfile = async (req, res) => {
 
     await sendOtpEmail(email, otp);
     req.flash("success", "OTP sent to your new email. Please verify.");
-    res.redirect("/verify-otp");
+    res.redirect("/otp-verification");
   } catch (err) {
     console.error("Error updating profile:", err);
     req.flash("error", "Error updating profile.");
@@ -211,12 +212,12 @@ const postChangePassword = async (req, res) => {
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
       req.flash("error", "Current password is incorrect.");
-      return res.redirect("/change-password");
+      return res.redirect("/changePassword");
     }
 
     if (newPassword !== confirmPassword) {
       req.flash("error", "New passwords do not match.");
-      return res.redirect("/change-password");
+      return res.redirect("/changePassword");
     }
 
     user.password = await bcrypt.hash(newPassword, 10);
@@ -227,7 +228,7 @@ const postChangePassword = async (req, res) => {
   } catch (err) {
     console.error("Error changing password:", err);
     req.flash("error", "Error changing password.");
-    res.redirect("/change-password");
+    res.redirect("/changePassword");
   }
 };
 

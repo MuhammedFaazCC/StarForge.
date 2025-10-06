@@ -1,5 +1,91 @@
 const bcrypt = require("bcrypt");
+const nodemailer = require("nodemailer");
 const User = require("../../models/userSchema");
+
+// Utilities for OTP resend
+const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+async function sendOTP(email, otp) {
+  const mailOptions = {
+    from: `"StarForge" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "StarForge OTP Verification",
+    html: `
+      <h2>Your OTP Code</h2>
+      <p>Your one-time password (OTP) is <strong>${otp}</strong>.</p>
+      <p>Please enter this code on the verification page to proceed.</p>
+      <p>This OTP is valid for 5 minutes.</p>
+      <p>If you did not request this, please ignore this email.</p>
+    `,
+  };
+  return transporter.sendMail(mailOptions);
+}
+
+const resendOTP = async (req, res) => {
+  try {
+    // Prevent duplicate resend within a short window
+    const now = Date.now();
+    const lastSend = req.session._otp_sending_ts || 0;
+    if (now - lastSend < 4000) {
+      return res.status(429).json({ success: false, message: "Please wait a moment before retrying." });
+    }
+
+    const otpSession = req.session.otp;
+    if (!otpSession) {
+      return res.status(400).json({ success: false, message: "No OTP session found" });
+    }
+
+    const { action } = otpSession;
+    let email = null;
+
+    if (action === "signup" || action === "editProfile") {
+      email = otpSession.userData && otpSession.userData.email;
+    } else if (action === "forgotPassword") {
+      if (!otpSession.userId) {
+        return res.status(400).json({ success: false, message: "No user context for OTP resend" });
+      }
+      const user = await User.findById(otpSession.userId).select("email");
+      if (!user) {
+        return res.status(404).json({ success: false, message: "User not found" });
+      }
+      email = user.email;
+    }
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "No email available to resend OTP" });
+    }
+
+    const newCode = generateOTP();
+    req.session.otp.code = newCode;
+    req.session.otp.expires = Date.now() + 5 * 60 * 1000; // extend validity
+    req.session._otp_sending_ts = Date.now();
+
+    req.session.save(async (err) => {
+      if (err) {
+        console.error("Session save error in resendOTP:", err);
+        return res.status(500).json({ success: false, message: "Failed to update session" });
+      }
+      try {
+        await sendOTP(email, newCode);
+        return res.json({ success: true, message: "OTP resent successfully" });
+      } catch (sendErr) {
+        console.error("Error resending OTP:", sendErr);
+        return res.status(500).json({ success: false, message: "Failed to resend OTP" });
+      }
+    });
+  } catch (error) {
+    console.error("Error in resendOTP:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 
 const otpVerificationPage = async (req, res) => {
   try {
@@ -165,5 +251,6 @@ const verifyOTP = async (req, res) => {
 
 module.exports = {
     otpVerificationPage,
-    verifyOTP
+    verifyOTP,
+    resendOTP
 }

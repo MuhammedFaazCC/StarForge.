@@ -1,10 +1,10 @@
 const Return = require("../../models/returnSchema");
+const Order = require("../../models/orderSchema");
 
 const requestReturnItem = async (req, res) => {
   try {
     const { orderId, productId } = req.params;
     const { reason } = req.body;
-    const userId = req.session.user._id;
 
     if (!reason || reason.trim().length < 10) {
       return res.status(400).json({ 

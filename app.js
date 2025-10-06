@@ -5,6 +5,7 @@ const flash = require('connect-flash');
 const userRouter = require("./routes/userRouter");
 const adminRouter = require("./routes/adminRouter");
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const passport = require('./config/passport');
 const cartWishlistCount = require('./middlewares/cartWishlistCount');
 require('dotenv').config();
@@ -23,23 +24,60 @@ app.set("views", [
   path.join(__dirname, "views/user"),
 ]);
 
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'starforge-secret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        maxAge: 24 * 60 * 60 * 1000,
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true
-    }
-}));
+// Setup a shared Mongo session store
+const mongoUrl = process.env.MONGODB_URI || 'mongodb://localhost:27017/StarForge';
+const sessionStore = MongoStore.create({
+  mongoUrl,
+  collectionName: 'sessions',
+});
 
+// Define distinct session middlewares
+const adminSession = session({
+  name: 'admin_session',
+  secret: process.env.ADMIN_SESSION_SECRET || 'starforge-admin-secret',
+  resave: false,
+  saveUninitialized: false,
+  store: sessionStore,
+  cookie: {
+    maxAge: 24 * 60 * 60 * 1000,
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'lax',
+  },
+});
+
+const userSession = session({
+  name: 'user_session',
+  secret: process.env.USER_SESSION_SECRET || 'starforge-user-secret',
+  resave: false,
+  saveUninitialized: false,
+  store: sessionStore,
+  cookie: {
+    maxAge: 24 * 60 * 60 * 1000,
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'lax',
+  },
+});
+
+// Apply sessions per namespace
+app.use('/admin', adminSession);
+app.use((req, res, next) => {
+  if (req.path.startsWith('/admin')) return next();
+  return userSession(req, res, next);
+});
+
+// Passport should only attach session for user side
 app.use(passport.initialize());
-app.use(passport.session());
+const passportSession = passport.session();
+app.use((req, res, next) => {
+  if (req.path.startsWith('/admin')) return next();
+  return passportSession(req, res, next);
+});
 
 app.use((req, res, next) => {
     if (req.path === '/admin' || req.path === '/admin/') {
-        if (req.session.admin && req.session.admin._id) {
+        if (req.session && req.session.admin && req.session.admin._id) {
             console.log("Admin redirect middleware: redirecting to dashboard");
             return res.redirect('/admin/dashboard');
         }

@@ -43,7 +43,8 @@ const getAddAddress = async (req, res) => {
 const addAddress = async (req, res) => {
   try {
     if (!req.session.user) {
-      return res.status(401).json({ success: false, message: "Please log in to add an address" });
+      req.session.error = "Please log in to add an address";
+      return res.redirect("/login");
     }
 
     const userId = req.session.user._id;
@@ -86,20 +87,19 @@ const addAddress = async (req, res) => {
     }
 
     if (Object.keys(validationErrors).length > 0) {
-      return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
+      req.session.error = "Validation failed. Please correct the highlighted fields.";
+      return res.redirect("/address/add");
     }
 
     // Prevent duplicate phone
     const existingPhone = await Address.findOne({ userId, phone: phoneVal });
     if (existingPhone) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "An address with this phone number already exists",
-        errors: { phone: "This phone number is already used in another address" }
-      });
+      req.session.error = "An address with this phone number already exists";
+      return res.redirect("/address/add");
     }
 
-    if (isDefault === "true" || isDefault === true) {
+    const defaultFlag = isDefault === "true" || isDefault === true || isDefault === "on" || isDefault === "1";
+    if (defaultFlag) {
       await Address.updateMany({ userId }, { $set: { isDefault: false } });
     }
 
@@ -112,7 +112,7 @@ const addAddress = async (req, res) => {
       state: toTitle(stateVal),
       city: toTitle(cityVal),
       pinCode: pinVal,
-      isDefault: isDefault === "true" || isDefault === true
+      isDefault: defaultFlag
     });
 
     await newAddress.save();
@@ -123,10 +123,12 @@ const addAddress = async (req, res) => {
       req.session.selectedAddressId = newAddress._id.toString();
     }
 
-    res.json({ success: true, message: "Address added successfully" });
+    req.session.success = "Address added successfully";
+    return res.redirect("/address");
   } catch (error) {
     console.error("Add address error:", error);
-    res.status(500).json({ success: false, message: "Failed to add address" });
+    req.session.error = "Failed to add address";
+    return res.redirect("/address/add");
   }
 };
 

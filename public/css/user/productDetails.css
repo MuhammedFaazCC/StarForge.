@@ -258,8 +258,34 @@ i {
 .sidebar-overlay.active {
   display: block;
 }
-    .rating-stars i { color: gold; }
-    .tab-content { padding-top: 20px; }
-    .review-card { border: 1px solid #ddd; padding: 15px; border-radius: 6px; margin-bottom: 10px; }
-    .review-user { font-weight: 600; }
-    .review-date { font-size: 0.85rem; color: #888; }
+
+.rating-stars i { color: gold; }
+.tab-content { padding-top: 20px; }
+.review-card { border: 1px solid #ddd; padding: 15px; border-radius: 6px; margin-bottom: 10px; }
+.review-user { font-weight: 600; }
+.review-date { font-size: 0.85rem; color: #888; }
+
+/* Simple toast (small gray rectangle) */
+.toast {
+  visibility: hidden;
+  min-width: 200px;
+  margin-left: -100px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 8px;
+  padding: 12px;
+  position: fixed;
+  z-index: 9999;
+  left: 50%;
+  bottom: 30px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.3s ease, bottom 0.3s ease;
+}
+
+.toast.show {
+  visibility: visible;
+  opacity: 1;
+  bottom: 50px;
+}

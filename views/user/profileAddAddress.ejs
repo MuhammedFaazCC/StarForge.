@@ -4,21 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Add New Address</title>
-  <link rel="stylesheet" href="/css/user/userProfile.css" />
+  <link rel="stylesheet" href="/css/user/profileDashboard.css" />
+  <link rel="stylesheet" href="/css/user/navbar-badges.css" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
 </head>
 <body>
-  <nav class="top-navbar">
-    <a href="/" class="navbar-brand">StarForge.</a>
-    <div class="navbar-user">
-      <span>Welcome, <%= user.fullName %></span>
-    </div>
-  </nav>
-
+  <%- include('../partials/user/navbar', { minimalNavbar: false }) %>
+  <%- include('../partials/user/profileSidebar', { user, currentPage: 'address' }) %>
   <div class="main-content">
     <div class="content-wrapper">
-      <%- include('../partials/user/profileSidebar', { user, currentPage: 'address' }) %>
 
       <div class="profile-container">
         <div class="page-header">
@@ -57,7 +52,7 @@
                 <i class="fas fa-user"></i>
                 Contact Information
               </h3>
-              
+
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <label for="name" class="form-label">
@@ -77,17 +72,18 @@
                 </div>
                 
                 <div class="col-md-6 mb-3">
-                  <label for="mobile" class="form-label">
+                  <label for="phone" class="form-label">
                     <i class="fas fa-phone"></i>
-                    Mobile Number
+                    Mobile Number *
                   </label>
                   <input 
                     type="tel" 
                     class="form-control" 
-                    id="mobile" 
-                    name="mobile" 
+                    id="phone" 
+                    name="phone" 
                     pattern="[0-9]{10}" 
                     maxlength="10"
+                    required
                     placeholder="Enter 10-digit mobile number"
                   >
                   <div class="invalid-feedback"></div>
@@ -226,13 +222,8 @@
       box-shadow: 
         0 10px 25px rgba(0,0,0,0.08),
         0 4px 10px rgba(0,0,0,0.06);
-      margin-bottom: 2rem;
-    }
-
-    .form-section {
-      margin-bottom: 2rem;
-      padding-bottom: 1.5rem;
-      border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+      max-width: 900px;
+      margin: 0 auto 2rem;
     }
 
     .form-section:last-of-type {
@@ -462,7 +453,6 @@
         padding: 0.6rem 1.2rem;
         font-size: 0.9rem;
       }
-    }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -471,16 +461,16 @@
       let isValid = true;
       const form = document.getElementById('addAddressForm');
       const requiredFields = form.querySelectorAll('[required]');
-      
+
       requiredFields.forEach(field => {
         const value = field.value.trim();
-        
+
         field.classList.remove('is-invalid', 'is-valid');
         const feedback = field.nextElementSibling;
         if (feedback && feedback.classList.contains('invalid-feedback')) {
           feedback.textContent = '';
         }
-        
+
         if (!value) {
           showFieldError(field, 'This field is required');
           isValid = false;
@@ -493,23 +483,26 @@
         } else if (field.name === 'pinCode' && !/^[0-9]{6}$/.test(value)) {
           showFieldError(field, 'Please enter a valid 6-digit pincode');
           isValid = false;
+        } else if (field.name === 'phone' && !/^[0-9]{10}$/.test(value)) {
+          showFieldError(field, 'Please enter a valid 10-digit mobile number');
+          isValid = false;
         } else {
           showFieldSuccess(field);
         }
       });
 
-      const mobileField = document.getElementById('mobile');
-      const mobileValue = mobileField.value.trim();
-      if (mobileValue && !/^[0-9]{10}$/.test(mobileValue)) {
-        showFieldError(mobileField, 'Please enter a valid 10-digit mobile number');
+      const phoneField = document.getElementById('phone');
+      const phoneValue = phoneField.value.trim();
+      if (phoneValue && !/^[0-9]{10}$/.test(phoneValue)) {
+        showFieldError(phoneField, 'Please enter a valid 10-digit mobile number');
         isValid = false;
-      } else if (mobileValue) {
-        showFieldSuccess(mobileField);
+      } else if (phoneValue) {
+        showFieldSuccess(phoneField);
       }
-      
+
       return isValid;
     }
-    
+
     function showFieldError(field, message) {
       field.classList.add('is-invalid');
       field.classList.remove('is-valid');
@@ -543,27 +536,26 @@
 
     document.getElementById('addAddressForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      
+
       if (!validateForm()) {
         return;
       }
-      
+
       setButtonLoading(true);
-      
       this.submit();
     });
 
     document.addEventListener('DOMContentLoaded', function() {
       const form = document.getElementById('addAddressForm');
       const inputs = form.querySelectorAll('input, textarea');
-      
+
       inputs.forEach(input => {
         input.addEventListener('blur', function() {
           if (this.hasAttribute('required') || this.value.trim()) {
             validateSingleField(this);
           }
         });
-        
+
         input.addEventListener('input', function() {
           if (this.classList.contains('is-invalid')) {
             validateSingleField(this);
@@ -575,41 +567,41 @@
     function validateSingleField(field) {
       const value = field.value.trim();
       field.classList.remove('is-invalid', 'is-valid');
-      
+
       const feedback = field.nextElementSibling;
       if (feedback && feedback.classList.contains('invalid-feedback')) {
         feedback.textContent = '';
       }
-      
+
       if (field.hasAttribute('required') && !value) {
         showFieldError(field, 'This field is required');
         return false;
       }
-      
-      if (field.name === 'mobile' && value && !/^[0-9]{10}$/.test(value)) {
+
+      if (field.name === 'phone' && value && !/^[0-9]{10}$/.test(value)) {
         showFieldError(field, 'Please enter a valid 10-digit mobile number');
         return false;
       }
-      
+
       if (field.name === 'pinCode' && value && !/^[0-9]{6}$/.test(value)) {
         showFieldError(field, 'Please enter a valid 6-digit pincode');
         return false;
       }
-      
+
       if (field.name === 'name' && value && value.length < 2) {
         showFieldError(field, 'Name must be at least 2 characters long');
         return false;
       }
-      
+
       if (field.name === 'address' && value && value.length < 10) {
         showFieldError(field, 'Please enter a complete address');
         return false;
       }
-      
+
       if (value) {
         showFieldSuccess(field);
       }
-      
+
       return true;
     }
   </script>

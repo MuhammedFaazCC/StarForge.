@@ -284,6 +284,10 @@ document.addEventListener('DOMContentLoaded', function () {
       })
         .then(res => res.json())
         .then(data => {
+          if (data.redirect) {
+            window.location.href = data.redirect;
+            return;
+          }
           if (data.success) {
             icon.classList.toggle('bi-heart');
             icon.classList.toggle('bi-heart-fill');
@@ -295,6 +299,10 @@ document.addEventListener('DOMContentLoaded', function () {
             toast.textContent = data.message || 'Wishlist updated!';
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 2000);
+          }
+
+          if (window.updateNavbarCounts && typeof data.wishlistCount !== 'undefined') {
+            window.updateNavbarCounts({ wishlistCount: data.wishlistCount });
           }
         })
         .catch(err => {
@@ -316,7 +324,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
   if (searchClear) {
     searchClear.addEventListener('click', function () {
-      searchInput.value = '';
+      const input = document.getElementById('searchInput');
+      if (input) input.value = '';
       window.location.href = buildUrl({ search: '', page: 1 });
     });
   }

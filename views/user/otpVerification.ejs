@@ -12,26 +12,28 @@
         <div class="login-container">
             <h2>OTP Verification</h2>
             <% if (error) { %>
-                <div class="error-message"><%= error %></div>
+              <div class="error-message"><%= error %></div>
             <% } %>
             <% if (success) { %>
-                <div class="success-message"><%= success %></div>
+              <div class="success-message"><%= success %></div>
             <% } %>
             <form action="/otp-verification" method="POST">
-                <div class="input-group">
-                    <label for="otp">Enter OTP</label>
-                    <div class="input-wrapper">
-                        <input type="text" id="otp" name="otp" placeholder="6-digit OTP" required maxlength="6">
-                        <i class="fas fa-lock icon"></i>
-                    </div>
+              <div class="input-group">
+                <label for="otp">Enter OTP</label>
+                <div class="input-wrapper">
+                  <input type="text" id="otp" name="otp" placeholder="6-digit OTP" required maxlength="6">
+                  <i class="fas fa-lock icon"></i>
                 </div>
-                <button type="submit">Verify OTP</button>
-                <div class="divider">
-                    <a href="/<%= otpAction === 'signup' ? 'signup' : 'forgotPassword' %>">Back to <%= otpAction === 'signup' ? 'Sign Up' : 'Forgot Password' %></a>
-                </div>
+              </div>
+              <button type="submit">Verify OTP</button>
+              <div class="divider" style="margin-top:10px;"></div>
+              <div class="resend-row" style="display:flex;align-items:center;gap:10px;justify-content:space-between;">
+                <button type="button" id="resendOtpBtn" class="btn-secondary" style="background:#f3f4f6;border:1px solid #e5e7eb;color:#111827;padding:10px 14px;border-radius:8px;font-weight:600;cursor:pointer;">
+                  <i class="fas fa-redo" style="margin-right:6px;"></i> Resend OTP
+                </button>
+                <small id="resendStatus" style="color:#6b7280;"></small>
+              </div>
+              <div class="divider">
+                <a href="/<%= otpAction === 'signup' ? 'signup' : 'forgotPassword' %>">Back to <%= otpAction === 'signup' ? 'Sign Up' : 'Forgot Password' %></a>
+              </div>
             </form>
-        </div>
-    </div>
-    <script src="/js/user/otpVerification.js"></script>
-</body>
-</html>

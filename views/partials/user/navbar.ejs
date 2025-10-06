@@ -322,13 +322,13 @@
                 <a href="/wishlist" class="nav-link position-relative" title="Wishlist" id="wishlist-link">
                     <i class="far fa-heart"></i>
                     <% if (typeof wishlistCount !== 'undefined') { %>
-                        <span class="count-badge <%= wishlistCount === 0 ? 'count-badge-zero' : '' %>" id="wishlist-badge"><%= wishlistCount %></span>
+                        <span class="count-badge <%= wishlistCount === 0 ? 'count-badge-zero' : '' %>" id="wishlistCount"><%= wishlistCount %></span>
                     <% } %>
                 </a>
                 <a href="/cart" class="nav-link position-relative" title="Cart" id="cart-link">
                     <i class="fas fa-shopping-cart"></i>
                     <% if (typeof cartCount !== 'undefined') { %>
-                        <span class="count-badge <%= cartCount === 0 ? 'count-badge-zero' : '' %>" id="cart-badge"><%= cartCount %></span>
+                        <span class="count-badge <%= cartCount === 0 ? 'count-badge-zero' : '' %>" id="cartCount"><%= cartCount %></span>
                     <% } %>
                 </a>
                 <div class="profile-container1">
@@ -348,3 +348,21 @@
         <% } %>
     <% } %>
 </header>
+<script>
+    // Global helper to update navbar counts from anywhere
+    window.updateNavbarCounts = function ({ wishlistCount, cartCount } = {}) {
+        const apply = (id, value) => {
+            const el = document.getElementById(id);
+            if (!el || typeof value === 'undefined') return;
+            const n = Number(value) || 0;
+            el.textContent = n;
+            if (n > 0) {
+                el.classList.remove('count-badge-zero');
+            } else {
+                el.classList.add('count-badge-zero');
+            }
+        };
+        apply('wishlistCount', wishlistCount);
+        apply('cartCount', cartCount);
+    };
+</script>
