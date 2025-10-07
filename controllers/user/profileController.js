@@ -93,21 +93,34 @@ const postEditProfile = async (req, res) => {
     }
 
     const { name, email, mobile } = req.body;
+    const trimmedName = name ? name.trim() : "";
+    const normalizedEmail = email ? email.trim().toLowerCase() : "";
+    const trimmedMobile = mobile ? mobile.trim() : undefined;
 
-    if (!name || !email) {
+    if (!trimmedName || !normalizedEmail) {
       req.flash("error", "Name and email are required.");
       return res.redirect("/profile");
     }
 
-    if (email === user.email) {
-      user.name = name;
-      user.mobile = mobile ? mobile.trim() : user.mobile;
+    if (normalizedEmail === user.email) {
+      // Update basic fields directly when email is unchanged
+      user.fullName = trimmedName;
+      user.mobile = typeof trimmedMobile === 'string' && trimmedMobile.length > 0 ? trimmedMobile : user.mobile;
+
+      // If a new profile image is uploaded via the same form, replace it
+      if (req.file) {
+        if (user.profileImage) {
+          await deleteImage(user.profileImage);
+        }
+        user.profileImage = req.file.filename;
+      }
+
       await user.save();
       req.flash("success", "Profile updated successfully.");
       return res.redirect("/profile");
     }
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       req.flash("error", "Email is already taken.");
       return res.redirect("/profile");
@@ -116,13 +129,13 @@ const postEditProfile = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     req.session.otp = {
       code: otp,
-      email,
+      email: normalizedEmail,
       expires: Date.now() + 10 * 60 * 1000,
-      userData: { name, mobile: mobile ? mobile.trim() : user.mobile },
+      userData: { fullName: trimmedName, mobile: typeof trimmedMobile === 'string' && trimmedMobile.length > 0 ? trimmedMobile : user.mobile },
       action: "editProfile",
     };
 
-    await sendOtpEmail(email, otp);
+    await sendOtpEmail(normalizedEmail, otp);
     req.flash("success", "OTP sent to your new email. Please verify.");
     res.redirect("/otp-verification");
   } catch (err) {
@@ -167,8 +180,7 @@ const removeProfileImage = async (req, res) => {
   try {
     const user = await User.findById(req.session.user._id);
     if (!user) {
-      req.flash("error", "User not found.");
-      return res.redirect("/pageNotFound");
+      return res.status(404).json({ success: false, message: "User not found" });
     }
 
     if (user.profileImage) {
@@ -177,12 +189,10 @@ const removeProfileImage = async (req, res) => {
       await user.save();
     }
 
-    req.flash("success", "Profile image removed successfully.");
-    res.redirect("/profile");
+    return res.json({ success: true, message: "Profile image removed successfully" });
   } catch (err) {
     console.error("Error removing profile image:", err);
-    req.flash("error", "Error removing profile image.");
-    res.redirect("/profile");
+    return res.status(500).json({ success: false, message: "Error removing profile image" });
   }
 };
 
