@@ -550,182 +550,33 @@
           </div>
         </header>
 
-        <% if (orders && orders.length > 0) { %>
-          <table class="table table-bordered">
-            <thead>
-              <tr>
-                <th>Products</th>
-                <th>Order ID</th>
-                <th>Placed On</th>
-                <th>Payment Method</th>
-                <th>Status</th>
-                <th>Total</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <% orders.forEach(order => { %>
-              <tbody class="order-box">
-                <tr>
-                  <td>
-                    <ul class="product-list">
-                      <% order.items.forEach(item => { %>
-                        <li class="product-item" data-product-id="<%= item.productId?._id %>">
-                          <div class="product-info">
-                            <div class="product-name">
-                              <% 
-                                let productName = 'Deleted Product';
-                                if (item.productId && item.productId.name) {
-                                  productName = item.productId.name;
-                                } else if (item.name) {
-                                  productName = item.name;
-                                }
-                              %>
-                              <%= productName %> × <%= item.quantity %>
-                            </div>
-                            <span class="orderStatus <%= item.status ? item.status.toLowerCase().replace(' ', '-') : 'unknown' %>">
-                              <%= item.status || 'Placed' %>
-                            </span>
-                          </div>
-                          <div class="product-actions">
-                            <% 
-                              const itemStatus = item.status || 'Placed';
-                              const cancellableStatuses = ['Placed', 'Ordered', 'Processing', 'Shipped'];
-                              const canCancelItem = cancellableStatuses.includes(itemStatus) && order.status !== 'Cancelled';
-                              
-                              // Return logic with time limit check
-                              const RETURN_DAYS_LIMIT = 7;
-                              const deliveryDate = item.deliveredAt || order.deliveredAt;
-                              let canReturnItem = false;
-                              
-                              if (itemStatus === 'Delivered' && deliveryDate) {
-                                const daysSinceDelivery = Math.floor((new Date() - new Date(deliveryDate)) / (1000 * 60 * 60 * 24));
-                                canReturnItem = daysSinceDelivery <= RETURN_DAYS_LIMIT;
-                              }
-                            %>
-                            
-                            <% if (itemStatus === 'Cancelled') { %>
-                              <span class="status-badge cancelled">❌ Cancelled</span>
-                            <% } else if (itemStatus === 'Return Requested') { %>
-                              <span class="status-badge return-requested">🔄 Return Requested</span>
-                            <% } else if (itemStatus === 'Returned') { %>
-                              <span class="status-badge returned">↩️ Returned</span>
-                            <% } else if (canCancelItem && item.productId) { %>
-                              <button class="btn btn-sm btn-outline-danger cancel-item-btn" 
-                                      onclick="cancelItem('<%= order._id %>', '<%= item.productId._id %>')">
-                                Cancel
-                              </button>
-                            <% } %>
-                            
-                            <% if (canReturnItem && item.productId) { %>
-                              <button class="btn btn-sm btn-outline-warning return-item-btn" 
-                                      onclick="returnItem('<%= order._id %>', '<%= item.productId._id %>')">
-                                Return
-                              </button>
-                            <% } %>
-                          </div>
-                        </li>
-                      <% }); %>
-                    </ul>
-                  </td>
-                  <td><%= order._id %></td>
-                  <td><%= order.createdAt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) %></td>
-                  <td>
-                    <span class="payment-method <%= order.paymentMethod ? order.paymentMethod.toLowerCase() : 'unknown' %>">
-                      <% if (order.paymentMethod === 'Online') { %>
-                        Razorpay
-                      <% } else if (order.paymentMethod === 'COD') { %>
-                        Cash on Delivery
-                      <% } else if (order.paymentMethod === 'Wallet') { %>
-                        Wallet
-                      <% } else { %>
-                        <%= order.paymentMethod || 'Unknown' %>
-                      <% } %>
-                    </span>
-                  </td>
-                  <td>
-                    <span class="orderStatus <%= order.status ? order.status.toLowerCase().replace(' ', '-') : 'unknown' %>">
-                      <%= order.status || 'Unknown' %>
-                    </span>
-                  </td>
-                  <td>₹<%= order.totalAmount.toFixed(2) || 'N/A' %></td>
-                  <td>
-                    <div class="action-buttons">
-                      
-                      
-                      <a href="/orders/<%= order._id %>" class="btn btn-sm btn-primary">View</a>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            <% }); %>
-          </table>
-        <% } else { %>
-          <div class="no-orders">
-            <h3>You have no orders yet</h3>
-            <p>Explore our products and place your first order!</p>
-            <a href="/products" class="btn btn-primary">Start Shopping</a>
-          </div>
-        <% } %>
-
-        <% if (pagination && pagination.totalPages > 1) { %>
-          <div class="pagination-container">
-            <div class="pagination-info">
-              Showing <%= ((pagination.currentPage - 1) * 10) + 1 %> to <%= Math.min(pagination.currentPage * 10, pagination.totalOrders) %> of <%= pagination.totalOrders %> orders
-            </div>
-            <div class="pagination">
-              <% if (pagination.hasPrevPage) { %>
-                <a href="?page=<%= pagination.prevPage %>" class="pagination-btn">
-                  ← Previous
+        <!-- Search Bar -->
+        <section class="orders-search" style="margin: 0 0 1rem 0;">
+          <form id="ordersSearchForm" method="GET" action="/orders" style="display:flex; gap:0.5rem; align-items:center;">
+            <div style="position:relative; flex:1;">
+              <input
+                id="ordersSearchInput"
+                type="text"
+                name="q"
+                value="<%= searchQuery || '' %>"
+                placeholder="Search by Order ID, Product name, or Status"
+                style="width:100%; padding:0.6rem 2.2rem 0.6rem 2.4rem; border:1px solid #e5e7eb; border-radius:8px;"
+                autocomplete="off"
+              />
+              <i class="fas fa-search" style="position:absolute; left:0.8rem; top:50%; transform:translateY(-50%); color:#9ca3af;"></i>
+              <% if (searchQuery) { %>
+                <a href="/orders" title="Clear" style="position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); color:#9ca3af; text-decoration:none;">
+                  <i class="fas fa-times"></i>
                 </a>
-              <% } else { %>
-                <span class="pagination-btn disabled">← Previous</span>
-              <% } %>
-
-              <% 
-                let startPage = Math.max(1, pagination.currentPage - 2);
-                let endPage = Math.min(pagination.totalPages, pagination.currentPage + 2);
-                
-                if (endPage - startPage < 4) {
-                  if (startPage === 1) {
-                    endPage = Math.min(pagination.totalPages, startPage + 4);
-                  } else {
-                    startPage = Math.max(1, endPage - 4);
-                  }
-                }
-              %>
-
-              <% if (startPage > 1) { %>
-                <a href="?page=1" class="pagination-btn">1</a>
-                <% if (startPage > 2) { %>
-                  <span class="pagination-dots">...</span>
-                <% } %>
-              <% } %>
-
-              <% for (let i = startPage; i <= endPage; i++) { %>
-                <% if (i === pagination.currentPage) { %>
-                  <span class="pagination-btn active"><%= i %></span>
-                <% } else { %>
-                  <a href="?page=<%= i %>" class="pagination-btn"><%= i %></a>
-                <% } %>
-              <% } %>
-
-              <% if (endPage < pagination.totalPages) { %>
-                <% if (endPage < pagination.totalPages - 1) { %>
-                  <span class="pagination-dots">...</span>
-                <% } %>
-                <a href="?page=<%= pagination.totalPages %>" class="pagination-btn"><%= pagination.totalPages %></a>
-              <% } %>
-
-              <% if (pagination.hasNextPage) { %>
-                <a href="?page=<%= pagination.nextPage %>" class="pagination-btn">
-                  Next →
-                </a>
-              <% } else { %>
-                <span class="pagination-btn disabled">Next →</span>
               <% } %>
             </div>
-          </div>
-        <% } %>
+            <button type="submit" class="btn btn-primary" style="padding:0.55rem 1rem; border-radius:8px;">Search</button>
+          </form>
+        </section>
+
+        <div id="ordersContainer">
+          <%- include('ordersList', { orders, pagination, searchQuery, searchQueryEncoded }) %>
+        </div>
       </div>
     </div>
   </main>
@@ -858,7 +709,89 @@
   <script src="/js/user/landingPage.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      
+      const form = document.getElementById('ordersSearchForm');
+      const input = document.getElementById('ordersSearchInput');
+      const container = document.getElementById('ordersContainer');
+      let debounceTimer;
+
+      function buildUrl(pageUrl) {
+        const url = new URL(pageUrl || window.location.origin + '/orders', window.location.origin);
+        const params = new URLSearchParams(url.search);
+        const qVal = (input?.value || '').trim();
+        if (qVal) {
+          params.set('q', qVal);
+        } else {
+          params.delete('q');
+        }
+        params.set('ajax', '1');
+        url.search = params.toString();
+        return url.toString();
+      }
+
+      async function loadOrders(urlToLoad, push = true) {
+        try {
+          const res = await fetch(urlToLoad, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+          const html = await res.text();
+          container.innerHTML = html;
+          if (push) {
+            // Update URL without ajax=1
+            const clean = new URL(urlToLoad);
+            const params = new URLSearchParams(clean.search);
+            params.delete('ajax');
+            clean.search = params.toString();
+            window.history.pushState({ path: clean.toString() }, '', clean.toString());
+          }
+          bindAjaxLinks();
+        } catch (e) {
+          console.error('Failed to load orders via AJAX', e);
+        }
+      }
+
+      function bindAjaxLinks() {
+        container.querySelectorAll('a.ajax-page').forEach(a => {
+          a.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            const targetUrl = new URL(a.href, window.location.origin);
+            // keep current q input value
+            const ajaxUrl = buildUrl(targetUrl.toString());
+            loadOrders(ajaxUrl, true);
+          });
+        });
+      }
+
+      if (form) {
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const ajaxUrl = buildUrl();
+          loadOrders(ajaxUrl, true);
+        });
+      }
+
+      if (input) {
+        input.addEventListener('input', () => {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            const ajaxUrl = buildUrl();
+            loadOrders(ajaxUrl, true);
+          }, 300);
+        });
+      }
+
+      window.addEventListener('popstate', (e) => {
+        const url = document.location.href;
+        const u = new URL(url);
+        const params = new URLSearchParams(u.search);
+        // reflect q into input box
+        if (input) input.value = params.get('q') || '';
+        // load content without pushing another state
+        params.set('ajax', '1');
+        u.search = params.toString();
+        loadOrders(u.toString(), false);
+      });
+
+      // Initial bind for current page's pagination links
+      bindAjaxLinks();
+
       document.querySelectorAll('.cancel-order-btn').forEach(button => {
         button.addEventListener('click', async () => {
           const orderId = button.dataset.orderId;

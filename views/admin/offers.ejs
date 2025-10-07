@@ -224,7 +224,13 @@
                     if (result.success) {
                         location.reload();
                     } else {
-                        alert('Error: ' + result.message);
+                        Swal.fire({
+                          icon: 'error',
+                          title: 'Error',
+                          text: result.message || 'An unexpected error occurred.',
+                          confirmButtonText: 'OK',
+                          confirmButtonColor: '#d33'
+                        });
                     }
                 } catch (error) {
                     Swal.fire({
@@ -265,7 +271,13 @@
                     if (result.success) {
                         location.reload();
                     } else {
-                        alert('Error: ' + result.message);
+                        Swal.fire({
+                          icon: 'error',
+                          title: 'Error',
+                          text: result.message || 'An unexpected error occurred.',
+                          confirmButtonText: 'OK',
+                          confirmButtonColor: '#d33'
+                        });
                     }
                 } catch (error) {
                     Swal.fire({

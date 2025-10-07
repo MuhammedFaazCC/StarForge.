@@ -5,6 +5,14 @@ const requestReturnItem = async (req, res) => {
   try {
     const { orderId, productId } = req.params;
     const { reason } = req.body;
+    const userId = req.session.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false, 
+        message: "Unauthorized: user session not found" 
+      });
+    }
 
     if (!reason || reason.trim().length < 10) {
       return res.status(400).json({ 

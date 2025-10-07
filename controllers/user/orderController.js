@@ -2,6 +2,7 @@ const Order = require("../../models/orderSchema");
 const Cart = require("../../models/cartSchema");
 const Product = require("../../models/productSchema");
 const Coupon = require("../../models/couponSchema");
+const mongoose = require('mongoose');
 
 const getCartCount = async (userId) => {
   try {
@@ -20,18 +21,35 @@ const getUserOrders = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = 10;
     const skip = (page - 1) * limit;
+    const q = (req.query.q || '').trim();
 
-    const totalOrders = await Order.countDocuments({
+    // Build base filter
+    const baseFilter = {
       userId: userId,
       totalAmount: { $exists: true, $ne: null }
-    });
+    };
+
+    // Build search filter
+    let filter = { ...baseFilter };
+    if (q) {
+      const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const orClauses = [
+        { status: regex },
+        { 'items.status': regex },
+        { 'items.name': regex },
+      ];
+      // If q looks like a valid ObjectId, include direct match
+      if (mongoose.Types.ObjectId.isValid(q)) {
+        orClauses.push({ _id: new mongoose.Types.ObjectId(q) });
+      }
+      filter = { ...baseFilter, $or: orClauses };
+    }
+
+    const totalOrders = await Order.countDocuments(filter);
 
     const totalPages = Math.ceil(totalOrders / limit);
 
-    const orders = await Order.find({
-      userId: userId,
-      totalAmount: { $exists: true, $ne: null }
-    })
+    const orders = await Order.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -58,10 +76,10 @@ const getUserOrders = async (req, res) => {
 
     const cartCount = await getCartCount(userId);
 
-    res.render("profileOrders", {
+    const viewData = {
       user: req.session.user,
       currentPage: "orders",
-      orders: orders,
+      orders,
       cartCount,
       pagination: {
         currentPage: page,
@@ -71,8 +89,16 @@ const getUserOrders = async (req, res) => {
         hasPrevPage: page > 1,
         nextPage: page + 1,
         prevPage: page - 1
-      }
-    });
+      },
+      searchQuery: q,
+      searchQueryEncoded: encodeURIComponent(q)
+    };
+
+    if (req.xhr || req.query.ajax === '1') {
+      return res.render("ordersList", viewData);
+    }
+
+    res.render("profileOrders", viewData);
   } catch (error) {
     console.error("Error fetching orders:", error);
     res.status(500).render("errorPage", {
@@ -470,4 +496,4 @@ module.exports = {
     orderSuccess,
     orderFailure,
     viewFailedOrder
-}
+};

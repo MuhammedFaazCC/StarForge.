@@ -105,26 +105,46 @@ const getAdminOrdersPage = async (req, res) => {
     const { page = 1, search = '', status = '', sort = 'desc' } = req.query;
     const limit = 10;
     const skip = (parseInt(page) - 1) * limit;
-    const query = {};
 
-    if (search) {
-      const users = await User.find({ 
+    const baseQuery = {};
+    const orConditions = [];
+    const trimmed = (search || '').trim();
+
+    if (trimmed) {
+      // Search by user name or email
+      const users = await User.find({
         $or: [
-          { fullName: new RegExp(search, 'i') },
-          { email: new RegExp(search, 'i') }
+          { fullName: new RegExp(trimmed, 'i') },
+          { email: new RegExp(trimmed, 'i') }
         ]
       }).select('_id');
-      query.userId = { $in: users.map(u => u._id) };
+      if (users.length > 0) {
+        orConditions.push({ userId: { $in: users.map(u => u._id) } });
+      }
+
+      // Search by exact Order ID (24-hex)
+      if (/^[a-fA-F0-9]{24}$/.test(trimmed)) {
+        try {
+          const { Types } = require('mongoose');
+          orConditions.push({ _id: new Types.ObjectId(trimmed) });
+        } catch {}
+      }
+
+      // Search by status or payment method text
+      orConditions.push({ status: new RegExp(trimmed, 'i') });
+      orConditions.push({ paymentMethod: new RegExp(trimmed, 'i') });
     }
 
     if (status) {
-      query.status = status;
+      baseQuery.status = status;
     }
 
-    const totalOrders = await Order.countDocuments(query);
+    const finalQuery = orConditions.length > 0 ? { $and: [baseQuery, { $or: orConditions }] } : baseQuery;
+
+    const totalOrders = await Order.countDocuments(finalQuery);
     const totalPages = Math.ceil(totalOrders / limit);
 
-    const orders = await Order.find(query)
+    const orders = await Order.find(finalQuery)
       .populate('userId')
       .populate({
         path: 'items.productId',
@@ -153,7 +173,7 @@ const getAdminOrdersPage = async (req, res) => {
         nextPage: parseInt(page) + 1,
         prevPage: parseInt(page) - 1
       },
-      search,
+      search: trimmed,
       status,
       sort,
       pendingReturnsCount

@@ -1,0 +1,176 @@
+<% if (orders && orders.length > 0) { %>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Products</th>
+        <th>Order ID</th>
+        <th>Placed On</th>
+        <th>Payment Method</th>
+        <th>Status</th>
+        <th>Total</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <% orders.forEach(order => { %>
+      <tbody class="order-box">
+        <tr>
+          <td>
+            <ul class="product-list">
+              <% order.items.forEach(item => { %>
+                <li class="product-item" data-product-id="<%= item.productId?._id %>">
+                  <div class="product-info">
+                    <div class="product-name">
+                      <% 
+                        let productName = 'Deleted Product';
+                        if (item.productId && item.productId.name) {
+                          productName = item.productId.name;
+                        } else if (item.name) {
+                          productName = item.name;
+                        }
+                      %>
+                      <%= productName %> × <%= item.quantity %>
+                    </div>
+                    <span class="orderStatus <%= item.status ? item.status.toLowerCase().replace(' ', '-') : 'unknown' %>">
+                      <%= item.status || 'Placed' %>
+                    </span>
+                  </div>
+                  <div class="product-actions">
+                    <% 
+                      const itemStatus = item.status || 'Placed';
+                      const cancellableStatuses = ['Placed', 'Ordered', 'Processing', 'Shipped'];
+                      const canCancelItem = cancellableStatuses.includes(itemStatus) && order.status !== 'Cancelled';
+                      const RETURN_DAYS_LIMIT = 7;
+                      const deliveryDate = item.deliveredAt || order.deliveredAt;
+                      let canReturnItem = false;
+                      if (itemStatus === 'Delivered' && deliveryDate) {
+                        const daysSinceDelivery = Math.floor((new Date() - new Date(deliveryDate)) / (1000 * 60 * 60 * 24));
+                        canReturnItem = daysSinceDelivery <= RETURN_DAYS_LIMIT;
+                      }
+                    %>
+
+                    <% if (itemStatus === 'Cancelled') { %>
+                      <span class="status-badge cancelled">❌ Cancelled</span>
+                    <% } else if (itemStatus === 'Return Requested') { %>
+                      <span class="status-badge return-requested">🔄 Return Requested</span>
+                    <% } else if (itemStatus === 'Returned') { %>
+                      <span class="status-badge returned">↩️ Returned</span>
+                    <% } else if (canCancelItem && item.productId) { %>
+                      <button class="btn btn-sm btn-outline-danger cancel-item-btn" 
+                              onclick="cancelItem('<%= order._id %>', '<%= item.productId._id %>')">
+                        Cancel
+                      </button>
+                    <% } %>
+
+                    <% if (canReturnItem && item.productId) { %>
+                      <button class="btn btn-sm btn-outline-warning return-item-btn" 
+                              onclick="returnItem('<%= order._id %>', '<%= item.productId._id %>')">
+                        Return
+                      </button>
+                    <% } %>
+                  </div>
+                </li>
+              <% }); %>
+            </ul>
+          </td>
+          <td><%= order._id %></td>
+          <td><%= order.createdAt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) %></td>
+          <td>
+            <span class="payment-method <%= order.paymentMethod ? order.paymentMethod.toLowerCase() : 'unknown' %>">
+              <% if (order.paymentMethod === 'Online') { %>
+                Razorpay
+              <% } else if (order.paymentMethod === 'COD') { %>
+                Cash on Delivery
+              <% } else if (order.paymentMethod === 'Wallet') { %>
+                Wallet
+              <% } else { %>
+                <%= order.paymentMethod || 'Unknown' %>
+              <% } %>
+            </span>
+          </td>
+          <td>
+            <span class="orderStatus <%= order.status ? order.status.toLowerCase().replace(' ', '-') : 'unknown' %>">
+              <%= order.status || 'Unknown' %>
+            </span>
+          </td>
+          <td>₹<%= order.totalAmount.toFixed(2) || 'N/A' %></td>
+          <td>
+            <div class="action-buttons">
+              <a href="/orders/<%= order._id %>" class="btn btn-sm btn-primary">View</a>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    <% }); %>
+  </table>
+<% } else { %>
+  <div class="no-orders">
+    <% if (searchQuery) { %>
+      <h3>No matching orders found</h3>
+      <p>No orders match "<%= searchQuery %>". Try a different Order ID, product name, or status.</p>
+      <a href="/orders" class="btn btn-primary">Clear Search</a>
+    <% } else { %>
+      <h3>You have no orders yet</h3>
+      <p>Explore our products and place your first order!</p>
+      <a href="/products" class="btn btn-primary">Start Shopping</a>
+    <% } %>
+  </div>
+<% } %>
+
+<% if (pagination && pagination.totalPages > 1) { %>
+  <div class="pagination-container">
+    <div class="pagination-info">
+      Showing <%= ((pagination.currentPage - 1) * 10) + 1 %> to <%= Math.min(pagination.currentPage * 10, pagination.totalOrders) %> of <%= pagination.totalOrders %> orders
+    </div>
+    <div class="pagination">
+      <% if (pagination.hasPrevPage) { %>
+        <a href="?page=<%= pagination.prevPage %><% if (searchQuery) { %>&q=<%= searchQueryEncoded %><% } %>" class="pagination-btn ajax-page">
+          ← Previous
+        </a>
+      <% } else { %>
+        <span class="pagination-btn disabled">← Previous</span>
+      <% } %>
+
+      <% 
+        let startPage = Math.max(1, pagination.currentPage - 2);
+        let endPage = Math.min(pagination.totalPages, pagination.currentPage + 2);
+        if (endPage - startPage < 4) {
+          if (startPage === 1) {
+            endPage = Math.min(pagination.totalPages, startPage + 4);
+          } else {
+            startPage = Math.max(1, endPage - 4);
+          }
+        }
+      %>
+
+      <% if (startPage > 1) { %>
+        <a href="?page=1<% if (searchQuery) { %>&q=<%= searchQueryEncoded %><% } %>" class="pagination-btn ajax-page">1</a>
+        <% if (startPage > 2) { %>
+          <span class="pagination-dots">...</span>
+        <% } %>
+      <% } %>
+
+      <% for (let i = startPage; i <= endPage; i++) { %>
+        <% if (i === pagination.currentPage) { %>
+          <span class="pagination-btn active"><%= i %></span>
+        <% } else { %>
+          <a href="?page=<%= i %><% if (searchQuery) { %>&q=<%= searchQueryEncoded %><% } %>" class="pagination-btn ajax-page"><%= i %></a>
+        <% } %>
+      <% } %>
+
+      <% if (endPage < pagination.totalPages) { %>
+        <% if (endPage < pagination.totalPages - 1) { %>
+          <span class="pagination-dots">...</span>
+        <% } %>
+        <a href="?page=<%= pagination.totalPages %><% if (searchQuery) { %>&q=<%= searchQueryEncoded %><% } %>" class="pagination-btn ajax-page"><%= pagination.totalPages %></a>
+      <% } %>
+
+      <% if (pagination.hasNextPage) { %>
+        <a href="?page=<%= pagination.nextPage %><% if (searchQuery) { %>&q=<%= searchQueryEncoded %><% } %>" class="pagination-btn ajax-page">
+          Next →
+        </a>
+      <% } else { %>
+        <span class="pagination-btn disabled">Next →</span>
+      <% } %>
+    </div>
+  </div>
+<% } %>
