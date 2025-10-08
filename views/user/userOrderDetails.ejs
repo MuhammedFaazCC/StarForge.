@@ -5,13 +5,14 @@
   <title>Order Details - StarForge</title>
   <link rel="stylesheet" href="/css/user/userProfile.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="/css/user/navbar-badges.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       background-color: #f8f9fa;
       margin: 0;
       padding: 0;
-      padding-top: 6rem;
     }
     
     .main-content {
@@ -384,10 +385,7 @@
   </style>
 </head>
 <body>
-  <nav class="top-navbar">
-    <a href="/" class="navbar-brand">StarForge.</a>
-    <div class="navbar-user">Hello, <%= user.fullName %></div>
-  </nav>
+  <%- include('../partials/user/navbar', { minimalNavbar: false }) %>
 
   <main class="main-content">
     <h1>Order Details</h1>

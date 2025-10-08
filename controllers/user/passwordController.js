@@ -76,6 +76,7 @@ const forgotPassword = async (req, res) => {
     }
 
     const otp = generateOTP();
+    console.log(otp)
     req.session.otp = {
       code: otp,
       expires: Date.now() + 5 * 60 * 1000,

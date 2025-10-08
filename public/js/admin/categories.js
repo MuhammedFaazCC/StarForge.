@@ -49,7 +49,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 row.style.display = text.includes(filter) ? "" : "none";
             }
         });
-
         if (clearLink) {
             clearLink.style.display = filter ? "inline-block" : "none";
         }
@@ -57,7 +56,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.querySelectorAll(".offer-remove").forEach((btn) => {
         btn.addEventListener("click", async () => {
-            if (!confirm("Remove this offer?")) return;
+            const result = await Swal.fire({
+              title: 'Remove offer?',
+              text: 'This will remove the category offer for this category.',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Yes, remove it',
+              cancelButtonText: 'Cancel',
+              confirmButtonColor: '#d33',
+              cancelButtonColor: '#3085d6'
+            });
+
+            if (!result.isConfirmed) return;
 
             const categoryId = btn.dataset.id;
             btn.disabled = true;
@@ -68,12 +78,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
                 const data = await res.json();
                 if (data.success) {
+                    await Swal.fire({
+                      icon: 'success',
+                      title: 'Offer Removed',
+                      text: 'The category offer has been removed.',
+                      confirmButtonText: 'OK',
+                      confirmButtonColor: '#10b981'
+                    });
                     location.reload();
                 } else {
                     Swal.fire({
                       icon: 'error',
                       title: 'Remove Failed',
-                      text: 'Failed to remove offer',
+                      text: data.message || 'Failed to remove offer',
                       confirmButtonText: 'OK',
                       confirmButtonColor: '#d33'
                     });
@@ -83,42 +100,6 @@ document.addEventListener("DOMContentLoaded", () => {
                   icon: 'error',
                   title: 'Remove Error',
                   text: 'Error removing offer',
-                  confirmButtonText: 'OK',
-                  confirmButtonColor: '#d33'
-                });
-            }
-            btn.disabled = false;
-        });
-    });
-
-    document.querySelectorAll(".delete-btn").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-            if (!confirm("Are you sure you want to delete this category?")) return;
-
-            const categoryId = btn.dataset.id;
-            btn.disabled = true;
-            try {
-                const res = await fetch(`/admin/categories/delete/${categoryId}`, {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                });
-                const data = await res.json();
-                if (data.success) {
-                    location.reload();
-                } else {
-                    Swal.fire({
-                      icon: 'error',
-                      title: 'Delete Failed',
-                      text: 'Failed to delete category',
-                      confirmButtonText: 'OK',
-                      confirmButtonColor: '#d33'
-                    });
-                }
-            } catch (err) {
-                Swal.fire({
-                  icon: 'error',
-                  title: 'Delete Error',
-                  text: 'Error deleting category',
                   confirmButtonText: 'OK',
                   confirmButtonColor: '#d33'
                 });

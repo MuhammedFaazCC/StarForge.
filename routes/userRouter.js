@@ -67,6 +67,7 @@ router.get('/address', userAuth, addressController.getAddressList);
 router.get("/address/add", userAuth, addressController.getAddAddress);
 router.post('/address', userAuth, addressController.addAddress);
 router.put('/address/:id', userAuth, addressController.editAddress);
+router.patch('/address/:id/default', userAuth, addressController.setDefaultAddress);
 router.delete('/address/:id', userAuth, addressController.deleteAddress);
 
 router.post('/cancelItem/:orderId/:productId', userAuth, cancelController.cancelSingleItem);
@@ -86,8 +87,8 @@ router.get('/order/view/:id', orderController.viewFailedOrder);
 
 router.get("/forgotPassword", passwordController.forgotPasswordPage);
 router.post("/forgotPassword", passwordController.forgotPassword);
-// router.get("/resetPassword", userController.resetPassword);
-// router.post("/resetPassword", userController.passwordReset);
+router.get("/resetPassword", passwordController.resetPassword);
+router.post("/resetPassword", passwordController.passwordReset);
 router.get('/changePassword', userAuth, passwordController.getChangePassword);
 router.post('/changePassword', userAuth, passwordController.postChangePassword);
 

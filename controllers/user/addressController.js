@@ -246,20 +246,42 @@ const selectAddress = async (req, res) => {
     const { addressId } = req.body;
     const userId = req.session.user._id;
 
-    if (!addressId) {
+      if (!addressId) {
       return res.status(400).json({ success: false, message: "Address ID is required" });
     }
-
-    const address = await Address.findOne({ _id: addressId, userId });
-    if (!address) {
-      return res.status(404).json({ success: false, message: "Address not found or unauthorized" });
-    }
-
     req.session.selectedAddressId = addressId.toString();
     res.json({ success: true, selectedAddressId: addressId });
   } catch (error) {
     console.error("Select address error:", error);
     res.status(500).json({ success: false, message: "Failed to select address" });
+  }
+};
+
+// Set an address as default for the logged-in user
+const setDefaultAddress = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.status(401).json({ success: false, message: "Please log in to update default address" });
+    }
+
+    const userId = req.session.user._id;
+    const addressId = req.params.id;
+
+    // Ensure the address exists and belongs to the user
+    const target = await Address.findOne({ _id: addressId, userId });
+    if (!target) {
+      return res.status(404).json({ success: false, message: "Address not found or unauthorized" });
+    }
+
+    // Unset default on all user's addresses
+    await Address.updateMany({ userId }, { $set: { isDefault: false } });
+    // Set default on the chosen address
+    await Address.updateOne({ _id: addressId, userId }, { $set: { isDefault: true } });
+
+    return res.json({ success: true, message: "Default address updated" });
+  } catch (error) {
+    console.error("Set default address error:", error);
+    return res.status(500).json({ success: false, message: "Failed to update default address" });
   }
 };
 
@@ -270,5 +292,6 @@ module.exports = {
   editAddress,
   deleteAddress,
   getAddress,
-  selectAddress
+  selectAddress,
+  setDefaultAddress
 };
