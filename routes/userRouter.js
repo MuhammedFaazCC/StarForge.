@@ -60,7 +60,6 @@ router.get('/referral/validate/:id', referralController.validateReferral);
 router.get("/wishlist", userAuth, wishlistController.wishlistPage);
 router.post('/wishlist/add/:id', wishlistController.addToWishlist);
 router.post('/wishlist/remove', wishlistController.removeFromWishlist);
-// AJAX toggle wishlist endpoint (adds if missing, removes if present)
 router.post('/toggle-wishlist/:id', wishlistController.addToWishlist);
 
 router.get('/address', userAuth, addressController.getAddressList);

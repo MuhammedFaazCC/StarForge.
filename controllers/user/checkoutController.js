@@ -7,8 +7,6 @@ const User = require("../../models/userSchema");
 const Razorpay = require('razorpay');
 
 
-// -------------------- Helpers -------------------- //
-
 async function validateStock(items) {
   for (const item of items) {
     const product = await Product.findById(item.productId);
@@ -80,8 +78,6 @@ function getPaymentErrorMessage(errorCode) {
   }
 }
 
-
-// -------------------- Controllers -------------------- //
 
 const getCheckoutPage = async (req, res) => {
   try {
@@ -470,7 +466,6 @@ const paymentFailure = async (req, res) => {
           }
         }
       } else {
-        // No session data, check if user has any recent failed orders
         const recentFailedOrder = await Order.findOne({
           userId: userId,
           status: 'Payment Failed',

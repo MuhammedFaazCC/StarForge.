@@ -273,3 +273,101 @@
       });
     });
   </script>
+  <script>
+    // Minimal toast utility (no dependencies) used by the quantity limiter
+    (function () {
+      const TOAST_ID = 'mini-toast-container';
+      function ensureToastContainer() {
+        let c = document.getElementById(TOAST_ID);
+        if (c) return c;
+        c = document.createElement('div');
+        c.id = TOAST_ID;
+        c.style.position = 'fixed';
+        c.style.left = '50%';
+        c.style.bottom = '20px';
+        c.style.transform = 'translateX(-50%)';
+        c.style.zIndex = '9999';
+        c.style.pointerEvents = 'none';
+        document.body.appendChild(c);
+        return c;
+      }
+
+      window.showMiniToast = function (msg, duration = 2000) {
+        const container = ensureToastContainer();
+        const t = document.createElement('div');
+        t.textContent = msg;
+        t.style.background = 'rgba(0,0,0,0.85)';
+        t.style.color = '#fff';
+        t.style.padding = '8px 12px';
+        t.style.marginTop = '6px';
+        t.style.borderRadius = '6px';
+        t.style.fontSize = '14px';
+        t.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+        t.style.opacity = '0';
+        t.style.transition = 'opacity 180ms ease';
+        container.appendChild(t);
+        requestAnimationFrame(() => { t.style.opacity = '1'; });
+        setTimeout(() => {
+          t.style.opacity = '0';
+          setTimeout(() => t.remove(), 200);
+        }, duration);
+      };
+    })();
+  </script>
+  <script>
+    (function () {
+      const MAX_QTY = 5;
+      const MIN_QTY = 1;
+      let lastToastAt = 0;
+
+      function clamp(n) {
+        const v = Number(n);
+        if (Number.isNaN(v)) return MIN_QTY;
+        return Math.max(MIN_QTY, Math.min(MAX_QTY, v));
+      }
+
+      function maybeToastMax() {
+        const now = Date.now();
+        if (now - lastToastAt > 800) { // rate-limit toasts
+          showMiniToast(`Maximum quantity limit is ${MAX_QTY}`);
+          lastToastAt = now;
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        const qtyInput = document.getElementById('quantity');
+        if (!qtyInput) return;
+
+        // Ensure initial clamp
+        qtyInput.value = clamp(qtyInput.value || MIN_QTY);
+
+        // Clamp while user types or uses arrows
+        qtyInput.addEventListener('input', function () {
+          const before = Number(qtyInput.value);
+          const after = clamp(before);
+          if (before !== after) {
+            qtyInput.value = after;
+            if (before > MAX_QTY) maybeToastMax();
+          }
+        });
+
+        // On blur, ensure value is valid
+        qtyInput.addEventListener('blur', function () {
+          qtyInput.value = clamp(qtyInput.value || MIN_QTY);
+        });
+
+        // Safety: clamp on form submit as well
+        const form = qtyInput.closest('form');
+        if (form) {
+          form.addEventListener('submit', function () {
+            const before = Number(qtyInput.value);
+            const after = clamp(before);
+            if (before !== after && before > MAX_QTY) {
+              maybeToastMax();
+            }
+            qtyInput.value = after;
+          }, true);
+        }
+      });
+    })();
+  </script>
