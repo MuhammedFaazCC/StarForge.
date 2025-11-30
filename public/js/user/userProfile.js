@@ -57,13 +57,17 @@ function showToast(message) {
 
 document.addEventListener('DOMContentLoaded', () => {
   const editBtn = document.querySelector('.edit-profile-btn');
-  console.log('Edit button found:', editBtn);
-  editBtn.addEventListener('click', () => {
-    console.log('Edit button clicked');
-    const modal = document.getElementById('editProfileModal');
-    modal.classList.remove('hidden');
-    modal.classList.add('show');
-  });
+  if (editBtn) {
+    console.log('Edit button found:', editBtn);
+    editBtn.addEventListener('click', () => {
+      console.log('Edit button clicked');
+      const modal = document.getElementById('editProfileModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('show');
+      }
+    });
+  }
 
   const urlParams = new URLSearchParams(window.location.search);
   const msg = urlParams.get('msg');
@@ -73,10 +77,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const modal = document.getElementById('editProfileModal');
-modal.addEventListener('click', (e) => {
-  if (e.target === modal) {
-    closeModal();
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
   }
-});
-
 });

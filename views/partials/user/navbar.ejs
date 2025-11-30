@@ -358,14 +358,17 @@
             const el = document.getElementById(id);
             if (!el || typeof value === 'undefined') return;
             const n = Number(value) || 0;
+
             el.textContent = n;
             if (n > 0) {
                 el.classList.remove('count-badge-zero');
             } else {
                 el.classList.add('count-badge-zero');
             }
+            if (badge) badge.textContent = n;
         };
         apply('wishlistCount', wishlistCount);
         apply('cartCount', cartCount);
     };
 </script>
+<script src="/js/user/landingPage.js"></script>

@@ -1,5 +1,6 @@
-
 document.addEventListener("DOMContentLoaded", () => {
+  if (window.__NAV_INITED__) return;
+  window.__NAV_INITED__ = true;
   console.log("JS Loaded");
 
   const hamburger = document.querySelector("#hamburgerMenu");
@@ -76,7 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
       sidebar &&
       sidebar.classList.contains("open") &&
       !sidebar.contains(e.target) &&
-      !hamburger.contains(e.target)
+      !(hamburger && hamburger.contains(e.target))
     ) {
       console.log("Closing sidebar - clicked outside");
       toggleSidebar();
@@ -86,7 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
       profileDropdown &&
       profileDropdown.classList.contains("show") &&
       !profileDropdown.contains(e.target) &&
-      !profileToggle.contains(e.target)
+      !(profileToggle && profileToggle.contains(e.target))
     ) {
       console.log("Closing profile dropdown - clicked outside");
       profileDropdown.classList.remove("show");
