@@ -42,14 +42,20 @@ const applyCoupon = async (req, res) => {
       });
     }
 
-    const discountAmount = (subtotal * coupon.discount) / 100;
-    const grandTotal = subtotal - discountAmount;
+    const applicableBase = coupon.maxAmount > 0
+      ? Math.min(subtotal, coupon.maxAmount)
+      : subtotal;
+
+    const discountAmount = (applicableBase * coupon.discount) / 100;
 
     req.session.coupon = {
       code: coupon.code,
       discount: coupon.discount,
+      maxAmount: coupon.maxAmount,
       discountAmount
     };
+
+const grandTotal = subtotal - discountAmount;
 
     res.json({
       success: true,

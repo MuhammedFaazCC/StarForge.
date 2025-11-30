@@ -26,7 +26,8 @@ const getUserOrders = async (req, res) => {
     // Build base filter
     const baseFilter = {
       userId: userId,
-      totalAmount: { $exists: true, $ne: null }
+      totalAmount: { $exists: true, $ne: null },
+      status: { $nin: ['Pending Payment', 'Payment Failed'] }
     };
 
     // Build search filter
@@ -289,6 +290,37 @@ const orderSuccess = async (req, res) => {
       await Product.updateOne({ _id: item.productId }, { $inc: { stock: -item.quantity } });
     }
 
+    // Always remove purchased items from the user's cart as a safeguard
+    try {
+      const purchasedProductIds = order.items.map(it => it.productId);
+      await Cart.updateOne(
+        { userId: userId },
+        { $pull: { items: { productId: { $in: purchasedProductIds } } } }
+      );
+
+      const maybeCart = await Cart.findOne({ userId: userId });
+      if (maybeCart && (!maybeCart.items || maybeCart.items.length === 0)) {
+        await Cart.deleteOne({ _id: maybeCart._id });
+      }
+
+      // Fallback: ensure removal via application-side filtering
+      const cartCheck = await Cart.findOne({ userId: userId });
+      if (cartCheck && cartCheck.items && cartCheck.items.length > 0) {
+        const purchasedSet = new Set(purchasedProductIds.map(id => id?.toString()));
+        const beforeLen = cartCheck.items.length;
+        cartCheck.items = cartCheck.items.filter(it => !purchasedSet.has(it.productId?.toString()));
+        if (cartCheck.items.length !== beforeLen) {
+          if (cartCheck.items.length === 0) {
+            await Cart.deleteOne({ _id: cartCheck._id });
+          } else {
+            await cartCheck.save();
+          }
+        }
+      }
+    } catch (removeErr) {
+      console.error("Post-payment cart cleanup failed:", removeErr);
+    }
+
     // Update coupon usage if applicable
     if (order.coupon && order.coupon.code) {
       const coupon = await Coupon.findOne({ code: order.coupon.code });
@@ -310,6 +342,23 @@ const orderSuccess = async (req, res) => {
         await Cart.deleteOne({ _id: pending.cartId });
       }
       req.session.coupon = null;
+    } else {
+      try {
+        // For retry flow, remove the purchased items from the user's cart
+        const purchasedProductIds = order.items.map(it => it.productId);
+        await Cart.updateOne(
+          { userId: userId },
+          { $pull: { items: { productId: { $in: purchasedProductIds } } } }
+        );
+
+        // Clean up empty cart if no items remain
+        const updatedCart = await Cart.findOne({ userId: userId });
+        if (updatedCart && (!updatedCart.items || updatedCart.items.length === 0)) {
+          await Cart.deleteOne({ _id: updatedCart._id });
+        }
+      } catch (e) {
+        console.error("Failed to remove purchased items from cart after retry:", e);
+      }
     }
 
     // Clean up session data

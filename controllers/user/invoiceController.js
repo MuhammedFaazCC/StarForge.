@@ -273,7 +273,8 @@ const downloadInvoice = async (req, res) => {
               <th class="text-right">Total</th>
             </tr>
           </thead>
-          <tbody${itemsWithAdjustedPrice.map(item => `
+          <tbody>
+            ${itemsWithAdjustedPrice.map(item => `
               <tr>
                 <td>
                   <strong>${item.name || 'Unknown Product'}</strong>

@@ -137,6 +137,7 @@ const updateCoupon = async (req, res) => {
       code: code.toUpperCase(), 
       _id: { $ne: id } 
     });
+    
     if (duplicateCoupon) {
       return res.json({ success: false, message: "Coupon code already exists" });
     }

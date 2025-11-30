@@ -337,7 +337,19 @@ const productEdit = async (req, res) => {
 
     // Validate images if provided (main image optional on edit)
     let baseMain = product.mainImage;
-    let baseAdditional = product.additionalImages || [];
+    let baseAdditional = Array.isArray(product.additionalImages) ? [...product.additionalImages] : [];
+
+    // Handle remove flags from form
+    const removeMain = req.body.removeMainImage === "true" || req.body.removeMainImage === "on";
+    let removedAdditional = req.body.removedAdditional || [];
+    if (!Array.isArray(removedAdditional) && removedAdditional) removedAdditional = [removedAdditional];
+
+    if (removedAdditional.length) {
+      const removedSet = new Set(removedAdditional);
+      baseAdditional = baseAdditional.filter((img) => !removedSet.has(img));
+    }
+
+    // If new files uploaded, validate and merge
     if (req.files && (req.files.mainImage?.[0] || (req.files.additionalImages?.length || 0) > 0)) {
       const img = validateImages(req.files, { requireMainImage: false });
       if (!img.ok) {
@@ -348,8 +360,13 @@ const productEdit = async (req, res) => {
           message: { success: false, text: img.error },
         });
       }
-      if (img.mainImage) baseMain = img.mainImage;
-      if (img.additionalImages?.length) baseAdditional = img.additionalImages;
+      if (img.mainImage) baseMain = img.mainImage; // replace main if provided
+      if (img.additionalImages?.length) baseAdditional = baseAdditional.concat(img.additionalImages); // append new images
+    }
+
+    // If requested to remove main image and no replacement uploaded, clear it
+    if (removeMain && !(req.files && req.files.mainImage?.[0])) {
+      baseMain = "";
     }
 
     // Compute pricing

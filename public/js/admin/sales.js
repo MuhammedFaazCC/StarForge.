@@ -28,6 +28,9 @@ function clearFilters() {
 }
 
 function exportReport(format) {
+    if (format !== 'pdf') {
+        return;
+    }
     const params = new URLSearchParams(window.location.search);
     const exportUrl = `/admin/sales/export/${format}?${params.toString()}`;
     
@@ -390,11 +393,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 document.addEventListener('keydown', function(e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
-        e.preventDefault();
-        exportReport('excel');
-    }
-    
     if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
         e.preventDefault();
         exportReport('pdf');

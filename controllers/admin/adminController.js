@@ -3,6 +3,7 @@ const User = require("../../models/userSchema");
 const Order = require("../../models/orderSchema");
 const ejs = require('ejs');
 const path = require('path');
+const pdf = require('html-pdf');
 
 const loginPage = async (req, res) => {
   try {

@@ -1,7 +1,7 @@
 function selectAddress(addressId) {
   const selectedCard = document.querySelector(`[data-address-id="${addressId}"]`);
   const hiddenInput = document.getElementById('selectedAddressId');
-  const errorElement = document.getElementById('addressError');
+  const errorElement = document.getElementById('addressSelectError');
   const radioButton = document.querySelector(`input[value="${addressId}"]`);
   
   document.querySelectorAll('.info-card').forEach(card => {
@@ -447,10 +447,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const selectedAddressId = selectedAddressInput.value;
     const paymentMethod = paymentMethodSelect.value;
+
+    const action = form.action;
+    console.log(form.action);
+
     const hasAddresses = document.querySelectorAll('.info-card').length > 0;
 
     if (hasAddresses && !selectedAddressId) {
-      const errorElement = document.getElementById('addressError');
+      const errorElement = document.getElementById('addressSelectError');
       if (errorElement) {
         errorElement.style.display = 'block';
         errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -501,17 +505,17 @@ document.addEventListener('DOMContentLoaded', () => {
         submitButton.disabled = true;
         submitButton.textContent = 'Processing...';
 
-        const response = await fetch('/create-order', { 
+        // For online payments, create Razorpay order first
+        const response = await fetch('/create-order', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ amount: totalAmount, addressId: selectedAddressId }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({addressId: selectedAddressId, paymentMethod: paymentMethod})
+
         });
 
         const data = await response.json();
 
-        if (!response.ok || !data.success) {
+        if (!response.ok || !data.success || !data.order) {
           Swal.fire({
             icon: 'error',
             title: 'Payment Initiation Failed',
@@ -796,7 +800,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const formData = new FormData(addressForm);
+
+      if (addressForm.dataset.addressId) {
+        formData.append("_id", addressForm.dataset.addressId);
+      }
+
       const action = addressForm.action;
+
       const submitBtn = e.target.querySelector('button[type="submit"]');
       
       // Disable submit button and show loading state
@@ -806,17 +816,32 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
+        // Build payload from form fields
+        const payload = {
+          name: formData.get('name')?.trim() || '',
+          phone: formData.get('phone')?.trim() || '',
+          address: formData.get('address')?.trim() || '',
+          district: formData.get('district')?.trim() || '',
+          state: formData.get('state')?.trim() || '',
+          city: formData.get('city')?.trim() || '',
+          pinCode: formData.get('pinCode')?.trim() || ''
+        };
+
         const response = await fetch(action, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(Object.fromEntries(formData))
+          body: JSON.stringify(payload)
         });
 
-        const data = await response.json();
-        if (data.success) {
-          window.location.reload();
-        } else {
-          // Handle backend validation errors
+        const contentType = response.headers.get('content-type') || '';
+
+        if (contentType.includes('application/json')) {
+          const data = await response.json();
+          if (data.success) {
+            window.location.reload();
+            return;
+          }
+
           if (data.errors && typeof data.errors === 'object') {
             Object.keys(data.errors).forEach(fieldName => {
               showError(fieldName, data.errors[fieldName]);
@@ -830,6 +855,21 @@ document.addEventListener('DOMContentLoaded', () => {
               confirmButtonColor: '#d33'
             });
           }
+        } else {
+          // Non-JSON response (likely a redirect from server). Treat as success.
+          if (response.ok || response.redirected) {
+            window.location.reload();
+            return;
+          }
+
+          // Fallback error if not ok
+          Swal.fire({
+            icon: 'error',
+            title: 'Address Save Failed',
+            text: 'Failed to save address. Please try again.',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#d33'
+          });
         }
       } catch (error) {
         console.error('Error saving address:', error);

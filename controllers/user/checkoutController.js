@@ -27,12 +27,9 @@ function calculateDiscount(subtotal, coupon) {
     return 0;
   }
 
-  let discountAmount = (subtotal * coupon.discount) / 100;
+  const applicableBase = coupon.maxAmount > 0 ? Math.min(subtotal, coupon.maxAmount) : subtotal;
 
-  if (coupon.maxAmount && coupon.maxAmount > 0) {
-    discountAmount = Math.min(discountAmount, coupon.maxAmount);
-  }
-  return discountAmount;
+  return (applicableBase * coupon.discount) / 100;
 }
 
 async function updateCouponUsage(userId, couponCode) {
@@ -314,8 +311,8 @@ const postRazorpay = async (req, res) => {
     }
 
     const { amount, addressId } = req.body;
-    if (!amount || !addressId) {
-      return res.status(400).json({ success: false, error: "Amount and address are required" });
+    if (!addressId) {
+      return res.status(400).json({ success: false, error: "Address is required" });
     }
 
     const userId = req.session.user._id;
@@ -385,7 +382,7 @@ const postRazorpay = async (req, res) => {
     });
 
     const options = {
-      amount: Math.round(amount * 100),
+      amount: Math.round(totalAmount * 100),
       currency: "INR",
       receipt: "receipt_order_" + Date.now(),
     };
@@ -398,7 +395,7 @@ const postRazorpay = async (req, res) => {
 
     req.session.pendingOrder = {
       razorpayOrderId: razorpayOrder.id,
-      amount: amount,
+      amount: totalAmount,
       addressId: addressId,
       cartId: cart._id,
       dbOrderId: pendingOrder._id,

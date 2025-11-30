@@ -25,8 +25,12 @@
             <% cart.items.forEach(item=> { %>
               <% if (item.productId) { const product=item.productId; %>
                 <div class="cart-item <%= product.stock === 0 ? 'out-of-stock' : '' %>" data-item-id="<%= item._id %>">
-                  <img src="<%= product.mainImage || product.additionalImages?.[0] || '/images/default.jpg' %>"
-                    alt="Product">
+                  <% if (product.mainImage || (product.additionalImages && product.additionalImages[0])) { %>
+                    <img src="<%= product.mainImage || product.additionalImages[0] %>" alt="Product">
+                  <% } else { %>
+                    <div style="width:90px;height:90px;border:1px dashed #ccc;border-radius:6px;color:#888;display:flex;align-items:center;justify-content:center;font-size:12px;">No image</div>
+                  <% } %>
+
                   <div class="item-details">
                     <h3>
                       <%= product.name %>

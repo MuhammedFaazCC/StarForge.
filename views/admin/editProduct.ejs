@@ -74,11 +74,33 @@
         <div class="form-group">
           <label for="mainImage">Main Image (Current: <%= product.mainImage || 'None' %>)</label>
           <input type="file" id="mainImage" name="mainImage" accept="image/jpeg,image/png,image/jpg,image/webp">
+          <% if (product.mainImage) { %>
+            <div style="margin-top:8px; display:flex; align-items:center; gap:12px;">
+              <img src="<%= product.mainImage %>" alt="Main Image" style="width:100px;height:100px;object-fit:cover;border:1px solid #ddd;border-radius:4px;">
+              <label style="display:flex; align-items:center; gap:6px;">
+                <input type="checkbox" name="removeMainImage">
+                <span>Remove current main image</span>
+              </label>
+            </div>
+          <% } %>
           <div class="error-message" id="mainImage-error">Main image must be a valid JPEG or PNG file.</div>
         </div>
         <div class="form-group">
           <label for="additionalImages">Additional Images (Current: <%= product.additionalImages.length %>)</label>
           <input type="file" id="additionalImages" name="additionalImages" accept="image/jpeg,image/png,image/jpg,image/webp" multiple>
+          <% if (product.additionalImages && product.additionalImages.length) { %>
+            <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:12px;">
+              <% product.additionalImages.forEach(function(img){ %>
+                <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+                  <img src="<%= img %>" alt="Additional Image" style="width:90px;height:90px;object-fit:cover;border:1px solid #ddd;border-radius:4px;">
+                  <label style="display:flex; align-items:center; gap:6px;font-size:12px;">
+                    <input type="checkbox" name="removedAdditional" value="<%= img %>">
+                    <span>Remove</span>
+                  </label>
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
           <div class="error-message" id="additionalImages-error">Additional images must be valid JPEG or PNG files.</div>
         </div>
         <button type="submit" id="updateButton">Update Product</button>

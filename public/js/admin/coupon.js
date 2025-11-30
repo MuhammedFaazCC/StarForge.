@@ -678,42 +678,97 @@ function clearModalForm() {
 
 // Form validation functions
 function validateCouponForm(formData) {
-  const errors = {};
-  
-  // Validate coupon code
-  if (!formData.code || formData.code.trim().length === 0) {
-    errors.code = 'Coupon code is required';
-  } else if (formData.code.trim().length < 3) {
-    errors.code = 'Coupon code must be at least 3 characters';
-  }
-  
-  // Validate discount
-  if (!formData.discount || isNaN(formData.discount)) {
-    errors.discount = 'Discount is required and must be a number';
-  } else if (formData.discount < 0 || formData.discount > 100) {
-    errors.discount = 'Discount must be between 0 and 100';
-  }
-  
-  // Validate expiry date
-  if (!formData.expiryDate) {
-    errors.expiryDate = 'Expiry date is required';
-  } else if (new Date(formData.expiryDate) <= new Date()) {
-    errors.expiryDate = 'Expiry date must be in the future';
-  }
-  
-  // Validate usage limit
-  if (!formData.usageLimit || isNaN(formData.usageLimit)) {
-    errors.usageLimit = 'Usage limit is required and must be a number';
-  } else if (formData.usageLimit < 1) {
-    errors.usageLimit = 'Usage limit must be at least 1';
-  }
-  
-  // Validate minimum amount (optional)
-  if (formData.minimumAmount && (isNaN(formData.minimumAmount) || formData.minimumAmount < 0)) {
-    errors.minimumAmount = 'Minimum amount must be a positive number';
-  }
-  
-  return errors;
+    const errors = {};
+
+    // Normalize values
+    const code = (formData.code || "").trim().toUpperCase();
+    const discount = Number(formData.discount);
+    const usageLimit = Number(formData.usageLimit);
+    const minimumAmount = formData.minimumAmount === "" ? "" : Number(formData.minimumAmount);
+    const maxAmount = formData.maxAmount === "" ? "" : Number(formData.maxAmount);
+    const expiryDate = formData.expiryDate ? new Date(formData.expiryDate) : null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // CODE VALIDATION
+    if (!code) {
+        errors.code = "Coupon code is required";
+    } else if (code.length < 3) {
+        errors.code = "Coupon code must be at least 3 characters";
+    } else if (!/^[A-Z0-9_-]+$/.test(code)) {
+        errors.code = "Only letters, numbers, hyphens and underscores allowed";
+    }
+
+    // DISCOUNT VALIDATION
+    if (isNaN(discount)) {
+        errors.discount = "Discount is required and must be a valid number";
+    } else if (discount < 1) {
+        errors.discount = "Discount must be at least 1%";
+    } else if (discount > 50) {
+        errors.discount = "Maximum allowed discount is 50%";
+    }
+
+    // EXPIRY DATE VALIDATION
+    const expiryDate = formData.expiryDate ? new Date(formData.expiryDate) : null;
+
+    // DATE VALIDATION
+    if (!expiryDate || isNaN(expiryDate.getTime())) {
+        errors.expiryDate = "Expiry date is required and must be valid";
+    } else {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // must be strictly in the future
+        if (expiryDate <= today) {
+            errors.expiryDate = "Expiry date must be in the future";
+        }
+
+        // not allowed to backdate by timezone drift
+        if (expiryDate.toString() === "Invalid Date") {
+            errors.expiryDate = "Invalid expiry date";
+        }
+
+        // safety upper bound (prevents unrealistic coupons)
+        const threeYearsLater = new Date();
+        threeYearsLater.setFullYear(threeYearsLater.getFullYear() + 3);
+
+        if (expiryDate > threeYearsLater) {
+            errors.expiryDate = "Expiry date cannot be more than 3 years from today";
+        }
+    }
+
+    // USAGE LIMIT VALIDATION
+    if (isNaN(usageLimit)) {
+        errors.usageLimit = "Usage limit is required";
+    } else if (usageLimit < 1) {
+        errors.usageLimit = "Usage limit must be at least 1";
+    }
+
+    // MINIMUM AMOUNT VALIDATION
+    if (minimumAmount !== "" && isNaN(minimumAmount)) {
+        errors.minimumAmount = "Minimum amount must be a valid number";
+    } else if (minimumAmount < 0) {
+        errors.minimumAmount = "Minimum amount cannot be negative";
+    }
+
+    // MAX AMOUNT VALIDATION
+    if (maxAmount !== "" && isNaN(maxAmount)) {
+        errors.maxAmount = "Maximum discount amount must be a valid number";
+    } else if (maxAmount < 0) {
+        errors.maxAmount = "Maximum discount amount cannot be negative";
+    }
+
+    // LOGICAL VALIDATION: min < max
+    if (minimumAmount !== "" && maxAmount !== "" && minimumAmount >= maxAmount) {
+        errors.minimumAmount = "Minimum amount must be less than maximum discount amount";
+    }
+
+    // Additional logical rule for high discounts
+    if (discount > 30 && (maxAmount === "" || isNaN(maxAmount))) {
+        errors.maxAmount = "Max discount amount is required when discount exceeds 30%";
+    }
+
+    return errors;
 }
 
 function displayValidationErrors(errors) {
@@ -746,8 +801,6 @@ const couponData = {
   minimumAmount: formData.get('minimumAmount') || 0,
   maxAmount: formData.get('maxAmount') || 0
 };
-
-    
     // Frontend validation
     const errors = validateCouponForm(couponData);
     if (Object.keys(errors).length > 0) {
@@ -865,10 +918,8 @@ function clearEditModalErrors() {
 }
 
 function displayEditValidationErrors(errors) {
-  // Clear previous errors
   clearEditModalErrors();
-  
-  // Display new errors
+
   Object.keys(errors).forEach(field => {
     const errorElement = document.getElementById(`edit-${field}-error`);
     if (errorElement) {
@@ -877,6 +928,7 @@ function displayEditValidationErrors(errors) {
     }
   });
 }
+
 
 // Handle Edit Coupon Form Submission
 const editCouponForm = document.getElementById('edit-coupon-form');
@@ -892,8 +944,15 @@ if (editCouponForm) {
       discount: formData.get('discount'),
       expiryDate: formData.get('expiryDate'),
       usageLimit: formData.get('usageLimit'),
-      minimumAmount: formData.get('minimumAmount')
+      minimumAmount: formData.get('minimumAmount'),
+      maxAmount: formData.get('maxAmount'),
     };
+
+    const errors = validateCouponForm(couponData);
+    if (Object.keys(errors).length > 0) {
+        displayEditValidationErrors(errors);
+        return;
+    }
 
     try {
       const response = await fetch(`/admin/coupons/${couponId}`, {
