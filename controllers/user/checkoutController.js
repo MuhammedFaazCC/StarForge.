@@ -20,6 +20,21 @@ async function validateStock(items) {
   return { valid: true };
 }
 
+function calculateDiscount(subtotal, coupon) {
+  if (!coupon) return 0;
+
+  if (coupon.minimumAmount && subtotal < coupon.minimumAmount) {
+    return 0;
+  }
+
+  let discountAmount = (subtotal * coupon.discount) / 100;
+
+  if (coupon.maxAmount && coupon.maxAmount > 0) {
+    discountAmount = Math.min(discountAmount, coupon.maxAmount);
+  }
+  return discountAmount;
+}
+
 async function updateCouponUsage(userId, couponCode) {
   if (!couponCode) return;
   const coupon = await Coupon.findOne({ code: couponCode });
@@ -100,12 +115,24 @@ const getCheckoutPage = async (req, res) => {
 
     const subtotal = cartItems.reduce((acc, item) => acc + item.subtotal, 0);
 
-    let discount = 0, grandTotal = subtotal, coupon = null;
+    let discount = 0, grandTotal = subtotal, appliedCoupon = null;
+
     if (req.session.coupon) {
-      coupon = req.session.coupon;
-      discount = coupon.discountAmount || 0;
+      const dbCoupon = await Coupon.findOne({ code: req.session.coupon.code });
+
+      if (dbCoupon) {
+        discount = calculateDiscount(subtotal, dbCoupon);
+        appliedCoupon = {
+          code: dbCoupon.code,
+          discountAmount: discount,
+          minimumAmount: dbCoupon.minimumAmount || 0,
+          maxAmount: dbCoupon.maxAmount || 0
+        };
+      }
+
       grandTotal = subtotal - discount;
     }
+
 
     // handle address selection
     let selectedAddressId = req.session.selectedAddressId || null;
@@ -144,7 +171,7 @@ const errorMessage = req.query.error
       grandTotal,
       addresses,
       razorpayKey: process.env.RAZORPAY_KEY_ID,
-      coupon,
+      coupon: appliedCoupon,
       error: errorMessage,
       selectedAddressId,
       availableCoupons,
@@ -191,10 +218,22 @@ const postCheckoutPage = async (req, res) => {
     let totalAmount = cart.items.reduce((total, item) => total + (item.quantity * item.productId.salesPrice), 0);
     let couponData = null;
     if (req.session.coupon) {
-      const discountAmount = req.session.coupon.discountAmount || 0;
-      totalAmount -= discountAmount;
-      couponData = { code: req.session.coupon.code, discountAmount };
+      const dbCoupon = await Coupon.findOne({ code: req.session.coupon.code });
+      if (dbCoupon) {
+        const discountAmount = calculateDiscount(
+          cart.items.reduce((t, i) => t + (i.quantity * i.productId.salesPrice), 0),
+          dbCoupon
+        );
+
+        totalAmount -= discountAmount;
+
+        couponData = {
+          code: dbCoupon.code,
+          discountAmount
+        };
+      }
     }
+
 
     if (paymentMethod === 'Wallet') {
       const user = await User.findById(userId);
@@ -303,13 +342,22 @@ const postRazorpay = async (req, res) => {
     let totalAmount = cart.items.reduce((total, item) => total + (item.quantity * item.productId.salesPrice), 0);
     let couponData = null;
     if (req.session.coupon) {
-      const discountAmount = req.session.coupon.discountAmount || 0;
-      totalAmount -= discountAmount;
-      couponData = {
-        code: req.session.coupon.code,
-        discountAmount: discountAmount,
-      };
+      const dbCoupon = await Coupon.findOne({ code: req.session.coupon.code });
+      if (dbCoupon) {
+        const discountAmount = calculateDiscount(
+          cart.items.reduce((t, i) => t + (i.quantity * i.productId.salesPrice), 0),
+          dbCoupon
+        );
+
+        totalAmount -= discountAmount;
+
+        couponData = {
+          code: dbCoupon.code,
+          discountAmount
+        };
+      }
     }
+
 
     // Create order with "Pending Payment" status BEFORE initiating payment
     const pendingOrder = new Order({

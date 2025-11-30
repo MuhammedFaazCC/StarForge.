@@ -738,13 +738,15 @@ if (addCouponForm) {
     e.preventDefault();
     
     const formData = new FormData(addCouponForm);
-    const couponData = {
-      code: formData.get('code'),
-      discount: formData.get('discount'),
-      expiryDate: formData.get('expiryDate'),
-      usageLimit: formData.get('usageLimit'),
-      minimumAmount: formData.get('minimumAmount') || 0
-    };
+const couponData = {
+  code: formData.get('code'),
+  discount: formData.get('discount'),
+  expiryDate: formData.get('expiryDate'),
+  usageLimit: formData.get('usageLimit'),
+  minimumAmount: formData.get('minimumAmount') || 0,
+  maxAmount: formData.get('maxAmount') || 0
+};
+
     
     // Frontend validation
     const errors = validateCouponForm(couponData);
