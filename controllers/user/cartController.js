@@ -134,7 +134,7 @@ const updateCartQuantity = async (req, res) => {
     }
 
     const newQty = item.quantity + change;
-    const maxAllowed = Math.min(5, item.productId.stock); // Limit to 5 or stock, whichever is lower
+    const maxAllowed = Math.min(5, item.productId.stock);
 
     // Validate quantity limits
     if (newQty < 1) {

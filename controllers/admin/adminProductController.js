@@ -2,9 +2,6 @@ const mongoose = require("mongoose");
 const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
 
-// ------------------------
-// Helper validation utils
-// ------------------------
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 const trimOrEmpty = (v) => (typeof v === "string" ? v.trim() : "");
@@ -65,7 +62,7 @@ const validateAndNormalizePayload = async (payload, { isEdit = false, productId 
     return { ok: false, error: "Name must be between 2 and 100 characters" };
   }
 
-  // Unique name check (case-insensitive)
+  // Unique name check
   const nameRegex = new RegExp(`^${out.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
   const nameQuery = { name: nameRegex };
   if (isEdit && productId) nameQuery._id = { $ne: productId };
@@ -84,13 +81,12 @@ const validateAndNormalizePayload = async (payload, { isEdit = false, productId 
   if (parsedPrice <= 0) return { ok: false, error: "Price must be greater than 0" };
   out.price = parsedPrice;
 
-  // Offer validations (optional)
+  // Offer validations
   let parsedOffer = payload.offer !== undefined && payload.offer !== null && payload.offer !== ""
     ? parsePositiveNumber(payload.offer)
     : 0;
   if (!Number.isFinite(parsedOffer)) parsedOffer = 0;
   if (parsedOffer < 0 || parsedOffer > 100) {
-    // Reset invalid offer to 0
     parsedOffer = 0;
   }
   out.offer = parsedOffer;
@@ -109,7 +105,6 @@ const validateAndNormalizePayload = async (payload, { isEdit = false, productId 
   if (parsedStock < 0) return { ok: false, error: "Stock cannot be negative" };
   out.stock = parsedStock;
 
-  // Sizes (optional)
   out.sizes = Array.isArray(payload.sizes)
     ? payload.sizes
     : (payload.sizes ? String(payload.sizes).split(",").map((s) => s.trim()).filter((s) => !!s) : []);

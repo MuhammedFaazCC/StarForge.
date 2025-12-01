@@ -99,7 +99,7 @@ const addCategory = async (req, res) => {
         
         const trimmedName = name.trim();
         
-        // Check for duplicate category (case-insensitive)
+        // Check for duplicate category
         const isDuplicate = await checkDuplicateCategory(trimmedName);
         if (isDuplicate) {
             return res.status(400).json({
@@ -215,7 +215,7 @@ const updateCategory = async (req, res) => {
         
         const trimmedName = name.trim();
         
-        // Check for duplicate category (case-insensitive, excluding current category)
+        // Check for duplicate category
         const isDuplicate = await checkDuplicateCategory(trimmedName, id);
         if (isDuplicate) {
             return res.status(400).json({
@@ -315,7 +315,6 @@ const toggleCategoryStatus = async (req, res) => {
         category.isActive = newStatus;
         await category.save();
 
-        // Only toggle listing status for non-deleted products. Never delete here.
         await Product.updateMany(
             { category: id, isDeleted: false },
             { $set: { isListed: newStatus } }

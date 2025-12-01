@@ -3,8 +3,8 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/userSchema');
 
 passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID, // eslint-disable-line no-undef
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET, // eslint-disable-line no-undef
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   callbackURL: "http://localhost:8080/auth/google/callback"
 }, async (accessToken, refreshToken, profile, done) => {
   console.log("✅ Raw Google profile:", JSON.stringify(profile, null, 2));
@@ -20,10 +20,10 @@ passport.use(new GoogleStrategy({
     const fullName = profile.displayName || `${profile.name?.givenName || ''} ${profile.name?.familyName || ''}`.trim();
     const avatar = profile.photos?.[0]?.value || null;
 
-    // 1) Try by googleId
+    // Try by googleId
     let user = await User.findOne({ googleId });
 
-    // 2) Fallback to email
+    // Fallback to email
     if (!user) {
       user = await User.findOne({ email });
       if (user && !user.googleId) {
@@ -34,7 +34,7 @@ passport.use(new GoogleStrategy({
       }
     }
 
-    // 3) Create if still not found
+    // Create if still not found
     if (!user) {
       user = await User.create({
         fullName: fullName || email.split('@')[0],
@@ -43,7 +43,6 @@ passport.use(new GoogleStrategy({
         profileImage: avatar,
         role: 'customer',
         referralCode: Math.random().toString(36).slice(2, 10).toUpperCase()
-        // Do NOT set mobile here; leave undefined so partial unique index doesn't collide
       });
     }
 

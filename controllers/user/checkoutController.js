@@ -355,8 +355,6 @@ const postRazorpay = async (req, res) => {
       }
     }
 
-
-    // Create order with "Pending Payment" status BEFORE initiating payment
     const pendingOrder = new Order({
       userId,
       items: cart.items.map(item => ({

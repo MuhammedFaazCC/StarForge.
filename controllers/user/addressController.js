@@ -267,15 +267,13 @@ const setDefaultAddress = async (req, res) => {
     const userId = req.session.user._id;
     const addressId = req.params.id;
 
-    // Ensure the address exists and belongs to the user
+    // Ensuring the address exists and belongs to the user
     const target = await Address.findOne({ _id: addressId, userId });
     if (!target) {
       return res.status(404).json({ success: false, message: "Address not found or unauthorized" });
     }
 
-    // Unset default on all user's addresses
     await Address.updateMany({ userId }, { $set: { isDefault: false } });
-    // Set default on the chosen address
     await Address.updateOne({ _id: addressId, userId }, { $set: { isDefault: true } });
 
     return res.json({ success: true, message: "Default address updated" });

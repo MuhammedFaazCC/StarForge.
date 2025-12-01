@@ -123,7 +123,7 @@ const getAdminOrdersPage = async (req, res) => {
         orConditions.push({ userId: { $in: users.map(u => u._id) } });
       }
 
-      // Search by exact Order ID (24-hex)
+      // Search by Order ID
       if (/^[a-fA-F0-9]{24}$/.test(trimmed)) {
         try {
           const { Types } = require('mongoose');

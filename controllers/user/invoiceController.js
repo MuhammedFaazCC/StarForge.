@@ -313,7 +313,7 @@ const downloadInvoice = async (req, res) => {
           <p><strong>Thank you for your business!</strong></p>
           <p>This is a computer-generated invoice.</p>
           <p>For any queries, please contact our support team.</p>
-          <p>StarForge - Your trusted electronics partner</p>
+          <p>StarForge - Your trusted partner</p>
         </div>
       </div>
     </body>
