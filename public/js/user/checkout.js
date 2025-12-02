@@ -167,6 +167,9 @@ function updateOrderSummary(data) {
   if (grandTotalElement && data.grandTotal) {
     grandTotalElement.innerHTML = `<strong>₹${data.grandTotal}</strong>`;
   }
+
+  // Enforce COD availability rule after summary updates
+  enforceCODRule();
 }
 
 function showAppliedCoupon(couponData) {
@@ -336,6 +339,44 @@ function addRemoveCouponListener() {
   }
 }
 
+// Enforce COD rule based on current grand total
+function enforceCODRule() {
+  const paymentMethodSelect = document.getElementById('paymentMethod');
+  if (!paymentMethodSelect) return;
+
+  const codOption = paymentMethodSelect.querySelector('option[value="COD"]');
+  const grandTotalElement = document.getElementById('grandTotalAmount');
+  let total = 0;
+  if (grandTotalElement) {
+    const text = grandTotalElement.textContent || '';
+    total = parseFloat(text.replace('₹', '').replace(/,/g, '')) || 0;
+  } else {
+    const initial = paymentMethodSelect.getAttribute('data-initial-grandtotal');
+    total = parseFloat(initial) || 0;
+  }
+
+  const shouldDisableCOD = total > 1000;
+
+  if (codOption) {
+    const wasDisabled = codOption.disabled;
+    codOption.disabled = shouldDisableCOD;
+
+    // If COD was selected and becomes invalid, reset selection and warn
+    if (shouldDisableCOD && paymentMethodSelect.value === 'COD') {
+      paymentMethodSelect.value = '';
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'info',
+          title: 'COD Not Available',
+          text: 'Cash on Delivery is available only for orders up to ₹1,000. Please choose another payment method.',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#0d6efd'
+        });
+      }
+    }
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('checkoutForm');
   const submitButton = document.querySelector('.checkout-btn');
@@ -435,6 +476,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initial remove coupon listener
   addRemoveCouponListener();
+
+  // Enforce COD rule on initial load
+  enforceCODRule();
 
   document.querySelectorAll('[data-close-modal]').forEach(button => {
     button.addEventListener('click', closeModal);

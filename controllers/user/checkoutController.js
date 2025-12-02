@@ -239,6 +239,10 @@ const postCheckoutPage = async (req, res) => {
       }
     }
 
+    if (paymentMethod === 'COD' && totalAmount > 1000) {
+      return res.status(400).json({ error: "Cash on Delivery is available only for orders up to ₹1,000. Please choose another payment method." });
+    }
+
 
     if (paymentMethod === 'Wallet') {
       const user = await User.findById(userId);

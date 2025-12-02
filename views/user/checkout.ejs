@@ -304,12 +304,16 @@
         <div class="section-header">
           <h3>Payment Method</h3>
         </div>
-        <select name="paymentMethod" id="paymentMethod" required>
+        <select name="paymentMethod" id="paymentMethod" required data-initial-grandtotal="<%= grandTotal %>">
           <option value="" disabled selected>Select Payment Method</option>
-          <option value="COD">Cash on Delivery</option>
+          <option value="COD" <%= grandTotal > 1000 ? 'disabled' : '' %>>Cash on Delivery</option>
           <option value="Online">Online Payment</option>
           <option value="Wallet">Pay using Wallet</option>
         </select>
+        <p id="codRuleNote" style="margin-top: 8px; color: #6c757d; font-size: 0.9rem;">
+          Cash on Delivery is available only for orders up to ₹1,000.
+        </p>
+
       </div>
 
       <div class="order-summary">
@@ -327,7 +331,7 @@
           <div id="couponMessage" style="display: none; margin-bottom: 10px; padding: 10px; border-radius: 5px;"></div>
 
           <!-- Applied Coupon Display -->
-          <div id="appliedCouponSection" style="<%= coupon ? '' : 'display: none;' %>">
+          <div id="appliedCouponSection" style="display: <%= coupon ? 'block' : 'none' %>;">
             <p id="appliedCouponText">
               <% if (coupon) { %>
                 Applied Coupon: <%= coupon.code %> (<%= coupon.discount %>% off)
@@ -337,7 +341,7 @@
           </div>
 
           <!-- Coupon Input Section -->
-          <div id="couponInputSection" style="<%= coupon ? 'display: none;' : '' %>">
+          <div id="couponInputSection" style="display: <%= coupon ? 'none' : 'block' %>;">
             <div class="coupon-box">
               <input type="text" id="couponCode" placeholder="Enter coupon code">
               <button id="applyCouponBtn" class="btn-secondary">Apply</button>
