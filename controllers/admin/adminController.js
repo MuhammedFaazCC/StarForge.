@@ -255,19 +255,6 @@ const getInvoicePDF = async (req, res) => {
   }
 };
 
-// const statusUpdate = async (req, res) => {
-//   const { status } = req.body;
-//   const { id } = req.params;
-
-//   try {
-//     await Order.findByIdAndUpdate(id, { status });
-//     res.json({ success: true });
-//   } catch (error) {
-//     console.error('Status update failed:', error);
-//     res.status(500).json({ success: false });
-//   }
-// };
-
 const updateItemStatus = async (req, res) => {
   const { status } = req.body;
   const { orderId, itemId } = req.params;
@@ -283,10 +270,36 @@ const updateItemStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Item not found' });
     }
 
+    const validItemStatuses = ['Placed', 'Ordered', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Return Requested', 'Returned', 'Return Declined'];
+    if (!validItemStatuses.includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status' });
+    }
+
+    const finalItemStatuses = ['Delivered', 'Returned', 'Cancelled'];
+    if (finalItemStatuses.includes(item.status)) {
+      return res.status(400).json({ success: false, message: `Cannot change status. Item is already ${item.status}` });
+    }
+
+    const transitions = {
+      'Placed': ['Ordered', 'Processing', 'Shipped', 'Cancelled'],
+      'Ordered': ['Processing', 'Shipped', 'Cancelled'],
+      'Processing': ['Shipped', 'Cancelled'],
+      'Shipped': ['Out for Delivery', 'Delivered', 'Cancelled'],
+      'Out for Delivery': ['Delivered', 'Cancelled'],
+      'Return Requested': ['Returned', 'Return Declined']
+    };
+
+    const currentStatus = item.status;
+    const allowed = transitions[currentStatus] || [];
+    if (status !== 'Cancelled' && !allowed.includes(status)) {
+      return res.status(400).json({ success: false, message: `Invalid transition from "${currentStatus}" to "${status}"` });
+    }
+
     item.status = status;
-    
     if (status === 'Delivered') {
       item.deliveredAt = new Date();
+    } else if (status === 'Cancelled') {
+      item.cancelledAt = new Date();
     }
 
     await order.save();
@@ -297,6 +310,7 @@ const updateItemStatus = async (req, res) => {
   }
 };
 
+// Update an entire order's status (and propagate to non-final items)
 const updateOrderStatus = async (req, res) => {
   try {
     const orderId = req.params.orderId || req.params.id;

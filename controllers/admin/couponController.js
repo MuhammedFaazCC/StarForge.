@@ -30,6 +30,7 @@ const couponsPage = async (req, res) => {
         expiry: coupon.expiryDate.toISOString().split('T')[0],
         status: coupon.status,
         minimumAmount: coupon.minimumAmount || 0,
+        orderMaxAmount: coupon.orderMaxAmount || 0,
         maxAmount: coupon.maxAmount || 0
       })),
       currentPage: parseInt(page),
@@ -51,7 +52,7 @@ const couponsPage = async (req, res) => {
 
 const postCreateCoupon = async (req, res) => {
   try {
-    const { code, discount, expiryDate, usageLimit, minimumAmount, maxAmount } = req.body;
+    const { code, discount, expiryDate, usageLimit, minimumAmount,orderMaxAmount, maxAmount } = req.body;
     const maxAmt = maxAmount ? parseFloat(maxAmount) : 0;
     console.log(maxAmount);
 
@@ -80,6 +81,11 @@ const postCreateCoupon = async (req, res) => {
       return res.json({ success: false, message: "Minimum amount cannot be negative" });
     }
 
+    const orderMax = orderMaxAmount ? parseFloat(orderMaxAmount) : 0;
+    if (orderMax < 0) {
+      return res.json({ success: false, message: "Maximum order amount cannot be negative" });
+    }
+
     if (maxAmt < 0) {
       return res.json({ success: false, message: "Maximum discount amount cannot be negative" });
     }
@@ -90,6 +96,7 @@ const postCreateCoupon = async (req, res) => {
       expiryDate: new Date(expiryDate),
       usageLimit: parseInt(usageLimit),
       minimumAmount: minAmount,
+      orderMaxAmount: orderMax,
       maxAmount: maxAmt,
       status: 'Active'
     });
@@ -122,7 +129,7 @@ const getCoupon = async (req, res) => {
 const updateCoupon = async (req, res) => {
   try {
     const { id } = req.params;
-    const { code, discount, expiryDate, usageLimit, minimumAmount, maxAmount } = req.body;
+    const { code, discount, expiryDate, usageLimit, minimumAmount, orderMaxAmount, maxAmount } = req.body;
 
     if (!code || !discount || !expiryDate || !usageLimit) {
       return res.json({ success: false, message: "All required fields must be filled" });
@@ -159,6 +166,11 @@ const updateCoupon = async (req, res) => {
       return res.json({ success: false, message: "Minimum amount cannot be negative" });
     }
 
+    const orderMax = orderMaxAmount ? parseFloat(orderMaxAmount) : 0;
+    if (orderMax < 0) {
+      return res.json({ success: false, message: "Maximum order amount cannot be negative" });
+    }
+
     const maxAmt = maxAmount ? parseFloat(maxAmount) : 0;
     if (maxAmt < 0) {
       return res.json({ success: false, message: "Maximum discount amount cannot be negative" });
@@ -170,6 +182,7 @@ const updateCoupon = async (req, res) => {
       expiryDate: new Date(expiryDate),
       usageLimit: parseInt(usageLimit),
       minimumAmount: minAmount,
+      orderMaxAmount: orderMax,
       maxAmount: maxAmt
     }, { new: true });
 

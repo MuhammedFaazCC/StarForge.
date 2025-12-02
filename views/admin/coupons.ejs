@@ -48,6 +48,7 @@
             <th>Coupon Code</th>
             <th>Discount</th>
             <th>Min. Amount</th>
+            <th>Max Order Amount</th>
             <th>Max Amount</th>
             <th>Expiry Date</th>
             <th>Status</th>
@@ -64,6 +65,13 @@
                   ₹<%= coupon.minimumAmount.toLocaleString('en-IN') %>
                 <% } else { %>
                   <span style="color: #666;">No minimum</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (coupon.orderMaxAmount > 0) { %>
+                  ₹<%= coupon.orderMaxAmount.toLocaleString('en-IN') %>
+                <% } else { %>
+                  <span style="color:#666;">No limit</span>
                 <% } %>
               </td>
               <td>
@@ -147,6 +155,12 @@
         </div>
 
         <div class="form-group">
+          <label for="modal-orderMaxAmount">Maximum Order Amount Allowed (₹)</label>
+          <input type="number" id="modal-orderMaxAmount" name="orderMaxAmount" placeholder="0 (no max)" step="0.01">
+          <span class="error-message" id="orderMaxAmount-error"></span>
+        </div>
+
+        <div class="form-group">
           <label for="modal-maxAmount">Maximum Discount Amount (₹)</label>
           <input type="number" id="modal-maxAmount" name="maxAmount"  placeholder="0 (no max)" step="0.01">
           <span class="error-message" id="maxAmount-error"></span>
@@ -198,9 +212,15 @@
         </div>
 
         <div class="form-group">
+          <label for="edit-modal-orderMaxAmount">Maximum Order Amount Allowed (₹)</label>
+          <input type="number" id="edit-modal-orderMaxAmount" name="orderMaxAmount" step="0.01">
+          <span id="edit-orderMaxAmount-error" class="error-message"></span>
+        </div>
+
+        <div class="form-group">
           <label for="modal-maxAmount">Maximum Discount Amount (₹)</label>
           <input type="number" id="edit-modal-maxAmount" name="maxAmount" step="0.01">
-          <span class="error-message" id="maxAmount-error"></span>
+          <span id="edit-maxAmount-error" class="error-message"></span>
         </div>
 
         <div class="modal-actions">

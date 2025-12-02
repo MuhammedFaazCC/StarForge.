@@ -31,7 +31,7 @@ async function sendOTP(email, otp) {
 
 const resendOTP = async (req, res) => {
   try {
-    // Prevent duplicate resend within a short window
+    // Prevent duplicate resend
     const now = Date.now();
     const lastSend = req.session._otp_sending_ts || 0;
     if (now - lastSend < 4000) {
@@ -65,7 +65,7 @@ const resendOTP = async (req, res) => {
 
     const newCode = generateOTP();
     req.session.otp.code = newCode;
-    req.session.otp.expires = Date.now() + 5 * 60 * 1000; // extend validity
+    req.session.otp.expires = Date.now() + 5 * 60 * 1000;
     req.session._otp_sending_ts = Date.now();
 
     req.session.save(async (err) => {

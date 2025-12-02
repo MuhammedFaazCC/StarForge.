@@ -27,9 +27,15 @@ function calculateDiscount(subtotal, coupon) {
     return 0;
   }
 
-  const applicableBase = coupon.maxAmount > 0 ? Math.min(subtotal, coupon.maxAmount) : subtotal;
+  // orderMaxAmount is a cap on the portion of subtotal eligible for discount
+  let eligibleAmount = subtotal;
+  if (coupon.orderMaxAmount > 0) {
+    eligibleAmount = Math.min(subtotal, coupon.orderMaxAmount);
+  }
 
-  return (applicableBase * coupon.discount) / 100;
+  const calculated = (eligibleAmount * coupon.discount) / 100;
+  const capped = coupon.maxAmount > 0 ? Math.min(calculated, coupon.maxAmount) : calculated;
+  return capped;
 }
 
 async function updateCouponUsage(userId, couponCode) {
@@ -94,6 +100,8 @@ function getPaymentErrorMessage(errorCode) {
 const getCheckoutPage = async (req, res) => {
   try {
     if (!req.session.user) return res.redirect('/login?redirect=/checkout');
+
+    req.session.coupon = null;
 
     const userId = req.session.user._id;
     const cart = await Cart.findOne({ userId }).populate('items.productId');

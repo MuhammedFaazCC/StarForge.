@@ -1,4 +1,4 @@
- const toggleBtn = document.querySelector(".toggle-btn");
+const toggleBtn = document.querySelector(".toggle-btn");
 const sidePanel = document.querySelector(".side-panel");
 const mainContent = document.querySelector(".main-content");
 
@@ -336,11 +336,12 @@ if (createCouponForm) {
   createCouponForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const code = document.getElementById("code").value.trim().toUpperCase();
-    const discount = parseFloat(document.getElementById("discount").value);
-    const expiryDate = new Date(document.getElementById("expiryDate").value);
-    const usageLimit = parseInt(document.getElementById("usageLimit").value);
-    const minimumAmount = parseFloat(document.getElementById("minimumAmount").value) || 0;
+    const code = document.getElementById("modal-code").value.trim().toUpperCase();
+    const discount = parseFloat(document.getElementById("modal-discount").value);
+    const expiryDate = new Date(document.getElementById("modal-expiryDate").value);
+    const usageLimit = parseInt(document.getElementById("modal-usageLimit").value);
+    const minimumAmount = parseFloat(document.getElementById("modal-minimumAmount").value) || 0;
+
 
     // Validation
     if (!code) {
@@ -685,6 +686,7 @@ function validateCouponForm(formData) {
     const discount = Number(formData.discount);
     const usageLimit = Number(formData.usageLimit);
     const minimumAmount = formData.minimumAmount === "" ? "" : Number(formData.minimumAmount);
+    const orderMaxAmount = formData.orderMaxAmount === "" ? "" : Number(formData.orderMaxAmount);
     const maxAmount = formData.maxAmount === "" ? "" : Number(formData.maxAmount);
     const expiryDate = formData.expiryDate ? new Date(formData.expiryDate) : null;
     const today = new Date();
@@ -707,9 +709,6 @@ function validateCouponForm(formData) {
     } else if (discount > 50) {
         errors.discount = "Maximum allowed discount is 50%";
     }
-
-    // EXPIRY DATE VALIDATION
-    const expiryDate = formData.expiryDate ? new Date(formData.expiryDate) : null;
 
     // DATE VALIDATION
     if (!expiryDate || isNaN(expiryDate.getTime())) {
@@ -751,6 +750,13 @@ function validateCouponForm(formData) {
         errors.minimumAmount = "Minimum amount cannot be negative";
     }
 
+    //MAX ORDER AMOUNT VALIDATION
+    if (orderMaxAmount !== "" && isNaN(orderMaxAmount)) {
+        errors.orderMaxAmount = "Maximum order amount must be a valid number";
+    } else if (orderMaxAmount < 0) {
+        errors.orderMaxAmount = "Maximum order amount cannot be negative";
+    }
+
     // MAX AMOUNT VALIDATION
     if (maxAmount !== "" && isNaN(maxAmount)) {
         errors.maxAmount = "Maximum discount amount must be a valid number";
@@ -759,8 +765,8 @@ function validateCouponForm(formData) {
     }
 
     // LOGICAL VALIDATION: min < max
-    if (minimumAmount !== "" && maxAmount !== "" && minimumAmount >= maxAmount) {
-        errors.minimumAmount = "Minimum amount must be less than maximum discount amount";
+    if (minimumAmount !== "" && orderMaxAmount !== "" && Number(minimumAmount) >= Number(orderMaxAmount)) {
+        errors.orderMaxAmount = "Maximum order amount must be greater than minimum order amount";
     }
 
     // Additional logical rule for high discounts
@@ -799,6 +805,7 @@ const couponData = {
   expiryDate: formData.get('expiryDate'),
   usageLimit: formData.get('usageLimit'),
   minimumAmount: formData.get('minimumAmount') || 0,
+  orderMaxAmount: formData.get('orderMaxAmount') || 0,
   maxAmount: formData.get('maxAmount') || 0
 };
     // Frontend validation
@@ -888,6 +895,11 @@ async function openEditCouponModal(couponId) {
     document.getElementById('edit-modal-usageLimit').value = coupon.usageLimit;
     document.getElementById('edit-modal-minimumAmount').value = coupon.minimumAmount || '';
 
+    document.getElementById('edit-modal-orderMaxAmount').value = coupon.orderMaxAmount || '';
+
+    document.getElementById('edit-modal-maxAmount').value = coupon.maxAmount || '';
+
+
     // Clear any previous errors
     clearEditModalErrors();
     
@@ -945,6 +957,7 @@ if (editCouponForm) {
       expiryDate: formData.get('expiryDate'),
       usageLimit: formData.get('usageLimit'),
       minimumAmount: formData.get('minimumAmount'),
+      orderMaxAmount: formData.get('orderMaxAmount'),
       maxAmount: formData.get('maxAmount'),
     };
 

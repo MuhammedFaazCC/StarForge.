@@ -22,14 +22,21 @@ async function updateItemsToShipped() {
     for (const order of orders) {
       console.log(`\nUpdating order ${order._id}:`);
       
-      // Update some items to "Shipped" status
+      const finalItemStatuses = ['Delivered', 'Returned', 'Cancelled'];
+      // Update only non-final items to simulate progression
       for (let i = 0; i < order.items.length; i++) {
-        if (i % 2 === 0) { // Update every other item to "Shipped"
-          order.items[i].status = 'Shipped';
-          console.log(`  - Item ${i + 1}: ${order.items[i].name} -> Shipped`);
+        const item = order.items[i];
+        if (finalItemStatuses.includes(item.status)) {
+          console.log(`  - Item ${i + 1}: ${item.name} skipped (final: ${item.status})`);
+          continue;
+        }
+
+        if (i % 2 === 0) { // Update every other non-final item to "Shipped"
+          item.status = 'Shipped';
+          console.log(`  - Item ${i + 1}: ${item.name} -> Shipped`);
         } else { // Update the rest to "Out for Delivery"
-          order.items[i].status = 'Out for Delivery';
-          console.log(`  - Item ${i + 1}: ${order.items[i].name} -> Out for Delivery`);
+          item.status = 'Out for Delivery';
+          console.log(`  - Item ${i + 1}: ${item.name} -> Out for Delivery`);
         }
       }
       

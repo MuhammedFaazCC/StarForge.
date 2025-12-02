@@ -104,10 +104,14 @@ const handleCouponInvalidationAndRefund = async (order, itemsToCancel, userId) =
         } else {
           result.couponRecalculated = true;
           
-          const newCouponDiscount = Math.min(
-            (newOrderSubtotal * coupon.discount) / 100,
-            coupon.maxDiscount || Number.MAX_VALUE
-          );
+          let eligibleAmount = newOrderSubtotal;
+          if (coupon.orderMaxAmount && coupon.orderMaxAmount > 0) {
+            eligibleAmount = Math.min(newOrderSubtotal, coupon.orderMaxAmount);
+          }
+          const recalculated = (eligibleAmount * coupon.discount) / 100;
+          const newCouponDiscount = (coupon.maxAmount && coupon.maxAmount > 0)
+            ? Math.min(recalculated, coupon.maxAmount)
+            : recalculated;
           
           for (const item of itemsToCancel) {
             const itemTotal = item.salesPrice * item.quantity;

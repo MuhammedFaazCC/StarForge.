@@ -3,7 +3,6 @@
     <thead>
       <tr>
         <th>Products</th>
-        <th>Order ID</th>
         <th>Placed On</th>
         <th>Payment Method</th>
         <th>Status</th>
@@ -72,7 +71,6 @@
               <% }); %>
             </ul>
           </td>
-          <td><%= order._id %></td>
           <td><%= order.createdAt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) %></td>
           <td>
             <span class="payment-method <%= order.paymentMethod ? order.paymentMethod.toLowerCase() : 'unknown' %>">

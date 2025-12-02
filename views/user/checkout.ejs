@@ -355,8 +355,11 @@
                       <% if (coupon.minimumAmount && coupon.minimumAmount > 0) { %>
                         <div style="font-size: 0.8rem; color: #e67e22;">Min. order: ₹<%= coupon.minimumAmount.toLocaleString('en-IN') %></div>
                       <% } %>
+                      <% if (coupon.orderMaxAmount && coupon.orderMaxAmount > 0) { %>
+                        <div style="font-size: 0.8rem; color: #e67e22;">max. order(discount applied): ₹<%= coupon.orderMaxAmount.toLocaleString('en-IN') %></div>
+                      <% } %>
                       <% if (coupon.maxAmount && coupon.maxAmount > 0) { %>
-                        <div style="font-size: 0.8rem; color: #e67e22;">max. order: ₹<%= coupon.maxAmount.toLocaleString('en-IN') %></div>
+                        <div style="font-size: 0.8rem; color: #e67e22;">max. discount: ₹<%= coupon.maxAmount.toLocaleString('en-IN') %></div>
                       <% } %>
                     </div>
                     <button class="btn-apply-coupon" data-coupon-code="<%= coupon.code %>">Apply</button>
