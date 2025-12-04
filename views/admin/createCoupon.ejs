@@ -4,12 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Create Coupon - Admin Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="/css/admin/common.css">
   <link rel="stylesheet" href="/css/admin/coupon.css">
 </head>
 <body>
   <%- include('../partials/admin/navbar') %>
   <%- include('../partials/admin/sidepanel', { active: 'coupons' }) %>
+  <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
   <div class="main-content" id="main-content">
     <div class="customers-section">
@@ -51,6 +53,7 @@
   </div>
 
   <%- include('../partials/admin/footer') %>
+  <script src="/js/admin/common.js"></script>
   <script src="/js/admin/coupon.js"></script>
 </body>
 </html>

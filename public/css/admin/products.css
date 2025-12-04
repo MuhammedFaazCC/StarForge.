@@ -33,7 +33,12 @@ body {
     background: #f1f5f9;
     border-radius: 6px;
     border: 1px solid #d1d5db;
-    overflow: hidden;
+}
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .products-table th,
@@ -298,12 +303,6 @@ footer {
 }
 
 @media (max-width: 768px) {
-    .side-panel {
-        width: 180px;
-    }
-    .main-content {
-        margin-left: 180px;
-    }
     .products-table th,
     .products-table td {
         font-size: 0.85rem;
@@ -324,26 +323,37 @@ footer {
         width: 100%;
         max-width: 300px;
     }
+
+    /* Ensure horizontal scroll reveals all columns neatly */
+    .products-table {
+        min-width: 720px;
+    }
+
+    /* Keep the toggle and action buttons readable and accessible */
+    .products-table td:nth-child(5),
+    .products-table th:nth-child(5) {
+        min-width: 90px; /* List column */
+    }
+
+    .products-table td:nth-child(6),
+    .products-table th:nth-child(6) {
+        min-width: 210px; /* Actions column */
+    }
+
+    .products-table td:nth-child(6) {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+    }
 }
 
 @media (max-width: 480px) {
-    .side-panel {
-        width: 100%;
-        position: static;
-        box-shadow: none;
-    }
-    .main-content {
-        margin-left: 0;
-        padding: 10px;
-    }
-    .navbar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-    }
     .products-table {
         font-size: 0.8rem;
+        min-width: 720px; /* maintain scroll width on very small screens */
     }
+    
     .products-table th,
     .products-table td {
         padding: 8px 10px;

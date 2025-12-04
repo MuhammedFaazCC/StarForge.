@@ -90,12 +90,34 @@
 }
 
 .side-panel.mobile {
-    width: 100%;
+    width: 82%;
+    max-width: 320px;
     top: 60px;
+    background-color: #808080;
+    box-shadow: 8px 0 24px rgba(0,0,0,0.25);
 }
 
 .side-panel.mobile.hidden {
     transform: translateX(-100%);
+}
+
+.side-panel.mobile.visible {
+    transform: translateX(0);
+}
+
+.sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.sidebar-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .side-panel ul {
@@ -257,7 +279,6 @@
   box-sizing: border-box;
 }
 
-
 @keyframes slideInRight {
     from {
         transform: translateX(100%);
@@ -297,13 +318,61 @@
     }
     
     .side-panel {
-        width: 280px;
+        width: 260px;
     }
     
     .main-content {
         padding: 15px;
     }
-    
+
+    /* Consistent mobile base type scale */
+    body {
+        font-size: 15px;
+        line-height: 1.5;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    /* Normalize table text across pages */
+    .main-content table th,
+    .main-content table td {
+        font-size: 14px;
+    }
+
+    /* Consistent mobile buttons */
+    button,
+    .btn,
+    .action-btn,
+    .btn-update-status,
+    .update-status-btn,
+    .invoice-btn,
+    .back-btn {
+        font-size: 13px;
+        padding: 8px 12px;
+        min-height: 36px;
+        line-height: 1.15;
+    }
+
+    /* Inputs/selects */
+    input,
+    select,
+    .status-dropdown {
+        font-size: 13px;
+        min-height: 36px;
+    }
+
+    /* Headings scale */
+    h1 { font-size: 22px; }
+    h2 { font-size: 20px; }
+    h3 { font-size: 18px; }
+    .main-content h2 { font-size: 20px; }
+    .main-content h3 { font-size: 18px; }
+
+    /* Badges */
+    .status-badge { font-size: 11px; }
+
+    /* Small headings inside cards/tables */
+    .main-content h4, .main-content h5 { font-size: 14px; }
+
     .toast-container {
         right: 10px;
         left: 10px;
@@ -331,6 +400,29 @@
     .main-content {
         padding: 10px;
     }
+
+    /* Slightly tighter but readable on very small phones */
+    body { font-size: 14px; }
+    .main-content table th,
+    .main-content table td { font-size: 13px; }
+    h1 { font-size: 20px; }
+    h2 { font-size: 19px; }
+    h3 { font-size: 17px; }
+    .main-content h2 { font-size: 19px; }
+    .main-content h3 { font-size: 17px; }
+    .main-content h4, .main-content h5 { font-size: 13.5px; }
+    .status-badge { font-size: 10.5px; }
+
+    button,
+    .btn,
+    .action-btn,
+    .btn-update-status,
+    .update-status-btn,
+    .invoice-btn,
+    .back-btn { font-size: 12.5px; padding: 7px 10px; min-height: 34px; }
+    input,
+    select,
+    .status-dropdown { font-size: 12.5px; min-height: 34px; }
 }
 
 .side-panel a:focus {

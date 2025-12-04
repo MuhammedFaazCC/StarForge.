@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Categories - StarForge</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="/css/admin/common.css">
     <link rel="stylesheet" href="/css/admin/categories.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -12,8 +13,9 @@
 <body>
     <%- include('../partials/admin/navbar') %>
     <%- include('../partials/admin/sidepanel', { active: 'categories' }) %>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
-    <div class="main-content">
+    <div class="main-content" id="main-content">
         <div class="categories-section">
             <div class="categories-header">
                 <h2>Categories</h2>
@@ -29,43 +31,45 @@
                 </form>
             </div>
 
-            <table class="categories-table" id="categoriesTable">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Description</th>
-                        <th>Offer (%)</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (categories.length === 0) { %>
-                        <tr><td colspan="4">No categories found.</td></tr>
-                    <% } else { %>
-                        <% categories.forEach(category => { %>
-                            <tr>
-                                <td><%= category.name %></td>
-                                <td><%= category.description %></td>
-                                <td><%= category.offer || 0 %>%</td>
-                                <td>
-                                    <button class="status-toggle <%= category.isActive ? 'active' : 'inactive' %>" 
-                                            data-id="<%= category._id %>">
-                                        <%= category.isActive ? 'UNLIST' : 'LIST' %>
-                                    </button>
-                                </td>
-                                <td>
-                                    <a href="/admin/categories/edit/<%= category._id %>" class="edit-btn">Edit</a>
-                                    <button class="delete-btn" data-id="<%= category._id %>">Delete</button>
-                                    <% if (category.offer) { %>
-                                        <button class="offer-remove" data-id="<%= category._id %>">Remove Offer</button>
-                                    <% } %>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    <% } %>
-                </tbody>
-            </table>
+            <div class="table-wrapper">
+                <table class="categories-table" id="categoriesTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Offer (%)</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (categories.length === 0) { %>
+                            <tr><td colspan="4">No categories found.</td></tr>
+                        <% } else { %>
+                            <% categories.forEach(category => { %>
+                                <tr>
+                                    <td><%= category.name %></td>
+                                    <td><%= category.description %></td>
+                                    <td><%= category.offer || 0 %>%</td>
+                                    <td>
+                                        <button class="status-toggle <%= category.isActive ? 'active' : 'inactive' %>" 
+                                                data-id="<%= category._id %>">
+                                            <%= category.isActive ? 'UNLIST' : 'LIST' %>
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <a href="/admin/categories/edit/<%= category._id %>" class="edit-btn">Edit</a>
+                                        <button class="delete-btn" data-id="<%= category._id %>">Delete</button>
+                                        <% if (category.offer) { %>
+                                            <button class="offer-remove" data-id="<%= category._id %>">Remove Offer</button>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
 
             <div class="pagination">
                 <% for (let i = 1; i <= totalPages; i++) { %>
@@ -77,6 +81,7 @@
     </div>
 
     <%- include('../partials/admin/footer') %>
+    <script src="/js/admin/common.js"></script>
     <script src="/js/admin/categories.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>

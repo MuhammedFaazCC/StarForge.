@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ id: categoryId }),
                 });
+
                 const data = await res.json();
                 if (data.status === "success") {
                     btn.textContent = data.isActive ? "UNLIST" : "LIST";
@@ -30,6 +31,61 @@ document.addEventListener("DOMContentLoaded", () => {
                   text: 'Error toggling status',
                   confirmButtonText: 'OK',
                   confirmButtonColor: '#d33'
+                });
+            }
+            btn.disabled = false;
+        });
+    });
+
+    // Handle delete category
+    document.querySelectorAll(".delete-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+            const categoryId = btn.dataset.id;
+            const result = await Swal.fire({
+                title: 'Delete category?',
+                text: 'This will soft-delete the category and unlist associated products.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6'
+            });
+
+            if (!result.isConfirmed) return;
+
+            btn.disabled = true;
+            try {
+                const res = await fetch(`/admin/categories/delete/${categoryId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted',
+                        text: 'Category deleted successfully.',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#10b981'
+                    });
+                    location.reload();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Delete Failed',
+                        text: data.message || 'Failed to delete category',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#d33'
+                    });
+                }
+            } catch (err) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error deleting category',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#d33'
                 });
             }
             btn.disabled = false;

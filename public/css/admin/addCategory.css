@@ -9,52 +9,9 @@ body {
   background-color: #f4f4f9;
   color: #333;
   line-height: 1.6;
-  padding-top: 60px;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-}
-
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 20px;
-  background-color: #1a1a1a;
-  color: #ffffff;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.logo {
-  font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  font-size: 1.5rem;
-  color: #ffffff;
-  letter-spacing: 0.5px;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.user-info img {
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  border: 2px solid #FCA120;
-}
-
-.user-info span {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #ffffff;
 }
 
 .toggle-btn {
@@ -100,6 +57,34 @@ form {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* Responsive: mobile adjustments */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0 !important;
+    padding: 12px;
+  }
+
+  .form-container {
+    padding: 16px;
+  }
+
+  form {
+    gap: 16px;
+  }
+
+  .btn,
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    text-align: center;
+  }
+
+  #imagePreview img {
+    max-width: 100%;
+    height: auto;
+  }
 }
 
 .form-group label {

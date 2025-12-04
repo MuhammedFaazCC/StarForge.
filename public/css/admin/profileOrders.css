@@ -6,46 +6,9 @@ body {
   padding: 0;
 }
 
-.navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color: #1a1a1a;
-    color: #ffffff;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.logo {
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    font-size: 1.5rem;
-    color: #ffffff;
-    letter-spacing: 0.5px;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.user-info img {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    border: 2px solid #FCA120;
-}
-
-.user-info span {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #ffffff;
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .main-content {
@@ -264,7 +227,7 @@ body {
 .back-btn {
   display: inline-block;
   margin-top: 30px;
-  background-color: #2196f3;
+  background-color: #1f2937;
   color: white;
   padding: 10px 20px;
   border-radius: 5px;
@@ -274,7 +237,7 @@ body {
 }
 
 .back-btn:hover {
-  background-color: #1976d2;
+  background-color: #111827;
 }
 
 /* Status badges */
@@ -465,7 +428,6 @@ body {
 
 @media (max-width: 768px) {
   .main-content {
-    margin-left: 0;
     padding: 20px;
   }
 
@@ -491,9 +453,10 @@ body {
   .items-table td {
     display: flex;
     justify-content: space-between;
-    padding: 10px 12px;
+    padding: 12px 12px;
     border-right: none;
     border-bottom: 1px solid #eee;
+    font-size: 13.5px;
   }
 
   .items-table td:last-child {
@@ -504,7 +467,8 @@ body {
     content: attr(data-label);
     font-weight: 600;
     color: #555;
-    width: 45%;
+    width: 50%;
+    font-size: 13.5px;
   }
 
   /* Mobile responsive styles for new components */
@@ -522,6 +486,49 @@ body {
   .status-update-container {
     gap: 3px;
   }
+
+  .view-order-container {
+    padding: 30px 16px;
+  }
+
+  .view-order-title {
+    font-size: 22px;
+  }
+
+  .view-order-info {
+    font-size: 15px;
+  }
+
+  .view-order-info strong {
+    width: auto;
+    display: inline;
+    margin-right: 6px;
+  }
+
+  .items-table td img {
+    width: 48px;
+    height: auto;
+  }
+
+  .status-badge {
+    font-size: 11px;
+  }
+
+  .invoice-btn,
+  .back-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .view-order-title { font-size: 20px; }
+  .items-table td { font-size: 13px; gap: 10px; }
+  .items-table td::before { font-size: 13px; }
+  .status-badge { font-size: 10px; }
+  .view-order-info p,
+  .order-status-section p,
+  .order-status-info { overflow-wrap: anywhere; word-break: break-word; }
 }
 /* Placed status style */
 .status-placed {

@@ -8,28 +8,69 @@ function initializeSidebarToggle() {
     const toggleBtn = document.getElementById('sidebarToggle');
     const sidePanel = document.querySelector('.side-panel');
     const mainContent = document.querySelector('.main-content');
+    const backdrop = document.getElementById('sidebarBackdrop');
 
     if (toggleBtn && sidePanel && mainContent) {
         toggleBtn.addEventListener('click', function() {
             sidebarToggled = !sidebarToggled;
-            
-            if (sidebarToggled) {
-                sidePanel.classList.add('collapsed');
-                mainContent.classList.add('expanded');
-                toggleBtn.innerHTML = '<i class="fas fa-times"></i>';
-                toggleBtn.setAttribute('aria-label', 'Close Sidebar');
+
+            const isMobile = sidePanel.classList.contains('mobile');
+            if (isMobile) {
+                if (sidebarToggled) {
+                    sidePanel.classList.remove('hidden');
+                    sidePanel.classList.add('visible');
+                    if (backdrop) backdrop.classList.add('visible');
+                    toggleBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    toggleBtn.setAttribute('aria-label', 'Close Sidebar');
+                    toggleBtn.setAttribute('aria-expanded', 'true');
+                } else {
+                    sidePanel.classList.add('hidden');
+                    sidePanel.classList.remove('visible');
+                    if (backdrop) backdrop.classList.remove('visible');
+                    toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                    toggleBtn.setAttribute('aria-label', 'Open Sidebar');
+                    toggleBtn.setAttribute('aria-expanded', 'false');
+                }
             } else {
-                sidePanel.classList.remove('collapsed');
-                mainContent.classList.remove('expanded');
-                toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
-                toggleBtn.setAttribute('aria-label', 'Toggle Sidebar');
+                if (sidebarToggled) {
+                    sidePanel.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                    toggleBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    toggleBtn.setAttribute('aria-label', 'Close Sidebar');
+                    toggleBtn.setAttribute('aria-expanded', 'true');
+                } else {
+                    sidePanel.classList.remove('collapsed');
+                    mainContent.classList.remove('expanded');
+                    toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                    toggleBtn.setAttribute('aria-label', 'Open Sidebar');
+                    toggleBtn.setAttribute('aria-expanded', 'false');
+                }
             }
         });
+
+        // Close on backdrop click (mobile)
+        if (backdrop) {
+            backdrop.addEventListener('click', () => {
+                if (sidePanel.classList.contains('mobile') && !sidePanel.classList.contains('hidden')) {
+                    sidePanel.classList.add('hidden');
+                    sidePanel.classList.remove('visible');
+                    backdrop.classList.remove('visible');
+                    sidebarToggled = false;
+                    if (toggleBtn) {
+                        toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                        toggleBtn.setAttribute('aria-label', 'Open Sidebar');
+                        toggleBtn.setAttribute('aria-expanded', 'false');
+                    }
+                }
+            });
+        }
     }
 }
 
 function initializeSidebarNavigation() {
     const sidebarLinks = document.querySelectorAll('.side-panel a');
+    const sidePanel = document.querySelector('.side-panel');
+    const toggleBtn = document.getElementById('sidebarToggle');
     
     sidebarLinks.forEach(link => {
         link.addEventListener('click', function(e) {
@@ -38,6 +79,18 @@ function initializeSidebarNavigation() {
             this.classList.add('active');
             
             localStorage.setItem('adminActivePage', this.getAttribute('href'));
+
+            // Auto-close sidebar on mobile after navigation
+            if (sidePanel && sidePanel.classList.contains('mobile')) {
+                sidePanel.classList.add('hidden');
+                sidePanel.classList.remove('visible');
+                sidebarToggled = false;
+                if (toggleBtn) {
+                    toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                    toggleBtn.setAttribute('aria-label', 'Open Sidebar');
+                    toggleBtn.setAttribute('aria-expanded', 'false');
+                }
+            }
         });
     });
     
@@ -56,6 +109,7 @@ function handleResponsiveLayout() {
         const sidePanel = document.querySelector('.side-panel');
         const mainContent = document.querySelector('.main-content');
         const toggleBtn = document.getElementById('sidebarToggle');
+        const backdrop = document.getElementById('sidebarBackdrop');
         
         if (window.innerWidth <= 768) {
             if (sidePanel) {
@@ -64,6 +118,7 @@ function handleResponsiveLayout() {
                     sidePanel.classList.add('hidden');
                 }
             }
+            if (backdrop && !sidebarToggled) backdrop.classList.remove('visible');
             if (mainContent) {
                 mainContent.classList.add('mobile');
             }
@@ -74,6 +129,7 @@ function handleResponsiveLayout() {
             if (sidePanel) {
                 sidePanel.classList.remove('mobile', 'hidden');
             }
+            if (backdrop) backdrop.classList.remove('visible');
             if (mainContent) {
                 mainContent.classList.remove('mobile');
             }

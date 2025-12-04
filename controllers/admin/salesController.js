@@ -4,6 +4,8 @@ const path = require('path');
 const ExcelJS = require('exceljs');
 const User = require("../../models/userSchema");
 const Order = require("../../models/orderSchema");
+const Product = require("../../models/productSchema");
+const mongoose = require('mongoose');
 
 // Helper to compute IST (UTC+05:30) start and end of current day, returned in UTC
 const IST_OFFSET_MINUTES = 330;
@@ -685,71 +687,169 @@ const exportSalesReportExcel = async (req, res) => {
   }
 };
 
+// Top 10 products by quantity sold
+const getTopProducts = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const pipeline = [
+      { $match: { status: { $nin: ['Cancelled', 'Payment Failed'] } } },
+      { $unwind: '$items' },
+      { $match: { 'items.status': { $nin: ['Cancelled', 'Returned'] } } },
+      { $group: {
+          _id: '$items.productId',
+          name: { $first: '$items.name' },
+          quantitySold: { $sum: '$items.quantity' },
+          revenue: { $sum: { $multiply: ['$items.quantity', '$items.salesPrice'] } }
+        }
+      },
+      { $sort: { quantitySold: -1 } },
+      { $limit: limit }
+    ];
+    const results = await Order.aggregate(pipeline);
+    res.json({ success: true, items: results });
+  } catch (error) {
+    console.error('getTopProducts error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load top products' });
+  }
+};
+
+// Top 10 categories by quantity sold
+const getTopCategories = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const pipeline = [
+      { $match: { status: { $nin: ['Cancelled', 'Payment Failed'] } } },
+      { $unwind: '$items' },
+      { $match: { 'items.status': { $nin: ['Cancelled', 'Returned'] } } },
+      { $lookup: { from: 'products', localField: 'items.productId', foreignField: '_id', as: 'prod' } },
+      { $unwind: '$prod' },
+      { $lookup: { from: 'categories', localField: 'prod.category', foreignField: '_id', as: 'cat' } },
+      { $unwind: '$cat' },
+      { $group: {
+          _id: '$cat._id',
+          name: { $first: '$cat.name' },
+          quantitySold: { $sum: '$items.quantity' },
+          revenue: { $sum: { $multiply: ['$items.quantity', '$items.salesPrice'] } }
+        }
+      },
+      { $sort: { quantitySold: -1 } },
+      { $limit: limit }
+    ];
+    const results = await Order.aggregate(pipeline);
+    res.json({ success: true, items: results });
+  } catch (error) {
+    console.error('getTopCategories error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load top categories' });
+  }
+};
+
+// Top 10 brands by quantity sold
+const getTopBrands = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const pipeline = [
+      { $match: { status: { $nin: ['Cancelled', 'Payment Failed'] } } },
+      { $unwind: '$items' },
+      { $match: { 'items.status': { $nin: ['Cancelled', 'Returned'] } } },
+      { $lookup: { from: 'products', localField: 'items.productId', foreignField: '_id', as: 'prod' } },
+      { $unwind: '$prod' },
+      { $group: {
+          _id: '$prod.brand',
+          name: { $first: '$prod.brand' },
+          quantitySold: { $sum: '$items.quantity' },
+          revenue: { $sum: { $multiply: ['$items.quantity', '$items.salesPrice'] } }
+        }
+      },
+      { $sort: { quantitySold: -1 } },
+      { $limit: limit }
+    ];
+    const results = await Order.aggregate(pipeline);
+    res.json({ success: true, items: results });
+  } catch (error) {
+    console.error('getTopBrands error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load top brands' });
+  }
+};
+
+// Sales chart data (supports range & legacy period)
 const getSalesChartData = async (req, res) => {
   try {
-    const { period = 'month' } = req.query;
+    const { range, year, month, startDate: sDate, endDate: eDate, period } = req.query;
     const now = new Date();
-    let startDate, groupBy, dateFormat;
 
-    switch (period) {
-      case 'week':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        groupBy = { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } };
-        dateFormat = 'daily';
-        break;
-      case 'month':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        groupBy = { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } };
-        dateFormat = 'daily';
-        break;
-      case 'year':
-        startDate = new Date(now.getFullYear(), 0, 1);
-        groupBy = { $dateToString: { format: "%Y-%m", date: "$orderDate" } };
-        dateFormat = 'monthly';
-        break;
-      default:
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        groupBy = { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } };
-        dateFormat = 'daily';
+    const mode = range || period || 'month';
+
+    function startOfISTDay(date) {
+      const d = new Date(date);
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+    function endOfISTDay(date) {
+      const d = new Date(date);
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+    }
+
+    let from, to;
+    if (mode === 'year') {
+      const y = parseInt(year) || now.getFullYear();
+      from = new Date(y, 0, 1);
+      to = new Date(y + 1, 0, 1);
+    } else if (mode === 'month') {
+      const y = parseInt(year) || now.getFullYear();
+      const m = month !== undefined ? parseInt(month) : now.getMonth();
+      from = new Date(y, m, 1);
+      to = new Date(y, m + 1, 1);
+    } else if (mode === 'week') {
+      const d = new Date();
+      const day = d.getDay();
+      const mondayOffset = (day + 6) % 7; // Monday-start week
+      const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() - mondayOffset);
+      from = startOfISTDay(monday);
+      to = new Date(from);
+      to.setDate(from.getDate() + 7);
+    } else if (mode === 'day') {
+      from = startOfISTDay(now);
+      to = endOfISTDay(now);
+    } else if (mode === 'custom' && sDate && eDate) {
+      from = startOfISTDay(new Date(sDate));
+      to = endOfISTDay(new Date(eDate));
+    } else {
+      from = new Date(now.getFullYear(), now.getMonth(), 1);
+      to = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    }
+
+    let groupId;
+    let labelFormat = 'daily';
+    if (mode === 'year') {
+      groupId = { $dateToString: { format: "%Y-%m", date: "$orderDate" } };
+      labelFormat = 'monthly';
+    } else {
+      groupId = { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } };
+      labelFormat = 'daily';
     }
 
     const salesData = await Order.aggregate([
-      {
-        $match: {
-          orderDate: { $gte: startDate },
-          status: { $ne: 'Cancelled' }
-        }
-      },
-      {
-        $group: {
-          _id: groupBy,
-          totalSales: { $sum: "$totalAmount" },
-          totalOrders: { $sum: 1 },
-          totalDiscounts: { $sum: "$coupon.discountAmount" }
-        }
-      },
-      {
-        $sort: { _id: 1 }
-      }
+      { $match: { orderDate: { $gte: from, $lt: to }, status: { $nin: ['Cancelled', 'Payment Failed', 'Returned'] } } },
+      { $group: { _id: groupId, totalSales: { $sum: "$totalAmount" }, totalOrders: { $sum: 1 } } },
+      { $sort: { _id: 1 } }
     ]);
 
-    res.json({
-      success: true,
-      data: salesData,
-      period,
-      dateFormat
-    });
+    const labels = salesData.map(d => d._id);
+    const datasets = { revenue: salesData.map(d => d.totalSales), orders: salesData.map(d => d.totalOrders) };
 
+    res.json({ success: true, labels, datasets, data: salesData, range: mode, dateFormat: labelFormat });
   } catch (error) {
-    console.error("Error getting sales chart data:", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    console.error('Error getting sales chart data:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 };
 
 module.exports = {
-    salesPage,
-    getSalesData,
-    exportSalesReportPDF,
-    exportSalesReportExcel,
-    getSalesChartData
-}
+  salesPage,
+  getSalesData,
+  exportSalesReportPDF,
+  exportSalesReportExcel,
+  getSalesChartData,
+  getTopProducts,
+  getTopCategories,
+  getTopBrands
+};

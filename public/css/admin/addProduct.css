@@ -12,46 +12,25 @@ body {
   padding-top: 60px;
 }
 
-.navbar {
-  display: flex;
-  justify-content: space-between;
+/* Ensure no horizontal overflow on this page */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+
+.back-btn-mobile {
+  display: inline-flex;
   align-items: center;
-  padding: 10px 20px;
-  background-color: #1a1a1a;
-  color: #ffffff;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.logo {
-  font-family: "Inter", sans-serif;
-  font-weight: 600;
-  font-size: 1.5rem;
-  color: #ffffff;
-  letter-spacing: 0.5px;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.user-info img {
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  border: 2px solid #fca120;
-}
-
-.user-info span {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #ffffff;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 9999px; /* pill */
+  border: 1px solid #e5e7eb;
+  background: #f3f4f6;
+  color: #111827;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .toggle-btn {
@@ -71,6 +50,13 @@ body {
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   min-height: calc(100vh - 120px);
+}
+
+/* This page does not use the admin side panel, so remove the default left margin */
+.main-content {
+  margin-left: 0 !important;
+  width: 100%;
+  max-width: 100%;
 }
 
 h2 {
@@ -119,6 +105,38 @@ h2 {
 form {
   display: grid;
   gap: 20px;
+}
+
+/* Actions row (Update + Cancel) */
+.form-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #111827;
+  border-color: #e5e7eb;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
 }
 
 .form-section {
@@ -325,8 +343,6 @@ button[type="submit"] {
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.3s, transform 0.1s;
-  display: block;
-  margin: 20px auto 0;
 }
 
 button[type="submit"]:hover {
@@ -384,6 +400,17 @@ footer p {
     font-size: 14px;
   }
 
+  .form-actions {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .form-actions .btn,
+  .form-actions button[type="submit"] {
+    width: 100%;
+  }
+
   .navbar {
     padding: 8px 15px;
   }
@@ -417,6 +444,20 @@ footer p {
 
   .crop-modal-content {
     width: 95%;
+  }
+
+  .mobile-back {
+    margin-bottom: 10px;
+  }
+
+  .back-btn-mobile {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .back-btn-mobile span:first-child {
+    font-size: 16px !important;
+    line-height: 1;
   }
 }
 .loading-overlay {
@@ -488,9 +529,8 @@ footer p {
     padding: 10px 14px;
   }
 
-  button[type="submit"] {
-    width: 100%;
-  }
+  .form-actions .btn,
+  .form-actions button[type="submit"] { width: 100%; }
 
   .navbar {
     flex-wrap: wrap;

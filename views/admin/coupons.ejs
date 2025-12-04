@@ -4,14 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Coupons - Admin Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="/css/admin/common.css">
   <link rel="stylesheet" href="/css/admin/coupon.css">
 </head>
 <body>
   <%- include('../partials/admin/navbar') %>
     <%- include('../partials/admin/sidepanel', { active: 'coupons' }) %>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
-  <div class="main-content">
+  <div class="main-content" id="main-content">
+
     <div class="customers-section">
       <div class="section-header">
         <h2>Coupons</h2>
@@ -42,63 +45,65 @@
         </form>
       </div>
 
-      <table class="customers-table">
-        <thead>
-          <tr>
-            <th>Coupon Code</th>
-            <th>Discount</th>
-            <th>Min. Amount</th>
-            <th>Max Order Amount</th>
-            <th>Max Amount</th>
-            <th>Expiry Date</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% coupons.forEach(coupon => { %>
+      <div class="table-wrapper">
+        <table class="customers-table">
+          <thead>
             <tr>
-              <td><%= coupon.code %></td>
-              <td><%= coupon.discount %></td>
-              <td>
-                <% if (coupon.minimumAmount > 0) { %>
-                  ₹<%= coupon.minimumAmount.toLocaleString('en-IN') %>
-                <% } else { %>
-                  <span style="color: #666;">No minimum</span>
-                <% } %>
-              </td>
-              <td>
-                <% if (coupon.orderMaxAmount > 0) { %>
-                  ₹<%= coupon.orderMaxAmount.toLocaleString('en-IN') %>
-                <% } else { %>
-                  <span style="color:#666;">No limit</span>
-                <% } %>
-              </td>
-              <td>
-                <% if (coupon.maxAmount > 0) { %>
-                  ₹<%= coupon.maxAmount.toLocaleString('en-IN') %>
-                <% } else { %>
-                  <span style="color:#666;">No limit</span>
-                <% } %>
-              </td>
-              <td><%= coupon.expiry %></td>
-              <td><span class="status <%= coupon.status.toLowerCase() %>"><%= coupon.status %></span></td>
-              <td>
-                <button class="btn-action btn-edit" onclick="openEditCouponModal('<%= coupon.id %>')">Edit</button>
-                <% if (coupon.status === 'Inactive') { %>
-                  <button class="btn-action btn-reactivate" onclick="reactivateCoupon('<%= coupon.id %>')">Reactivate</button>
-                <% } %>
-                <button class="btn-action btn-block" onclick="deleteCoupon('<%= coupon.id %>')">Delete</button>
-              </td>
+              <th>Coupon Code</th>
+              <th>Discount</th>
+              <th>Min. Amount</th>
+              <th>Max Order Amount</th>
+              <th>Max Amount</th>
+              <th>Expiry Date</th>
+              <th>Status</th>
+              <th>Action</th>
             </tr>
-          <% }) %>
-          <% if (coupons.length === 0) { %>
-            <tr class="no-results">
-              <td colspan="6">No coupons found</td>
-            </tr>
-          <% } %>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            <% coupons.forEach(coupon => { %>
+              <tr>
+                <td><%= coupon.code %></td>
+                <td><%= coupon.discount %></td>
+                <td>
+                  <% if (coupon.minimumAmount > 0) { %>
+                    ₹<%= coupon.minimumAmount.toLocaleString('en-IN') %>
+                  <% } else { %>
+                    <span style="color: #666;">No minimum</span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (coupon.orderMaxAmount > 0) { %>
+                    ₹<%= coupon.orderMaxAmount.toLocaleString('en-IN') %>
+                  <% } else { %>
+                    <span style="color:#666;">No limit</span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (coupon.maxAmount > 0) { %>
+                    ₹<%= coupon.maxAmount.toLocaleString('en-IN') %>
+                  <% } else { %>
+                    <span style="color:#666;">No limit</span>
+                  <% } %>
+                </td>
+                <td><%= coupon.expiry %></td>
+                <td><span class="status <%= coupon.status.toLowerCase() %>"><%= coupon.status %></span></td>
+                <td>
+                  <button class="btn-action btn-edit" onclick="openEditCouponModal('<%= coupon.id %>')">Edit</button>
+                  <% if (coupon.status === 'Inactive') { %>
+                    <button class="btn-action btn-reactivate" onclick="reactivateCoupon('<%= coupon.id %>')">Reactivate</button>
+                  <% } %>
+                  <button class="btn-action btn-block" onclick="deleteCoupon('<%= coupon.id %>')">Delete</button>
+                </td>
+              </tr>
+            <% }) %>
+            <% if (coupons.length === 0) { %>
+              <tr class="no-results">
+                <td colspan="6">No coupons found</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
 
       <% if (totalPages > 1) { %>
         <div class="pagination">
@@ -114,8 +119,7 @@
             <button class="btn-arrow" onclick="window.location.href='?page=<%= currentPage + 1 %>&search=<%= search %>&status=<%= status %>'">Next</button>
           <% } %>
         </div>
-
-        <% } %>
+      <% } %>
     </div>
   </div>
 
@@ -243,9 +247,11 @@
   </div>
 
   <footer>
-    <p>© 2025 Admin Dashboard. All rights reserved.</p>
+    <p> 2025 Admin Dashboard. All rights reserved.</p>
   </footer>
 
+  <script src="/js/admin/common.js"></script>
   <script src="/js/admin/coupon.js"></script>
+
 </body>
 </html>

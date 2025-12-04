@@ -12,51 +12,9 @@ body {
     background-color: #f8fafc;
 }
 
-.navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color: #1a1a1a;
-    color: #ffffff;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.logo {
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    font-size: 1.5rem;
-    color: #ffffff;
-    letter-spacing: 0.5px;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.user-info img {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    border: 2px solid #FCA120;
-}
-
-.user-info span {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #ffffff;
-}
-
 .main-content {
     margin-left: 220px;
-    margin-top: 50px;
+    margin-top: 60px;
     padding: 20px;
     flex-grow: 1;
     overflow-y: auto;
@@ -131,17 +89,100 @@ body {
 }
 
 .chart {
-    height: 260px;
-    background: #f1f5f9;
-    border-radius: 6px;
-    border: 1px solid #d1d5db;
-    overflow: hidden;
+    height: 320px;
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    padding: 12px;
 }
 
-.chart svg {
-    width: 100%;
-    height: 100%;
+.chart canvas {
+    width: 100% !important;
+    height: 100% !important;
 }
+
+/* Dashboard filters */
+.filters select,
+.filters input[type="number"],
+.filters input[type="date"] {
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 0.9rem;
+}
+
+.btn {
+  background: #111827;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.btn:hover {
+  background: #0b1220;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+/* Top lists layout */
+.toplists {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1100px) {
+  .toplists { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 700px) {
+  .toplists { grid-template-columns: 1fr; }
+}
+
+.top-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  padding: 14px;
+}
+
+.top-card h3 {
+  margin-bottom: 10px;
+  font-size: 1rem;
+  color: #111827;
+}
+
+/* Tables */
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table thead {
+  background: #f3f4f6;
+}
+
+.table th, .table td {
+  padding: 10px 12px;
+  font-size: 0.92rem;
+  color: #111827;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table th { text-align: left; color: #374151; font-weight: 600; }
+.table tbody tr:hover { background: #f9fafb; }
+.table tbody tr:last-child td { border-bottom: none; }
 
 footer p {
     width: 100%;
@@ -155,30 +196,22 @@ footer p {
 }
 
 @media (max-width: 768px) {
-    .side-panel {
-        width: 180px;
-    }
-    .main-content {
-        margin-left: 180px;
-    }
+    .main-content { margin-left: 0; }
+    .filters { flex-wrap: wrap; gap: 8px; }
+    .filters select,
+    .filters input { width: 100%; }
+    .chart { height: 260px; padding: 10px; }
+    .top-card { padding: 12px; }
+    .top-card h3 { font-size: 0.95rem; }
+    .table th, .table td { padding: 8px 10px; font-size: 0.9rem; }
 }
 
 @media (max-width: 480px) {
-    .toggle-btn {
-        display: block;
-    }
-    .side-panel {
-        width: 220px;
-        position: fixed;
-        transform: translateX(-100%);
-    }
-    .side-panel.visible {
-        transform: translateX(0);
-    }
-    .main-content {
-        margin-left: 0;
-        padding: 10px;
-    }
+    .toggle-btn { display: block; }
+    .main-content { margin-left: 0; }
+    .filters { flex-direction: column; }
+    .chart { height: 240px; }
+    .table th, .table td { padding: 7px 9px; font-size: 0.88rem; }
     .navbar {
         flex-direction: row;
         align-items: center;

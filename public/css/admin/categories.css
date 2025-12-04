@@ -139,6 +139,12 @@ body {
     cursor: pointer;
 }
 
+.table-wrapper {
+    overflow-x: auto;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+}
+
 .categories-table {
     width: 100%;
     border-collapse: collapse;
@@ -146,6 +152,7 @@ body {
     border-radius: 6px;
     border: 1px solid #d1d5db;
     overflow: hidden;
+    min-width: 900px;
 }
 
 .categories-table th,
@@ -260,17 +267,40 @@ footer p {
 
 @media (max-width: 768px) {
     .main-content {
-        margin-left: 180px;
+        margin-left: 0 !important;
+        padding: 12px;
+    }
+
+    .categories-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .add-category-btn {
+        width: 100%;
+    }
+
+    .products-controls {
+        width: 100%;
+    }
+
+    .search-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        width: 100%;
+    }
+
+    #searchInput,
+    .search-form .clear-search {
+        width: 100%;
     }
 
     .categories-table th,
     .categories-table td {
         font-size: 0.85rem;
         padding: 10px 12px;
-    }
-
-    #searchInput {
-        width: 150px;
     }
 }
 
@@ -292,20 +322,12 @@ footer p {
     }
 
     .products-controls {
-        flex-direction: column;
-        align-items: flex-start;
+        width: 100%;
     }
 
     .search-form {
-        flex-direction: column;
-        align-items: flex-start;
+        grid-template-columns: 1fr;
         width: 100%;
-    }
-
-    #searchInput,
-    .search-form .clear-search {
-        width: 100%;
-        text-align: center;
     }
 
     .sort-bar {

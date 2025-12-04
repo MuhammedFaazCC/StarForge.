@@ -2,13 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>View Product</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="/css/admin/common.css" />
   <link rel="stylesheet" href="/css/admin/viewProduct.css">
 </head>
 <body>
   <%- include('../partials/admin/navbar') %>
+  <%- include('../partials/admin/sidepanel', { active: 'products' }) %>
+  <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
   <div class="main-content" id="main-content">
+  <div class="page-actions">
+    <a href="/admin/products" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Products</a>
+  </div>
 <section class="product-view-section">
   <div class="product-header">
     <div class="main-image-container">
@@ -50,6 +58,7 @@
   </div>
 
 </section>
-<%- include('../partials/admin/footer') %>
+  <script src="/js/admin/common.js"></script>
+  <%- include('../partials/admin/footer') %>
 </body>
 </html>

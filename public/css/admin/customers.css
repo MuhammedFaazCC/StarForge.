@@ -71,6 +71,11 @@ body {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
+.table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+}
+
 .section-header {
     display: flex;
     justify-content: space-between;
@@ -209,21 +214,56 @@ body {
 
 .pagination {
   margin-top: 20px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.page-link {
-  display: inline-block;
-  margin: 0 4px;
-  padding: 6px 12px;
-  background: #f0f0f0;
-  border-radius: 4px;
+.page-link,
+.btn-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 12px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #1f2937;
   text-decoration: none;
-  color: #333;
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+  cursor: pointer;
 }
-.page-link.active {
-  background: #fca120;
-  color: #fff;
+
+.page-link:hover,
+.btn-arrow:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
+}
+
+.page-link.active,
+.btn-arrow.active {
+  background: #1f2937;
+  color: #ffffff;
+  border-color: #111827;
+  font-weight: 600;
+}
+
+.btn-arrow:disabled,
+.page-link.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.pagination-ellipsis {
+  padding: 0 6px;
+  color: #6b7280;
 }
 
 footer p {
@@ -251,12 +291,12 @@ mark {
 
 @media (max-width: 768px) {
     .main-content {
-        margin-left: 180px;
+        margin-left: 0; /* sidepanel overlays on mobile via common.css */
     }
 
     .customers-table th,
     .customers-table td {
-        font-size: 0.85rem;
+        font-size: 14px; /* align with common.css */
         padding: 10px 12px;
     }
 
@@ -289,16 +329,13 @@ mark {
         text-align: center;
     }
 
-    .customers-table {
-        font-size: 0.8rem;
-    }
-
     .customers-table th,
     .customers-table td {
         padding: 8px 10px;
+        font-size: 13px; /* align with common.css */
     }
 
     .pagination {
-        flex-wrap: wrap;
+        row-gap: 8px;
     }
 }

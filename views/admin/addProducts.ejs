@@ -8,12 +8,28 @@
   <link rel="stylesheet" href="/css/admin/addProduct.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .mobile-back {
+      display: none;
+    }
+    @media only screen and (max-width: 768px) {
+      .mobile-back {
+        display: block;
+      }
+    }
+  </style>
 </head>
 <body>
   <%- include('../partials/admin/navbar') %>
 
   <div class="main-content" id="main-content">
   <div class="container">
+    <div class="mobile-back">
+      <button type="button" class="back-btn-mobile" onclick="window.location.href='/admin/products'">
+        <span style="font-size:18px;line-height:1">←</span>
+        <span style="margin-left:6px">Back</span>
+      </button>
+    </div>
     <h2>Add New Product</h2>
 
     <% if (message && message.type === 'success') { %>

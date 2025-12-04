@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customers - StarForge</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="/css/admin/common.css">
     <link rel="stylesheet" href="/css/admin/customers.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -12,6 +13,7 @@
 <body>
     <%- include('../partials/admin/navbar') %>
     <%- include('../partials/admin/sidepanel', { active: 'customers' }) %>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
     <div class="main-content">
         <div class="customers-section">
@@ -29,95 +31,80 @@
                 </div>
             <% } %>
 
-            <table class="customers-table" id="customersTable">
-                <thead>
-                    <tr>
-                        <th class="sortable" data-sort="fullName">Name <span class="sort-icon"></span></th>
-                        <th class="sortable" data-sort="email">Email <span class="sort-icon"></span></th>
-                        <th class="sortable" data-sort="mobile">Phone <span class="sort-icon"></span></th>
-                        <th class="sortable" data-sort="createdAt">Registered <span class="sort-icon"></span></th>
-                        <th class="sortable" data-sort="orders">Orders <span class="sort-icon"></span></th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="customersTableBody">
-                    <% if (customers.length > 0) { %>
-                        <% customers.forEach(customer => { %>
-                            <tr data-id="<%= customer._id %>">
-                                <td><%= customer.fullName %></td>
-                                <td><%= customer.email %></td>
-                                <td><%= customer.mobile || 'N/A' %></td>
-                                <td><%= new Date(customer.createdAt).toLocaleDateString() %></td>
-                                <td><%= customer.orders || 0 %></td>
-                                <td>
-                                    <span class="status <%= customer.isBlocked ? 'blocked' : 'active' %>">
-                                        <%= customer.isBlocked ? 'Blocked' : 'Active' %>
-                                    </span>
-                                </td>
-                                <td>
-                                    <button class="btn btn-action <%= customer.isBlocked ? 'btn-unblock' : 'btn-block' %>"
-                                        data-id="<%= customer._id %>"
-                                        data-action="<%= customer.isBlocked ? 'unblock' : 'block' %>">
-                                        <%= customer.isBlocked ? 'Unblock' : 'Block' %>
-                                    </button>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    <% } else { %>
-                        <tr class="no-results">
-                            <td colspan="7">No customers found</td>
+            <div class="table-wrapper">
+                <table class="customers-table" id="customersTable">
+                    <thead>
+                        <tr>
+                            <th class="sortable" data-sort="fullName">Name <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="email">Email <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="mobile">Phone <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="createdAt">Registered <span class="sort-icon"></span></th>
+                            <th class="sortable" data-sort="orders">Orders <span class="sort-icon"></span></th>
+                            <th>Status</th>
+                            <th>Actions</th>
                         </tr>
-                    <% } %>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody id="customersTableBody">
+                        <% if (customers.length > 0) { %>
+                            <% customers.forEach(customer => { %>
+                                <tr data-id="<%= customer._id %>">
+                                    <td><%= customer.fullName %></td>
+                                    <td><%= customer.email %></td>
+                                    <td><%= customer.mobile || 'N/A' %></td>
+                                    <td><%= new Date(customer.createdAt).toLocaleDateString() %></td>
+                                    <td><%= customer.orders || 0 %></td>
+                                    <td>
+                                        <span class="status <%= customer.isBlocked ? 'blocked' : 'active' %>">
+                                            <%= customer.isBlocked ? 'Blocked' : 'Active' %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-action <%= customer.isBlocked ? 'btn-unblock' : 'btn-block' %>"
+                                            data-id="<%= customer._id %>"
+                                            data-action="<%= customer.isBlocked ? 'unblock' : 'block' %>">
+                                            <%= customer.isBlocked ? 'Unblock' : 'Block' %>
+                                        </button>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr class="no-results">
+                                <td colspan="7">No customers found</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
 
             <div class="pagination" id="pagination">
-  <% if (pagination.totalPages > 1) { %>
-    <% const startPage = Math.max(1, pagination.currentPage - 2); %>
-    <% const endPage = Math.min(pagination.totalPages, startPage + 4); %>
+                <% if (pagination.totalPages > 1) { %>
+                    <% const startPage = Math.max(1, pagination.currentPage - 2); %>
+                    <% const endPage = Math.min(pagination.totalPages, startPage + 4); %>
 
-    <% if (pagination.currentPage > 1) { %>
-      <a href="?page=<%= pagination.currentPage - 1 %>" class="page-link">«</a>
-    <% } %>
+                    <% if (pagination.currentPage > 1) { %>
+                        <a href="?page=<%= pagination.currentPage - 1 %>" class="page-link">«</a>
+                    <% } %>
 
-    <% for (let i = startPage; i <= endPage; i++) { %>
-      <a href="?page=<%= i %>" class="page-link <%= i === pagination.currentPage ? 'active' : '' %>">
-        <%= i %>
-      </a>
-    <% } %>
+                    <% for (let i = startPage; i <= endPage; i++) { %>
+                        <a href="?page=<%= i %>" class="page-link <%= i === pagination.currentPage ? 'active' : '' %>">
+                            <%= i %>
+                        </a>
+                    <% } %>
 
-    <% if (pagination.currentPage < pagination.totalPages) { %>
-      <a href="?page=<%= pagination.currentPage + 1 %>" class="page-link">»</a>
-    <% } %>
-  <% } %>
-</div>
+                    <% if (pagination.currentPage < pagination.totalPages) { %>
+                        <a href="?page=<%= pagination.currentPage + 1 %>" class="page-link">»</a>
+                    <% } %>
+                <% } %>
+            </div>
 
         </div>
     </div>
 
     <%- include('../partials/admin/footer') %>
 
+    <script src="/js/admin/common.js"></script>
     <script src="/js/admin/customers.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-  function fetchCustomers(page = 1) {
-  fetch(`/admin/customers?page=${page}`, {
-    headers: {
-      Accept: "application/json"
-    }
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        updateCustomerTable(data.customers);
-        renderPagination(data.pagination);
-      }
-    })
-    .catch(err => console.error("Error loading customers:", err));
-}
 
-
-    </script>
 </body>
 </html>

@@ -73,6 +73,12 @@ router.get("/sales/export/pdf", adminAuth, salesController.exportSalesReportPDF)
 router.get("/sales/export/excel", adminAuth, salesController.exportSalesReportExcel);
 router.get("/sales/chart-data", adminAuth, salesController.getSalesChartData);
 
+// Dashboard data endpoints
+router.get('/dashboard/chart-data', adminAuth, salesController.getSalesChartData);
+router.get('/dashboard/top-products', adminAuth, salesController.getTopProducts);
+router.get('/dashboard/top-categories', adminAuth, salesController.getTopCategories);
+router.get('/dashboard/top-brands', adminAuth, salesController.getTopBrands);
+
 router.get('/categories', adminAuth, categoryController.getAllCategories);
 router.get('/categories/add', adminAuth, categoryController.renderAddCategory);
 router.post('/categories/add', adminAuth, upload.single('image'), categoryController.addCategory);

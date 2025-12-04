@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Order Details</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="stylesheet" href="/css/admin/common.css">
   <link rel="stylesheet" href="/css/admin/profileOrders.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -152,6 +154,8 @@
 </head>
 <body>
   <%- include('../partials/admin/navbar') %>
+  <%- include('../partials/admin/sidepanel', { active:'orders' }) %>
+  <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
   <div class="main-content" id="main-content">
     <div class="container">
@@ -204,6 +208,7 @@
       </div>
 
       <h3>Items:</h3>
+      <div class="table-wrapper">
       <table class="items-table">
         <thead>
           <tr>
@@ -221,7 +226,7 @@
             <% const itemStatus = item.status || 'Placed'; %>
             <% const isFinalStatus = ['Delivered', 'Returned', 'Cancelled'].includes(itemStatus); %>
             <tr data-item-id="<%= item._id %>">
-              <td>
+              <td data-label="Product">
                 <% 
                   let productName = 'Deleted Product';
                   if (item.productId && item.productId.name) {
@@ -232,16 +237,16 @@
                 %>
                 <%= productName %>
               </td>
-              <td>
+              <td data-label="Image">
                 <% if (item.productId?.mainImage?.[0]) { %>
                   <img src="<%= item.productId.mainImage %>" alt="Product" width="60">
                 <% } else { %>
                   <em>No image</em>
                 <% } %>
               </td>
-              <td><%= item.quantity %></td>
-              <td>₹<%= item.salesPrice.toFixed(2) %></td>
-              <td>
+              <td data-label="Quantity"><%= item.quantity %></td>
+              <td data-label="Price">₹<%= item.salesPrice.toFixed(2) %></td>
+              <td data-label="Current Status">
                 <span class="status-badge status-<%= itemStatus.toLowerCase().replace(/\s+/g, '-') %>">
                   <%= itemStatus %>
                 </span>
@@ -255,7 +260,7 @@
                   <br><small class="status-timestamp">Return Requested: <%= item.returnRequestedAt.toDateString() %></small>
                 <% } %>
               </td>
-              <td>
+              <td data-label="Update Status">
                 <% if (!isFinalStatus) { %>
                   <div class="status-update-container">
                     <select class="status-dropdown" data-item-id="<%= item._id %>" data-current-status="<%= itemStatus %>">
@@ -282,7 +287,7 @@
                   <span class="final-status-text">Final Status</span>
                 <% } %>
               </td>
-              <td>
+              <td data-label="Actions">
                 <% if (!isFinalStatus) { %>
                   <button class="update-status-btn" 
                           data-order-id="<%= order._id %>" 
@@ -298,6 +303,7 @@
           <% }) %>
         </tbody>
       </table>
+      </div>
       <a href="/admin/orders/<%= order._id %>/invoice" class="invoice-btn">Download Invoice</a>
       <a href="/admin/orders" class="back-btn" style="margin-top: 20px;">Back to Orders</a>
     </div>
@@ -504,6 +510,7 @@
       });
     });
   </script>
+  <script src="/js/admin/common.js"></script>
   </div>
 
   <%- include('../partials/admin/footer') %>

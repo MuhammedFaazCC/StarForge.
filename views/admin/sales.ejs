@@ -7,7 +7,7 @@
     <title>Sales Report - StarForge</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@600&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="/css/admin/common.css">
     <link rel="stylesheet" href="/css/admin/sales.css">
 </head>
@@ -16,6 +16,7 @@
     <%- include('../partials/admin/navbar') %>
 
     <%- include('../partials/admin/sidepanel', { active:'sales' }) %>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
     <div class="main-content" id="main-content">
         <div class="sales-section">
@@ -119,7 +120,7 @@
                             </select>
                         </div>
 
-                        <div class="filter-group custom-dates" id="customDates" style="<%= dateFilter === 'custom' ? 'display: flex;' : 'display: none;' %>">
+                        <div class="filter-group custom-dates <%= dateFilter === 'custom' ? 'show' : '' %>" id="customDates">
                             <div class="date-input">
                                 <label for="startDate">From:</label>
                                 <input type="date" name="startDate" id="startDate" value="<%= startDate %>">
@@ -300,6 +301,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/admin/common.js"></script>
+    <script src="/js/admin/sales.js"></script>
 
     <script>
         function toggleCustomDates() {

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Return Requests - StarForge Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="/css/admin/common.css">
   <link rel="stylesheet" href="/css/admin/orders.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -128,15 +128,15 @@
     }
 
     .view-btn {
-      background: #3b82f6;
+      background: #1f2937;
       color: white;
-      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+      box-shadow: 0 2px 8px rgba(31, 41, 55, 0.25);
     }
 
     .view-btn:hover {
-      background: #2563eb;
+      background: #111827;
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+      box-shadow: 0 4px 12px rgba(17, 24, 39, 0.35);
     }
 
     .return-details {
@@ -285,6 +285,7 @@
 <body>
   <%- include('../partials/admin/navbar') %>
   <%- include('../partials/admin/sidepanel', { active: 'orders' }) %>
+  <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
   <div class="main-content" id="main-content">
     <div class="orders-section">
@@ -556,6 +557,8 @@
   </div>
 
   <%- include('../partials/admin/footer') %>
+
+  <script src="/js/admin/common.js"></script>
 
   <script>
     async function acceptReturn(orderId) {
