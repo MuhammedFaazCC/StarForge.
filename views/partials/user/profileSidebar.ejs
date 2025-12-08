@@ -151,13 +151,13 @@
   position: fixed;
   top: 80px;
   left: 15px;
-  z-index: 1001;
+  z-index: 1100;
   background: #fca120;
   color: white;
   border: none;
   border-radius: 8px;
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
   display: none;
   align-items: center;
   justify-content: center;
@@ -188,6 +188,49 @@
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+}
+
+/* Mobile behavior: collapse sidebar and show arrow under navbar */
+@media (max-width: 768px) {
+  :root { --navH: 58px; }
+
+  .profile-sidebar1 {
+    transform: translateX(-100%);
+    top: var(--navH);
+    height: calc(100vh - var(--navH));
+    width: 80vw;
+    max-width: 300px;
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.2);
+  }
+
+  .profile-sidebar1.show1 {
+    transform: translateX(0);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Baseline: force the toggle visible and fixed; JS will refine position */
+  .sidebar-toggle1 {
+    position: fixed;
+    display: flex;
+    top: calc(var(--navH, 58px) + var(--navGap, 10px) + 14px);
+    left: 12px;
+    width: 38px;
+    height: 38px;
+    border-radius: 9999px;
+    z-index: 1100;
+    background: linear-gradient(135deg, #fca120 0%, #e8940f 100%);
+    color: #fff;
+    border: 2px solid rgba(255,255,255,0.95);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+  }
+  .sidebar-toggle1 i { font-size: 20px; }
+
+  body.sidebar-open1 {
+    overflow: hidden;
+  }
 }
 </style>
 
@@ -292,10 +335,6 @@
         </ul>
     </nav>
     
-    <!-- Mobile Toggle Button -->
-    <button class="sidebar-toggle1 d-md-none" id="sidebarToggle1" aria-label="Toggle Sidebar">
-        <i class="fas fa-bars"></i>
-    </button>
 </aside>
 
 <!-- Sidebar Overlay for Mobile -->
@@ -304,6 +343,22 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
+    // Compute navbar height and expose as CSS var --navH for mobile positioning
+    const applyNavHeightVar = () => {
+      const navEl = document.querySelector('.navbar');
+      let navH = 58;
+      let navGap = 10;
+      if (navEl) {
+        const rect = navEl.getBoundingClientRect();
+        navH = Math.max(40, Math.round(rect.height));
+        const cs = window.getComputedStyle(navEl);
+        const mt = parseInt(cs.marginTop || '0', 10);
+        if (!Number.isNaN(mt)) navGap = mt;
+      }
+      document.documentElement.style.setProperty('--navH', navH + 'px');
+      document.documentElement.style.setProperty('--navGap', navGap + 'px');
+    };
+    applyNavHeightVar();
     // Enhanced logout functionality
     const logoutBtn = document.getElementById('logout-btn1');
     if (logoutBtn) {
@@ -349,10 +404,31 @@
     
     // Enhanced mobile sidebar toggle functionality
     const sidebarToggle = document.getElementById('sidebarToggle1');
+    const toggleIcon = document.getElementById('sidebarToggleIcon1');
     const sidebar = document.getElementById('profileSidebar1');
     const overlay = document.getElementById('sidebarOverlay1');
     
+    // Helper to position toggle exactly below navbar bottom
+    const positionToggle = () => {
+      const navEl = document.querySelector('.navbar');
+      if (navEl && sidebarToggle) {
+        const rect = navEl.getBoundingClientRect();
+        const cs = window.getComputedStyle(navEl);
+        const mb = parseInt(cs.marginBottom || '0', 10) || 0;
+        const offset = 14; // gap after navbar (increased for clearer separation)
+        sidebarToggle.style.top = (Math.round(rect.bottom) + mb + offset) + 'px';
+        sidebarToggle.style.position = 'fixed';
+        sidebarToggle.style.left = '12px';
+      }
+    };
+
     if (sidebarToggle && sidebar && overlay) {
+      // Ensure toggle is visible on mobile
+      if (window.innerWidth < 768) {
+        sidebarToggle.style.display = 'flex';
+      }
+      // Position toggle under navbar
+      positionToggle();
       // Toggle sidebar
       sidebarToggle.addEventListener('click', (e) => {
         e.preventDefault();
@@ -388,11 +464,20 @@
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
+        applyNavHeightVar();
+        positionToggle();
         if (window.innerWidth >= 768) {
           closeSidebar();
+          sidebarToggle.style.display = '';
+        } else {
+          sidebarToggle.style.display = 'flex';
         }
       }, 150);
     });
+    // Keep toggle pinned under navbar while scrolling
+    window.addEventListener('scroll', () => {
+      if (window.innerWidth < 768) positionToggle();
+    }, { passive: true });
     
     // Add smooth scroll behavior for navigation links
     const navLinks = document.querySelectorAll('.nav-link1[href^="/"]');
@@ -437,6 +522,11 @@
       if (firstNavLink) {
         setTimeout(() => firstNavLink.focus(), 300);
       }
+      // Toggle icon to point left when open
+      if (toggleIcon) {
+        toggleIcon.classList.remove('fa-chevron-right');
+        toggleIcon.classList.add('fa-chevron-left');
+      }
     }
     
     function closeSidebar() {
@@ -447,6 +537,11 @@
       // Return focus to toggle button for accessibility
       if (document.activeElement && sidebar.contains(document.activeElement)) {
         sidebarToggle.focus();
+      }
+      // Toggle icon to point right when closed
+      if (toggleIcon) {
+        toggleIcon.classList.remove('fa-chevron-left');
+        toggleIcon.classList.add('fa-chevron-right');
       }
     }
     

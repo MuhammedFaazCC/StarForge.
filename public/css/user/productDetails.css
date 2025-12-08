@@ -289,3 +289,50 @@ i {
   opacity: 1;
   bottom: 50px;
 }
+/* === Responsive: productDetails additions === */
+/* Add horizontal gutter between columns on the main product row */
+.container > .row.mb-4 { 
+  --bs-gutter-x: 1rem;
+}
+
+/* Allow action controls to wrap and add spacing */
+.d-flex.align-items-center.mb-3 {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Improve thumbnails behavior */
+#thumbStrip { 
+  overflow-x: auto; 
+  -webkit-overflow-scrolling: touch; 
+}
+#thumbStrip .p-thumb { 
+  flex: 0 0 auto; 
+}
+
+@media (max-width: 576px) {
+  /* Make quantity input usable on narrow widths */
+  #quantity { width: 120px !important; }
+
+  /* Let buttons share space nicely next to input */
+  .d-flex.align-items-center.mb-3 .btn { flex: 1 1 auto; }
+
+  /* Keep thumbnail strip single-line scroll on mobile */
+  #thumbStrip { flex-wrap: nowrap; gap: 8px; }
+}
+
+/* === Responsive: productDetails image tweaks === */
+@media (max-width: 576px) {
+  .zoom-wrap { max-height: 60vw; }
+  img.zoomable { object-fit: contain; }
+  /* Ensure columns have breathing room */
+  .container > .row.mb-4 { --bs-gutter-x: 1rem; }
+}
+
+/* === Sticky footer for product details page === */
+html, body { height: 100%; }
+body { min-height: 100vh; display: flex; flex-direction: column; }
+/* Main page container should expand to fill available space */
+.container.py-4 { flex: 1 0 auto; margin-bottom: 0; }
+/* Footer sits at the very bottom without external gap */
+footer.footer { margin-top: auto !important; }

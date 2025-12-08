@@ -371,6 +371,9 @@
 </head>
 <body>
   <%- include('../partials/user/navbar', { minimalNavbar: false }) %>
+  <button class="sidebar-toggle1 d-md-none" id="sidebarToggle1" aria-label="Toggle Sidebar">
+      <i class="fas fa-chevron-right" id="sidebarToggleIcon1"></i>
+  </button>
   <%- include('../partials/user/profileSidebar', { user, currentPage: 'address' }) %>
 
   <div class="main-content">

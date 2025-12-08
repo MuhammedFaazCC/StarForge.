@@ -769,3 +769,197 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #e8940f 0%, #d97706 100%);
 }
+/* =========================
+   Responsive Overrides
+   ========================= */
+
+/* Fluid typography and spacing */
+body .profile-info h1 { font-size: clamp(1.25rem, 4.5vw, 2.75rem); }
+body .profile-info p { font-size: clamp(0.9rem, 2.5vw, 1.1rem); }
+
+/* Profile header and avatar scaling */
+body .profile-header { gap: clamp(1rem, 2.5vw, 2rem); flex-wrap: wrap; }
+body .profile-image { width: clamp(5.5rem, 10vw, 8.75rem); height: clamp(5.5rem, 10vw, 8.75rem); font-size: clamp(2rem, 6vw, 3.5rem); border-width: 0.25rem; }
+body .image-upload-overlay { width: 2.5rem; height: 2.5rem; bottom: 0.4rem; right: 0.4rem; border-width: 0.2rem; }
+
+/* Stats and actions */
+body .profile-stats { gap: clamp(0.75rem, 2.5vw, 2.5rem); flex-wrap: wrap; }
+body .stat-item { padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 2.5vw, 1.5rem); border-radius: 0.75rem; min-width: clamp(8rem, 25vw, 12rem); }
+body .stat-value { font-size: clamp(1.25rem, 4vw, 1.75rem); }
+body .stat-label { font-size: clamp(0.8rem, 2.5vw, 0.9rem); }
+body .action-card { padding: clamp(1rem, 2.5vw, 2rem); border-radius: 1rem; }
+body .action-icon { width: clamp(2.5rem, 6vw, 3.5rem); height: clamp(2.5rem, 6vw, 3.5rem); font-size: clamp(1.25rem, 4vw, 1.75rem); border-radius: 0.75rem; }
+body .action-title { font-size: clamp(1.05rem, 3.5vw, 1.3rem); }
+body .action-description { font-size: clamp(0.9rem, 2.5vw, 0.95rem); }
+body .action-button { font-size: clamp(0.9rem, 2.5vw, 0.95rem); padding: 0.75rem 1.25rem; border-radius: 0.625rem; flex-wrap: wrap; }
+
+/* Grids */
+body .quick-actions { grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); }
+body .detail-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
+body .detail-item { padding: clamp(1rem, 2.5vw, 1.5rem); border-radius: 0.75rem; border-width: 0.125rem; min-width: 0; word-break: break-word; }
+body .detail-label { font-size: clamp(0.8rem, 2.5vw, 0.9rem); }
+body .detail-value { font-size: clamp(0.95rem, 3vw, 1.1rem); }
+body .profile-details-section { padding: clamp(1.25rem, 2.5vw, 2.5rem); border-radius: 1rem; }
+body .section-title { font-size: clamp(1.25rem, 4vw, 1.75rem); }
+body .section-title i { font-size: clamp(1.1rem, 3.5vw, 1.5rem); }
+body .edit-profile-btn { padding: clamp(0.75rem, 2.5vw, 1rem) clamp(1.25rem, 3vw, 2.5rem); border-radius: 0.625rem; font-size: clamp(0.95rem, 2.5vw, 1rem); }
+
+/* Modals: viewport-fit and scrollable body */
+body .modal-content { width: min(95vw, 42rem); max-width: 95%; max-height: 90vh; display: flex; flex-direction: column; }
+body .modal-header { padding: clamp(1rem, 2.5vw, 1.5rem); border-radius: 1rem 1rem 0 0; }
+body .modal-title { font-size: clamp(1.05rem, 3.5vw, 1.25rem); }
+body .close-modal { width: 1.875rem; height: 1.875rem; font-size: clamp(1.25rem, 4vw, 1.5rem); }
+body .modal-content form { padding: clamp(1rem, 2.5vw, 2rem); overflow: auto; max-height: calc(90vh - 3.5rem); }
+body .modal-actions { flex-wrap: wrap; }
+body .btn-primary, body .btn-secondary { padding: 0.75rem 1.25rem; border-radius: 0.5rem; font-size: clamp(0.9rem, 2.5vw, 1rem); }
+
+/* Upload UI */
+body .file-upload-area { border-radius: 0.75rem; padding: clamp(1.25rem, 3vw, 2.5rem); border-width: 0.125rem; }
+body .upload-icon { font-size: clamp(2rem, 7vw, 3.5rem); }
+body .upload-text { font-size: clamp(0.95rem, 3vw, 1.1rem); }
+body .upload-hint { font-size: clamp(0.8rem, 2.5vw, 0.9rem); }
+
+/* Toast constraints */
+body .toast { border-radius: 0.625rem; box-shadow: 0 0.5rem 2rem rgba(0,0,0,0.2); max-width: min(95vw, 24rem); word-break: break-word; }
+
+/* New Breakpoints */
+@media (max-width: 1024px) { body .profile-stats { justify-content: center; } }
+@media (max-width: 820px) { body .profile-header { flex-direction: column; text-align: center; } }
+@media (max-width: 768px) {
+  body .quick-actions { grid-template-columns: 1fr; }
+  body .detail-grid { grid-template-columns: 1fr; }
+  body .modal-actions { flex-direction: column; gap: 0.5rem; }
+  body .modal-actions .btn-primary, body .modal-actions .btn-secondary { width: 100%; justify-content: center; }
+}
+@media (max-width: 576px) {
+  body .profile-overview { padding: 1.25rem; }
+  body .profile-details-section { padding: 1.25rem; }
+  body .action-card { padding: 1.25rem; }
+  body .toast { bottom: 1rem; right: 1rem; }
+}
+@media (max-width: 430px) {
+  body .image-upload-overlay { width: 2.25rem; height: 2.25rem; }
+  body .stat-item { min-width: 9rem; }
+}
+@media (max-width: 360px) {
+  body .profile-stats { gap: 0.75rem; }
+  body .stat-item { min-width: 8rem; padding: 0.5rem 0.75rem; }
+  body .modal-content form { padding: 1rem; }
+}
+
+/* Mobile navbar spacing fix and toggle positioning */
+@media (max-width: 768px) {
+  body .navbar { margin-top: 0; padding: 8px 12px; top: 0; }
+  body .logo { left: 0; }
+  body .login-button { right: 0; }
+}
+
+/* Mobile navbar top-gap fix and sidebar toggle visibility (overrides inline styles) */
+@media (max-width: 768px) {
+  body { padding-top: 0 !important; }
+  .navbar { margin-top: 10px !important; padding: 10px 20px !important; top: 0 !important; }
+  .logo { left: 0 !important; }
+  /* Ensure the profile sidebar toggle button is visible and above navbar */
+  .sidebar-toggle1 { display: flex !important; z-index: 1002 !important; top: calc(var(--navH, 58px) + 6px) !important; left: 12px !important; width: 44px !important; height: 44px !important; border-radius: 9999px !important; }
+}
+
+@media (max-width: 576px) {
+  body { padding-top: 0 !important; }
+}
+
+/* Mobile fixes: prevent navbar overflow and ensure sidebar toggle visibility */
+@media (max-width: 768px) {
+  html, body { overflow-x: hidden !important; }
+  .navbar { width: 100% !important; left: 0 !important; right: 0 !important; box-sizing: border-box; margin-top: 10px !important; padding: 10px 16px !important; }
+  .logo { left: 0 !important; }
+  .nav-buttons, .icons { display: flex; align-items: center; gap: 10px; }
+  .sidebar-toggle1 { display: flex !important; position: fixed !important; z-index: 1100 !important; }
+}
+
+/* Mobile layout centering and persistent profile toggle visibility */
+@media (max-width: 768px) {
+  html, body { overflow-x: hidden !important; }
+  .main-content { margin-left: 0 !important; }
+  .content-wrapper { margin: 0 auto !important; padding-left: 12px !important; padding-right: 12px !important; }
+  .profile-container { margin: 0 auto !important; }
+  /* Force the profile sidebar toggle to be visible and fixed */
+  .sidebar-toggle1 { position: fixed !important; display: flex !important; left: 12px !important; z-index: 999 !important; }
+}
+
+/* Mobile: reserve a gap between navbar and page content for the profile sidebar button */
+@media (max-width: 768px) {
+  .main-content { margin-top: 64px !important; }
+}
+
+/* Mobile: force profile sidebar button visible and above content (fallback positioning) */
+@media (max-width: 768px) {
+  .sidebar-toggle1 { position: fixed !important; display: flex !important; top: var(--profile-btn-top, 64px) !important; left: 12px !important; z-index: 2000 !important; }
+  .sidebar-toggle1 i { font-size: 18px; }
+}
+
+/* =========================
+   Orders Page Responsive Overrides
+   ========================= */
+/* Base layout tweaks */
+body .content-wrapper { max-width: 1200px; margin: 0 auto; padding-inline: clamp(12px, 4vw, 24px); }
+body .page-title { font-size: clamp(1.4rem, 3.5vw, 2.25rem); }
+
+/* Typography and wrapping */
+body .orders-table td { font-size: clamp(0.9rem, 2.6vw, 0.95rem); word-break: break-word; }
+body .product-name { font-size: clamp(0.88rem, 2.6vw, 0.95rem); }
+body .order-total { font-size: clamp(0.95rem, 2.8vw, 1rem); }
+
+@media (max-width: 1024px) {
+  body .orders-table { font-size: 0.85rem; }
+  body .orders-table th, body .orders-table td { padding: 1rem 0.75rem; }
+}
+
+@media (max-width: 820px) {
+  body .orders-search form { flex-wrap: wrap; }
+  body .orders-search button { width: 100%; }
+  body .pagination-container { padding: 1.25rem; }
+}
+
+@media (max-width: 768px) {
+  /* Card-like rows */
+  body .orders-table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+  body .orders-table thead { display: none; }
+  body .orders-table tbody, body .orders-table tr, body .orders-table td { display: block; width: 100%; }
+  body .orders-table tbody tr { margin-bottom: 1.5rem; padding: 1.5rem; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); background: #fff; }
+  body .orders-table tbody td { display: flex; justify-content: space-between; align-items: flex-start; padding: 0.75rem 0; border-bottom: 1px solid #f3f4f6; text-align: left; position: relative; min-height: auto; white-space: normal; }
+  body .orders-table tbody td:last-child { border-bottom: none; }
+  body .orders-table tbody td::before { content: attr(data-label); font-weight: 600; color: #374151; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px; width: 40%; flex-shrink: 0; }
+
+  body .product-item { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  body .product-actions { width: 100%; justify-content: flex-start; }
+
+  body .action-buttons { flex-direction: column; align-items: stretch; width: 100%; }
+  body .action-btn { justify-content: center; width: 100%; }
+
+  body .pagination { gap: 0.25rem; }
+  body .pagination-btn { padding: 0.5rem 0.75rem; font-size: 0.8rem; min-width: 40px; }
+}
+
+@media (max-width: 576px) {
+  body .orders-table tbody tr { padding: 1rem; }
+  body .orders-table tbody td { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  body .orders-table tbody td::before { width: 100%; margin-bottom: 0.25rem; }
+  body .action-buttons { width: 100%; }
+  body .pagination-container { padding: 1rem; }
+  body .pagination-info { font-size: 0.8rem; text-align: center; }
+}
+
+@media (max-width: 430px) {
+  body .orders-table tbody tr { padding: 0.875rem; }
+  body .orders-table tbody td { padding: 0.6rem 0; }
+  body .product-item { gap: 0.4rem; }
+  body .action-btn { padding: 0.45rem 0.75rem; font-size: 0.78rem; }
+  body .pagination-btn { min-width: 34px; font-size: 0.78rem; }
+}
+
+@media (max-width: 360px) {
+  body .orders-search button { font-size: 0.9rem; }
+  body .orders-table tbody tr { padding: 0.75rem; }
+  body .orders-table tbody td::before { font-size: 0.75rem; }
+  body .action-btn { padding: 0.4rem 0.65rem; font-size: 0.75rem; }
+}
