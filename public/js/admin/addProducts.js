@@ -1,4 +1,186 @@
 document.addEventListener("DOMContentLoaded", () => {
+
+  function validateAddProductForm() {
+  const name = document.getElementById("name").value.trim();
+  const brand = document.getElementById("brand").value.trim();
+  const price = document.getElementById("price").value.trim();
+  const offer = document.getElementById("offer").value.trim();
+  const description = document.getElementById("description").value.trim();
+  const category = document.getElementById("category").value;
+  const stock = document.getElementById("stock").value.trim();
+  const sizes = document.getElementById("sizes").value.trim();
+  const rimMaterial = document.getElementById("rimMaterial").value.trim();
+  const color = document.getElementById("color").value.trim();
+
+  const allowedSizes = ["16","17","18","19","20","21","22"]; // same as server
+  const nameRegex = /^[A-Za-z0-9\s\-']+$/;
+
+  if (!name) return "Product name is required";
+  if (name.length < 2 || name.length > 100) return "Name must be 2–100 characters";
+
+  if (!/^[A-Za-z0-9\s\-']+$/.test(name))
+    return "Invalid characters in product name";
+
+  if (!/[A-Za-z0-9]/.test(name))
+    return "Name must contain at least one alphanumeric character";
+
+  if (/---+/.test(name))
+    return "Name cannot contain repeated hyphens";
+
+  if (/^[-']|[-']$/.test(name))
+    return "Name cannot start or end with hyphens or apostrophes";
+
+  if (!brand) return "Brand is required";
+
+  if (brand.length < 2 || brand.length > 50)
+    return "Brand must be 2–50 characters";
+
+  if (!/^[A-Za-z0-9\s\-']+$/.test(brand))
+    return "Brand contains invalid characters";
+
+  if (!/[A-Za-z0-9]/.test(brand))
+    return "Brand must contain at least one alphanumeric character";
+
+  if (/^[^A-Za-z0-9]+$/.test(brand))
+    return "Brand cannot be only symbols";
+
+  if (/---+/.test(brand))
+    return "Brand cannot contain repeated hyphens";
+
+  if (/^[-']|[-']$/.test(brand))
+    return "Brand cannot start or end with hyphens or apostrophes";
+
+  if (/[<>]/.test(brand))
+    return "Brand cannot contain < or >";
+
+
+  if (!price) return "Price is required";
+
+  if (!/^\d+(\.\d{1,2})?$/.test(price))
+    return "Price must be a valid number with up to 2 decimals";
+
+  if (price.startsWith("."))
+    return "Price cannot start with a dot";
+
+  if (/^0\d+/.test(price))
+    return "Invalid leading zeros in price";
+
+  if (!(Number(price) > 0))
+    return "Price must be greater than 0";
+
+  if (price.length > 15)
+    return "Price value is too large";
+
+  let off = offer.trim();
+
+  if (off === "") off = "0";
+
+  if (!/^\d+$/.test(off))
+    return "Offer must be an integer";
+
+  if (off.length > 1 && off.startsWith("0"))
+    return "Offer cannot contain leading zeros";
+
+  const offerNum = Number(off);
+
+  if (offerNum < 0 || offerNum > 90)
+    return "Offer must be between 0 and 90%";
+
+  if (off.length > 2)
+    return "Invalid offer value";
+
+  if (description.length > 2000)
+    return "Description must be ≤ 2000 characters";
+
+  if (description && !/[A-Za-z0-9]/.test(description))
+    return "Description must contain at least one alphanumeric character";
+
+  if (/^[^A-Za-z0-9]+$/.test(description))
+    return "Description cannot be only special characters";
+
+  if (/([^\w\s])\1\1+/.test(description))
+    return "Description contains invalid repeated symbols";
+
+  if (/[<>]/.test(description))
+    return "Description cannot contain < or >";
+
+  if (/\n{4,}/.test(description))
+    return "Too many blank lines in description";
+
+  if (!category) return "Category required";
+
+  if (!stock || !/^\d+$/.test(stock) || Number(stock) < 0)
+    return "Stock must be integer ≥ 0";
+
+  if (!sizes) return "Size required";
+  const splitSizes = sizes.split(",").map(s => s.trim()).filter(Boolean);
+  for (const s of splitSizes) {
+    if (!allowedSizes.includes(s)) return `Invalid size: ${s}`;
+  }
+
+  if (rimMaterial.length > 100)
+    return "Rim material must be ≤ 100 characters";
+
+  if (rimMaterial) {
+    if (!/^[A-Za-z0-9\s\-']+$/.test(rimMaterial))
+      return "Rim material contains invalid characters";
+
+    if (!/[A-Za-z0-9]/.test(rimMaterial))
+      return "Rim material must contain at least one alphanumeric character";
+
+    if (/^[^A-Za-z0-9]+$/.test(rimMaterial))
+      return "Rim material cannot be only symbols";
+
+    if (/---+/.test(rimMaterial))
+      return "Rim material cannot contain repeated hyphens";
+
+    if (/^[-']|[-']$/.test(rimMaterial))
+      return "Rim material cannot start or end with hyphens or apostrophes";
+
+    if (/[<>]/.test(rimMaterial))
+      return "Rim material cannot contain < or >";
+
+    if (/([^\w\s])\1\1+/.test(rimMaterial))
+      return "Rim material contains repeated symbols";
+  }
+
+  if (color.length > 50)
+    return "Color must be ≤ 50 characters";
+
+  if (color) {
+    if (!/^[A-Za-z0-9\s\-']+$/.test(color))
+      return "Color contains invalid characters";
+
+    if (!/[A-Za-z0-9]/.test(color))
+      return "Color must contain at least one alphanumeric character";
+
+    if (/^[^A-Za-z0-9]+$/.test(color))
+      return "Color cannot be only symbols";
+
+    if (/---+/.test(color))
+      return "Color cannot contain repeated hyphens";
+
+    if (/^[-']|[-']$/.test(color))
+      return "Color cannot start or end with hyphens or apostrophes";
+
+    if (/[<>]/.test(color))
+      return "Color cannot contain < or >";
+
+    if (/([^\w\s])\1\1+/.test(color))
+      return "Color contains repeated symbols";
+  }
+
+  // image validation
+  if (!croppedFiles.mainImage) return "Main image required";
+  if (croppedFiles.mainImage.size > 2 * 1024 * 1024) return "Main image > 2MB";
+  if (croppedFiles.additionalImages.length > 5) return "Max 5 additional images";
+  for (const f of croppedFiles.additionalImages) {
+    if (f.size > 2 * 1024 * 1024) return "One of the additional images > 2MB";
+  }
+
+  return null;
+}
+
   const mainImageInput = document.getElementById("mainImage");
   const mainImagePreview = document.getElementById("mainImagePreview");
   const additionalImagesInput = document.getElementById("additionalImages");
@@ -161,8 +343,17 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   form.addEventListener("submit", (e) => {
-    console.log("Form submit event triggered");
-    e.preventDefault();
+  e.preventDefault();
+
+  const error = validateAddProductForm();
+  if (error) {
+    Swal.fire({
+      icon: "error",
+      title: "Validation Error",
+      text: error
+    });
+    return;
+  }
 
     console.log("Form action:", form.action);
     console.log("Form method:", form.method);

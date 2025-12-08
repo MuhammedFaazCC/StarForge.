@@ -205,7 +205,8 @@ const verifyOTP = async (req, res) => {
         return res.redirect("/resetPassword");
       });
     } else if (action === "editProfile") {
-      const { fullName, email, mobile, profileImage } = req.session.otp.userData;
+      const { fullName, mobile } = req.session.otp.userData;
+      const newEmail = req.session.otp.email;
       const userId = req.session.user._id;
       
       try {
@@ -213,12 +214,12 @@ const verifyOTP = async (req, res) => {
           userId,
           {
             fullName: fullName.trim(),
-            email: email,
+            email: newEmail,
             mobile: mobile || null,
-            profileImage: profileImage,
           },
           { new: true }
         );
+
 
         if (!updatedUser) {
           req.session.error = "Failed to update profile";

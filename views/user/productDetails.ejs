@@ -1,9 +1,12 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><%= product.name %> | StarForge</title>
+  <title>
+    <%= product.name %> | StarForge
+  </title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -19,15 +22,18 @@
       color: #888;
       transition: color 0.3s ease;
     }
+
     .wishlist-btn.active,
     .wishlist-btn:hover {
       color: #fca120;
     }
+
     .zoom-wrap {
       position: relative;
       overflow: hidden;
       border-radius: 6px;
     }
+
     img.zoomable {
       transition: transform 180ms ease;
       cursor: zoom-in;
@@ -35,449 +41,474 @@
       width: 100%;
       height: auto;
     }
+
     img.zoomable.zoomed {
       transform: scale(2);
       cursor: zoom-out;
     }
   </style>
 </head>
+
 <body>
   <%- include('../partials/user/navbar', { minimalNavbar: false }) %>
- 
-  <div class="container py-4">
-    <nav aria-label="breadcrumb">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/">Home</a></li>
-        <li class="breadcrumb-item"><a href="/products">All Products</a></li>
-        <li class="breadcrumb-item active" aria-current="page"><%= product.name %></li>
-      </ol>
-    </nav>
 
-    <div class="row mb-4">
-      <div class="col-md-3">
-        <div class="position-relative mb-2 zoom-wrap">
-          <% if (product.mainImage) { %>
-            <img id="mainProductImage" src="<%= product.mainImage %>"
-                 class="img-fluid zoomable"
-                 alt="<%= product.name %>">
-          <% } else { %>
-            <div id="mainProductImagePlaceholder" class="d-flex align-items-center justify-content-center" style="height:220px;border:1px dashed #ccc;border-radius:6px;color:#888;font-size:14px;">
-              No image
-            </div>
-          <% } %>
-          <div id="imageNav" class="d-flex justify-content-between mt-2" style="gap:8px;">
-            <button type="button" id="prevImageBtn" class="btn btn-sm btn-outline-secondary">Prev</button>
-            <button type="button" id="nextImageBtn" class="btn btn-sm btn-outline-secondary">Next</button>
-          </div>
-        </div>
-        <div id="thumbStrip" class="d-flex flex-wrap gap-2">
-          <% 
-            const thumbs = (product.additionalImages && product.additionalImages.length)
-              ? product.additionalImages.filter(Boolean)
-              : [];
-          %>
-          <% if ((product.mainImage) || thumbs.length) { %>
+    <div class="container py-4">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item"><a href="/products">All Products</a></li>
+          <li class="breadcrumb-item active" aria-current="page">
+            <%= product.name %>
+          </li>
+        </ol>
+      </nav>
+
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <div class="position-relative mb-2 zoom-wrap">
             <% if (product.mainImage) { %>
-              <img src="<%= product.mainImage %>" class="img-thumbnail p-thumb" style="width: 60px; height: 60px; object-fit: cover;" alt="<%= product.name %> thumbnail" data-src="<%= product.mainImage %>">
-            <% } %>
-            <% thumbs.forEach(image => { %>
-              <img src="<%= image %>" class="img-thumbnail p-thumb" style="width: 60px; height: 60px; object-fit: cover;" alt="<%= product.name %> thumbnail" data-src="<%= image %>">
-            <% }) %>
-          <% } else { %>
-            <span class="text-muted" style="font-size: 0.9rem;">No additional images</span>
-          <% } %>
-        </div>
-      </div>
-
-      <div class="col-md-7">
-        <h2><%= product.name %></h2>
-        <div class="rating-stars mb-2">
-          <% for (let i = 1; i <= 5; i++) { %>
-            <i class="bi <%= i <= product.avgRating ? 'bi-star-fill' : 'bi-star' %>"></i>
-          <% } %>
-          <span class="text-muted">(<%= product.totalRatings %> reviews)</span>
-        </div>
-        <p class="text-muted">Brand: <%= product.brand %></p>
-        <% if (product.offer > 0) { %>
-          <h4 class="text-danger">&#8377;<%= product.salePrice %> <small class="text-muted"><del>&#8377;<%= product.price %></del></small></h4>
-        <% } else { %>
-          <h4 class="text-primary">&#8377;<%= product.price %></h4>
-        <% } %>
-
-        <form action="/cart/add/<%= product._id %>" method="POST" class="my-3">
-          <label for="quantity" class="form-label">Quantity</label>
-          <div class="d-flex align-items-center mb-3">
-            <input type="number" name="quantity" id="quantity" value="1" min="1" class="form-control w-25 me-3">
-            <button type="submit" class="btn btn-warning me-2">Add to Cart</button>
-            <button 
-              type="button"
-              id="wishlistBtn"
-              class="wishlist-btn <%= isInWishlist ? 'active' : '' %>"
-              data-product="<%= product._id %>">
-              <i class="<%= isInWishlist ? 'fas' : 'far' %> fa-heart"></i>
-            </button>
-          </div>
-        </form>
-        <h5 class="mt-3">Description</h5>
-        <p><%= product.description %></p>
-        <h5>Specifications</h5>
-        <ul class="mb-2">
-          <% for (let key in product.specifications) { %>
-            <% if (product.specifications[key]) { %>
-              <li><strong><%= key.replace(/([A-Z])/g, ' $1').toUpperCase() %></strong>: <%= product.specifications[key] %></li>
-            <% } %>
-          <% } %>
-        </ul>
-
-      <div id="reviews">
-        <% if (user) { %>
-          <form action="/product/<%= product._id %>/review" method="POST" class="my-3">
-            <div class="mb-2">
-              <label for="rating" class="form-label">Rating</label>
-              <select name="rating" class="form-select w-25" required>
-                <option value="">Select</option>
-                <% for (let i = 1; i <= 5; i++) { %>
-                  <option value="<%= i %>"><%= i %> Star<%= i > 1 ? 's' : '' %></option>
-                <% } %>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="comment" class="form-label">Comment</label>
-              <textarea name="comment" class="form-control" rows="3" required></textarea>
-            </div>
-            <button type="submit" class="btn btn-dark">Submit Review</button>
-          </form>
-        <% } else { %>
-          <p class="text-muted">Please <a href="/login">login</a> to write a review.</p>
-        <% } %>
-
-        <% if (reviews.length === 0) { %>
-          <p>No reviews yet.</p>
-        <% } else { %>
-          <div class="row">
-            <% reviews.forEach(review => { %>
-              <div class="col-md-6">
-                <div class="review-card">
-                  <div class="review-user"><%= review.user.fullName %></div>
-                  <div class="rating-stars mb-1">
-                    <% for (let i = 1; i <= 5; i++) { %>
-                      <i class="bi <%= i <= review.rating ? 'bi-star-fill' : 'bi-star' %>"></i>
-                    <% } %>
-                  </div>
-                  <p><%= review.comment %></p>
-                  <div class="review-date"><%= new Date(review.createdAt).toDateString() %></div>
-                </div>
-              </div>
-            <% }) %>
-          </div>
-        <% } %>
-      </div>
-    </div>
-
-    <div class="mt-5">
-      <h4>You May Also Like</h4>
-      <div class="row">
-        <% relatedProducts.forEach(prod => { %>
-          <div class="col-6 col-md-2">
-            <div class="card mb-4">
-              <% if (prod.mainImage) { %>
-                <img src="<%= prod.mainImage %>" class="card-img-top" alt="<%= prod.name %>">
+              <img id="mainProductImage" src="<%= product.mainImage %>" class="img-fluid zoomable"
+                alt="<%= product.name %>">
               <% } else { %>
-                <div class="d-flex align-items-center justify-content-center" style="height:150px;border:1px dashed #ccc;border-radius:6px;color:#888;font-size:12px;">No image</div>
+                <div id="mainProductImagePlaceholder" class="d-flex align-items-center justify-content-center"
+                  style="height:220px;border:1px dashed #ccc;border-radius:6px;color:#888;font-size:14px;">
+                  No image
+                </div>
+                <% } %>
+                  <div id="imageNav" class="d-flex justify-content-between mt-2" style="gap:8px;">
+                    <button type="button" id="prevImageBtn" class="btn btn-sm btn-outline-secondary">Prev</button>
+                    <button type="button" id="nextImageBtn" class="btn btn-sm btn-outline-secondary">Next</button>
+                  </div>
+          </div>
+          <div id="thumbStrip" class="d-flex flex-wrap gap-2">
+            <% const thumbs=(product.additionalImages && product.additionalImages.length) ?
+              product.additionalImages.filter(Boolean) : []; %>
+              <% if ((product.mainImage) || thumbs.length) { %>
+                <% if (product.mainImage) { %>
+                  <img src="<%= product.mainImage %>" class="img-thumbnail p-thumb"
+                    style="width: 60px; height: 60px; object-fit: cover;" alt="<%= product.name %> thumbnail"
+                    data-src="<%= product.mainImage %>">
+                  <% } %>
+                    <% thumbs.forEach(image=> { %>
+                      <img src="<%= image %>" class="img-thumbnail p-thumb"
+                        style="width: 60px; height: 60px; object-fit: cover;" alt="<%= product.name %> thumbnail"
+                        data-src="<%= image %>">
+                      <% }) %>
+                        <% } else { %>
+                          <span class="text-muted" style="font-size: 0.9rem;">No additional images</span>
+                          <% } %>
+          </div>
+        </div>
+
+        <div class="col-md-7">
+          <h2>
+            <%= product.name %>
+          </h2>
+          <div class="rating-stars mb-2">
+            <% for (let i=1; i <=5; i++) { %>
+              <i class="bi <%= i <= product.avgRating ? 'bi-star-fill' : 'bi-star' %>"></i>
+              <% } %>
+                <span class="text-muted">(<%= product.totalRatings %> reviews)</span>
+          </div>
+          <p class="text-muted">Brand: <%= product.brand %>
+          </p>
+          <% if (product.offer> 0) { %>
+            <h4 class="text-danger">&#8377;<%= product.salePrice %> <small class="text-muted"><del>&#8377;<%=
+                      product.price %></del></small></h4>
+            <% } else { %>
+              <h4 class="text-primary">&#8377;<%= product.price %>
+              </h4>
               <% } %>
 
-              <div class="card-body">
-                <h6 class="card-title"><%= prod.name %></h6>
-                <p class="card-text">&#8377;<%= prod.salePrice %></p>
-                <a href="/product/<%= prod._id %>" class="btn btn-outline-dark btn-sm">View</a>
+                <form action="/cart/add/<%= product._id %>" method="POST" class="my-3">
+                  <label for="quantity" class="form-label">Quantity</label>
+                  <div class="d-flex align-items-center mb-3">
+                    <input type="number" name="quantity" id="quantity" value="1" min="1" class="form-control w-25 me-3">
+                    <button type="submit" class="btn btn-warning me-2">Add to Cart</button>
+                    <button type="button" id="wishlistBtn" class="wishlist-btn <%= isInWishlist ? 'active' : '' %>"
+                      data-product="<%= product._id %>">
+                      <i class="<%= isInWishlist ? 'fas' : 'far' %> fa-heart"></i>
+                    </button>
+                  </div>
+                </form>
+                <h5 class="mt-3">Description</h5>
+                <p>
+                  <%= product.description %>
+                </p>
+                <h5>Specifications</h5>
+                <ul class="mb-2">
+                  <% for (let key in product.specifications) { %>
+                    <% if (product.specifications[key]) { %>
+                      <li><strong>
+                          <%= key.replace(/([A-Z])/g, ' $1' ).toUpperCase() %>
+                        </strong>: <%= product.specifications[key] %>
+                      </li>
+                      <% } %>
+                        <% } %>
+                </ul>
+
+                <div id="reviews">
+                  <% if (user) { %>
+                    <form action="/product/<%= product._id %>/review" method="POST" class="my-3">
+                      <div class="mb-2">
+                        <label for="rating" class="form-label">Rating</label>
+                        <select name="rating" class="form-select w-25" required>
+                          <option value="">Select</option>
+                          <% for (let i=1; i <=5; i++) { %>
+                            <option value="<%= i %>">
+                              <%= i %> Star<%= i> 1 ? 's' : '' %>
+                            </option>
+                            <% } %>
+                        </select>
+                      </div>
+                      <div class="mb-3">
+                        <label for="comment" class="form-label">Comment</label>
+                        <textarea name="comment" class="form-control" rows="3" required></textarea>
+                      </div>
+                      <button type="submit" class="btn btn-dark">Submit Review</button>
+                    </form>
+                    <% } else { %>
+                      <p class="text-muted">Please <a href="/login">login</a> to write a review.</p>
+                      <% } %>
+
+                        <% if (reviews.length===0) { %>
+                          <p>No reviews yet.</p>
+                          <% } else { %>
+                            <div class="row">
+                              <% reviews.forEach(review=> { %>
+                                <div class="col-md-6">
+                                  <div class="review-card">
+                                    <div class="review-user">
+                                      <%= review.user.fullName %>
+                                    </div>
+                                    <div class="rating-stars mb-1">
+                                      <% for (let i=1; i <=5; i++) { %>
+                                        <i class="bi <%= i <= review.rating ? 'bi-star-fill' : 'bi-star' %>"></i>
+                                        <% } %>
+                                    </div>
+                                    <p>
+                                      <%= review.comment %>
+                                    </p>
+                                    <div class="review-date">
+                                      <%= new Date(review.createdAt).toDateString() %>
+                                    </div>
+                                  </div>
+                                </div>
+                                <% }) %>
+                            </div>
+                            <% } %>
+                </div>
+        </div>
+
+        <div class="mt-5">
+          <h4>You May Also Like</h4>
+          <div class="row">
+            <% relatedProducts.forEach(prod=> { %>
+              <div class="col-6 col-md-2">
+                <div class="card mb-4">
+                  <% if (prod.mainImage) { %>
+                    <img src="<%= prod.mainImage %>" class="card-img-top" alt="<%= prod.name %>">
+                    <% } else { %>
+                      <div class="d-flex align-items-center justify-content-center"
+                        style="height:150px;border:1px dashed #ccc;border-radius:6px;color:#888;font-size:12px;">No
+                        image</div>
+                      <% } %>
+
+                        <div class="card-body">
+                          <h6 class="card-title">
+                            <%= prod.name %>
+                          </h6>
+                          <p class="card-text">&#8377;<%= prod.salesPrice %>
+                          </p>
+                          <a href="/product/<%= prod._id %>" class="btn btn-outline-dark btn-sm">View</a>
+                        </div>
+                </div>
               </div>
-            </div>
+              <% }) %>
           </div>
-        <% }) %>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <%- include('../partials/user/footer') %>
+      <%- include('../partials/user/footer') %>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  
-  <script>
-    // Simple image gallery controller
-    (function(){
-      document.addEventListener('DOMContentLoaded', function(){
-        const mainImg = document.getElementById('mainProductImage');
-        const zoomWrap = document.querySelector('.zoom-wrap');
-        if (mainImg) {
-          mainImg.addEventListener('click', function(){
-            this.classList.toggle('zoomed');
-          });
-          if (zoomWrap) {
-            zoomWrap.addEventListener('mousemove', function(e){
-              if (!mainImg.classList.contains('zoomed')) return;
-              const rect = zoomWrap.getBoundingClientRect();
-              const x = Math.min(Math.max(e.clientX - rect.left, 0), rect.width);
-              const y = Math.min(Math.max(e.clientY - rect.top, 0), rect.height);
-              const xp = (x / rect.width) * 100;
-              const yp = (y / rect.height) * 100;
-              mainImg.style.transformOrigin = xp + '% ' + yp + '%';
-            });
-            zoomWrap.addEventListener('mouseleave', function(){
-              // Optional: reset origin when leaving
-              mainImg.style.transformOrigin = '';
-            });
-          }
-        }
-        const placeholder = document.getElementById('mainProductImagePlaceholder');
-        const thumbs = Array.from(document.querySelectorAll('#thumbStrip .p-thumb'));
-        const prevBtn = document.getElementById('prevImageBtn');
-        const nextBtn = document.getElementById('nextImageBtn');
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-        const sources = thumbs.map(t => t.getAttribute('data-src')).filter(Boolean);
-        let current = 0;
-
-        function show(index){
-          if (!sources.length) {
-            if (prevBtn && nextBtn) { prevBtn.style.display = 'none'; nextBtn.style.display = 'none'; }
-            return;
-          }
-          current = (index + sources.length) % sources.length;
-          if (mainImg) {
-            mainImg.src = sources[current];
-            mainImg.classList.remove('zoomed');
-            if (placeholder) placeholder.style.display = 'none';
-          }
-
-          thumbs.forEach((t, i)=>{
-            if (i === current) t.classList.add('border', 'border-primary');
-            else t.classList.remove('border', 'border-primary');
-          });
-        }
-
-        // Initialize
-        if (sources.length) {
-          // If main image exists and is first in thumbs, current stays 0
-          show(0);
-        } else {
-          if (prevBtn && nextBtn) { prevBtn.style.display = 'none'; nextBtn.style.display = 'none'; }
-        }
-
-        // Handlers
-        thumbs.forEach((t, i)=>{
-          t.addEventListener('click', ()=> show(i));
-        });
-        if (prevBtn) prevBtn.addEventListener('click', ()=> show(current - 1));
-        if (nextBtn) nextBtn.addEventListener('click', ()=> show(current + 1));
-      });
-    })();
-  </script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const addToCartForm = document.querySelector('form[action*="/cart/add/"]');
-      
-      if (addToCartForm) {
-        addToCartForm.addEventListener('submit', function(e) {
-          e.preventDefault();
-          
-          const formData = new FormData(this);
-          const productId = this.action.split('/').pop();
-          
-          const submitButton = this.querySelector('button[type="submit"]');
-          const originalText = submitButton.textContent;
-          submitButton.disabled = true;
-          submitButton.textContent = 'Adding...';
-          
-          fetch(`/cart/add/${productId}`, {
-            method: 'POST',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams(formData)
-          })
-          .then(async (response) => {
-            const data = await response.json();
-            if (response.status === 401) {
-              window.location.href = '/login';
-              return;
-            }
-            return data;
-          })
-          .then(data => {
-            if (data && data.success) {
-              if (window.updateNavbarCounts && typeof data.cartCount !== 'undefined') {
-                window.updateNavbarCounts({ cartCount: data.cartCount });
+        <script>
+          // Simple image gallery controller
+          (function () {
+            document.addEventListener('DOMContentLoaded', function () {
+              const mainImg = document.getElementById('mainProductImage');
+              const zoomWrap = document.querySelector('.zoom-wrap');
+              if (mainImg) {
+                mainImg.addEventListener('click', function () {
+                  this.classList.toggle('zoomed');
+                });
+                if (zoomWrap) {
+                  zoomWrap.addEventListener('mousemove', function (e) {
+                    if (!mainImg.classList.contains('zoomed')) return;
+                    const rect = zoomWrap.getBoundingClientRect();
+                    const x = Math.min(Math.max(e.clientX - rect.left, 0), rect.width);
+                    const y = Math.min(Math.max(e.clientY - rect.top, 0), rect.height);
+                    const xp = (x / rect.width) * 100;
+                    const yp = (y / rect.height) * 100;
+                    mainImg.style.transformOrigin = xp + '% ' + yp + '%';
+                  });
+                  zoomWrap.addEventListener('mouseleave', function () {
+                    // Optional: reset origin when leaving
+                    mainImg.style.transformOrigin = '';
+                  });
+                }
               }
-              if (window.Swal) {
-                Swal.fire({
-                  toast: true,
-                  position: 'top-end',
-                  icon: 'success',
-                  title: data.message || 'Added to cart!',
-                  showConfirmButton: false,
-                  timer: 1500,
-                  timerProgressBar: true
+              const placeholder = document.getElementById('mainProductImagePlaceholder');
+              const thumbs = Array.from(document.querySelectorAll('#thumbStrip .p-thumb'));
+              const prevBtn = document.getElementById('prevImageBtn');
+              const nextBtn = document.getElementById('nextImageBtn');
+
+              const sources = thumbs.map(t => t.getAttribute('data-src')).filter(Boolean);
+              let current = 0;
+
+              function show(index) {
+                if (!sources.length) {
+                  if (prevBtn && nextBtn) { prevBtn.style.display = 'none'; nextBtn.style.display = 'none'; }
+                  return;
+                }
+                current = (index + sources.length) % sources.length;
+                if (mainImg) {
+                  mainImg.src = sources[current];
+                  mainImg.classList.remove('zoomed');
+                  if (placeholder) placeholder.style.display = 'none';
+                }
+
+                thumbs.forEach((t, i) => {
+                  if (i === current) t.classList.add('border', 'border-primary');
+                  else t.classList.remove('border', 'border-primary');
                 });
               }
-            }
-          })
-          .catch(error => {
-            console.error('Error:', error);
-          })
-          .finally(() => {
-            submitButton.disabled = false;
-            submitButton.textContent = originalText;
-          });
-        });
-      }
-    });
-  </script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const wishlistBtn = document.getElementById('wishlistBtn');
-      if (!wishlistBtn) return;
 
-      wishlistBtn.addEventListener('click', function() {
-        const productId = this.dataset.product;
-        fetch(`/toggle-wishlist/${productId}`, {
-          method: 'POST',
-          headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.redirect) {
-            window.location.href = data.redirect;
-            return;
-          }
-          if (data.success) {
-            const icon = this.querySelector('i');
-            if (data.added) {
-              // Set to solid heart
-              icon.classList.remove('far');
-              icon.classList.add('fas');
-              this.classList.add('active');
-            } else {
-              // Set to outline heart
-              icon.classList.remove('fas');
-              icon.classList.add('far');
-              this.classList.remove('active');
-            }
+              // Initialize
+              if (sources.length) {
+                // If main image exists and is first in thumbs, current stays 0
+                show(0);
+              } else {
+                if (prevBtn && nextBtn) { prevBtn.style.display = 'none'; nextBtn.style.display = 'none'; }
+              }
 
-            if (window.updateNavbarCounts && typeof data.wishlistCount !== 'undefined') {
-              window.updateNavbarCounts({ wishlistCount: data.wishlistCount });
-            }
-            if (window.Swal) {
-              Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'success',
-                title: data.message || (data.added ? 'Added to wishlist' : 'Removed from wishlist'),
-                showConfirmButton: false,
-                timer: 1500,
-                timerProgressBar: true
+              // Handlers
+              thumbs.forEach((t, i) => {
+                t.addEventListener('click', () => show(i));
+              });
+              if (prevBtn) prevBtn.addEventListener('click', () => show(current - 1));
+              if (nextBtn) nextBtn.addEventListener('click', () => show(current + 1));
+            });
+          })();
+        </script>
+        <script>
+          document.addEventListener('DOMContentLoaded', function () {
+            const addToCartForm = document.querySelector('form[action*="/cart/add/"]');
+
+            if (addToCartForm) {
+              addToCartForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                const formData = new FormData(this);
+                const productId = this.action.split('/').pop();
+
+                const submitButton = this.querySelector('button[type="submit"]');
+                const originalText = submitButton.textContent;
+                submitButton.disabled = true;
+                submitButton.textContent = 'Adding...';
+
+                fetch(`/cart/add/${productId}`, {
+                  method: 'POST',
+                  headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                  },
+                  body: new URLSearchParams(formData)
+                })
+                  .then(async (response) => {
+                    const data = await response.json();
+                    if (response.status === 401) {
+                      window.location.href = '/login';
+                      return;
+                    }
+                    return data;
+                  })
+                  .then(data => {
+                    if (data && data.success) {
+                      if (window.updateNavbarCounts && typeof data.cartCount !== 'undefined') {
+                        window.updateNavbarCounts({ cartCount: data.cartCount });
+                      }
+                      if (window.Swal) {
+                        Swal.fire({
+                          toast: true,
+                          position: 'top-end',
+                          icon: 'success',
+                          title: data.message || 'Added to cart!',
+                          showConfirmButton: false,
+                          timer: 1500,
+                          timerProgressBar: true
+                        });
+                      }
+                    }
+                  })
+                  .catch(error => {
+                    console.error('Error:', error);
+                  })
+                  .finally(() => {
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText;
+                  });
               });
             }
-          }
-        })
-        .catch(err => console.error('Wishlist toggle error:', err));
-      });
-    });
-  </script>
-  <script>
-    // Minimal toast utility (no dependencies) used by the quantity limiter
-    (function () {
-      const TOAST_ID = 'mini-toast-container';
-      function ensureToastContainer() {
-        let c = document.getElementById(TOAST_ID);
-        if (c) return c;
-        c = document.createElement('div');
-        c.id = TOAST_ID;
-        c.style.position = 'fixed';
-        c.style.left = '50%';
-        c.style.bottom = '20px';
-        c.style.transform = 'translateX(-50%)';
-        c.style.zIndex = '9999';
-        c.style.pointerEvents = 'none';
-        document.body.appendChild(c);
-        return c;
-      }
+          });
+        </script>
+        <script>
+          document.addEventListener('DOMContentLoaded', function () {
+            const wishlistBtn = document.getElementById('wishlistBtn');
+            if (!wishlistBtn) return;
 
-      window.showMiniToast = function (msg, duration = 2000) {
-        const container = ensureToastContainer();
-        const t = document.createElement('div');
-        t.textContent = msg;
-        t.style.background = 'rgba(0,0,0,0.85)';
-        t.style.color = '#fff';
-        t.style.padding = '8px 12px';
-        t.style.marginTop = '6px';
-        t.style.borderRadius = '6px';
-        t.style.fontSize = '14px';
-        t.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-        t.style.opacity = '0';
-        t.style.transition = 'opacity 180ms ease';
-        container.appendChild(t);
-        requestAnimationFrame(() => { t.style.opacity = '1'; });
-        setTimeout(() => {
-          t.style.opacity = '0';
-          setTimeout(() => t.remove(), 200);
-        }, duration);
-      };
-    })();
-  </script>
-  <script>
-    (function () {
-      const MAX_QTY = 5;
-      const MIN_QTY = 1;
-      let lastToastAt = 0;
+            wishlistBtn.addEventListener('click', function () {
+              const productId = this.dataset.product;
+              fetch(`/toggle-wishlist/${productId}`, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+              })
+                .then(res => res.json())
+                .then(data => {
+                  if (data.redirect) {
+                    window.location.href = data.redirect;
+                    return;
+                  }
+                  if (data.success) {
+                    const icon = this.querySelector('i');
+                    if (data.added) {
+                      // Set to solid heart
+                      icon.classList.remove('far');
+                      icon.classList.add('fas');
+                      this.classList.add('active');
+                    } else {
+                      // Set to outline heart
+                      icon.classList.remove('fas');
+                      icon.classList.add('far');
+                      this.classList.remove('active');
+                    }
 
-      function clamp(n) {
-        const v = Number(n);
-        if (Number.isNaN(v)) return MIN_QTY;
-        return Math.max(MIN_QTY, Math.min(MAX_QTY, v));
-      }
-
-      function maybeToastMax() {
-        const now = Date.now();
-        if (now - lastToastAt > 800) { // rate-limit toasts
-          showMiniToast(`Maximum quantity limit is ${MAX_QTY}`);
-          lastToastAt = now;
-        }
-      }
-
-      document.addEventListener('DOMContentLoaded', function () {
-        const qtyInput = document.getElementById('quantity');
-        if (!qtyInput) return;
-
-        // Ensure initial clamp
-        qtyInput.value = clamp(qtyInput.value || MIN_QTY);
-
-        // Clamp while user types or uses arrows
-        qtyInput.addEventListener('input', function () {
-          const before = Number(qtyInput.value);
-          const after = clamp(before);
-          if (before !== after) {
-            qtyInput.value = after;
-            if (before > MAX_QTY) maybeToastMax();
-          }
-        });
-
-        // On blur, ensure value is valid
-        qtyInput.addEventListener('blur', function () {
-          qtyInput.value = clamp(qtyInput.value || MIN_QTY);
-        });
-
-        // Safety: clamp on form submit as well
-        const form = qtyInput.closest('form');
-        if (form) {
-          form.addEventListener('submit', function () {
-            const before = Number(qtyInput.value);
-            const after = clamp(before);
-            if (before !== after && before > MAX_QTY) {
-              maybeToastMax();
+                    if (window.updateNavbarCounts && typeof data.wishlistCount !== 'undefined') {
+                      window.updateNavbarCounts({ wishlistCount: data.wishlistCount });
+                    }
+                    if (window.Swal) {
+                      Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: data.message || (data.added ? 'Added to wishlist' : 'Removed from wishlist'),
+                        showConfirmButton: false,
+                        timer: 1500,
+                        timerProgressBar: true
+                      });
+                    }
+                  }
+                })
+                .catch(err => console.error('Wishlist toggle error:', err));
+            });
+          });
+        </script>
+        <script>
+          // Minimal toast utility (no dependencies) used by the quantity limiter
+          (function () {
+            const TOAST_ID = 'mini-toast-container';
+            function ensureToastContainer() {
+              let c = document.getElementById(TOAST_ID);
+              if (c) return c;
+              c = document.createElement('div');
+              c.id = TOAST_ID;
+              c.style.position = 'fixed';
+              c.style.left = '50%';
+              c.style.bottom = '20px';
+              c.style.transform = 'translateX(-50%)';
+              c.style.zIndex = '9999';
+              c.style.pointerEvents = 'none';
+              document.body.appendChild(c);
+              return c;
             }
-            qtyInput.value = after;
-          }, true);
-        }
-      });
-    })();
-  </script>
+
+            window.showMiniToast = function (msg, duration = 2000) {
+              const container = ensureToastContainer();
+              const t = document.createElement('div');
+              t.textContent = msg;
+              t.style.background = 'rgba(0,0,0,0.85)';
+              t.style.color = '#fff';
+              t.style.padding = '8px 12px';
+              t.style.marginTop = '6px';
+              t.style.borderRadius = '6px';
+              t.style.fontSize = '14px';
+              t.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+              t.style.opacity = '0';
+              t.style.transition = 'opacity 180ms ease';
+              container.appendChild(t);
+              requestAnimationFrame(() => { t.style.opacity = '1'; });
+              setTimeout(() => {
+                t.style.opacity = '0';
+                setTimeout(() => t.remove(), 200);
+              }, duration);
+            };
+          })();
+        </script>
+        <script>
+          (function () {
+            const MAX_QTY = 5;
+            const MIN_QTY = 1;
+            let lastToastAt = 0;
+
+            function clamp(n) {
+              const v = Number(n);
+              if (Number.isNaN(v)) return MIN_QTY;
+              return Math.max(MIN_QTY, Math.min(MAX_QTY, v));
+            }
+
+            function maybeToastMax() {
+              const now = Date.now();
+              if (now - lastToastAt > 800) { // rate-limit toasts
+                showMiniToast(`Maximum quantity limit is ${MAX_QTY}`);
+                lastToastAt = now;
+              }
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+              const qtyInput = document.getElementById('quantity');
+              if (!qtyInput) return;
+
+              // Ensure initial clamp
+              qtyInput.value = clamp(qtyInput.value || MIN_QTY);
+
+              // Clamp while user types or uses arrows
+              qtyInput.addEventListener('input', function () {
+                const before = Number(qtyInput.value);
+                const after = clamp(before);
+                if (before !== after) {
+                  qtyInput.value = after;
+                  if (before > MAX_QTY) maybeToastMax();
+                }
+              });
+
+              // On blur, ensure value is valid
+              qtyInput.addEventListener('blur', function () {
+                qtyInput.value = clamp(qtyInput.value || MIN_QTY);
+              });
+
+              // Safety: clamp on form submit as well
+              const form = qtyInput.closest('form');
+              if (form) {
+                form.addEventListener('submit', function () {
+                  const before = Number(qtyInput.value);
+                  const after = clamp(before);
+                  if (before !== after && before > MAX_QTY) {
+                    maybeToastMax();
+                  }
+                  qtyInput.value = after;
+                }, true);
+              }
+            });
+          })();
+        </script>
