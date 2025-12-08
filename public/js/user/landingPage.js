@@ -118,4 +118,18 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+  const retroBtn = document.querySelector(".retro-promo .explore");
+  const offroadBtn = document.querySelector(".offroad-promo .shop-now");
+
+  if (retroBtn) {
+    retroBtn.addEventListener("click", () => {
+      window.location.href = "/products?category=Classic Wheels";
+    });
+  }
+
+  if (offroadBtn) {
+    offroadBtn.addEventListener("click", () => {
+      window.location.href = "/products?category=Off-Road";
+    });
+  }
 });

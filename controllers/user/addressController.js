@@ -86,10 +86,12 @@ const addAddress = async (req, res) => {
       validationErrors.pinCode = "Pin code must be exactly 6 digits";
     }
 
-    if (Object.keys(validationErrors).length > 0) {
-      req.session.error = "Validation failed. Please correct the highlighted fields.";
-      return res.redirect("/address/add");
-    }
+if (Object.keys(validationErrors).length > 0) {
+  req.session.fieldErrors = validationErrors;
+  req.session.formData = req.body;
+  return res.redirect("/address/add");
+}
+
 
     // Prevent duplicate phone
     const existingPhone = await Address.findOne({ userId, phone: phoneVal });

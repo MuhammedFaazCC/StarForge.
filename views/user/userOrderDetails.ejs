@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -8,381 +8,234 @@
   <link rel="stylesheet" href="/css/user/navbar-badges.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f8f9fa;
-      margin: 0;
-      padding: 0;
-    }
-    
-    .main-content {
-      max-width: 960px;
-      margin: 2rem auto;
-      padding: 2rem;
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      padding-top: 1rem;
-    }
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f5f5f5;
+  margin: 0;
+  padding: 0;
+}
 
-    .top-navbar {
-      background:#000000;
-      padding: 1rem 2rem;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 1000;
-      height: 70px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+/* MAIN CONTAINER */
+.main-content {
+  max-width: 900px;
+  margin: 100px auto 2rem auto;
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* HEADINGS */
+h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+}
+
+/* SUMMARY SECTIONS */
+.order-summary,
+.coupon-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.coupon-summary {
+  padding: 1rem;
+  border-left: 4px solid #28a745;
+  background: #f8f8f8;
+}
+
+.label {
+  font-weight: 600;
+  color: #555;
+}
+
+.value {
+  font-weight: 700;
+  color: #000;
+}
+
+/* ADDRESS SECTION */
+.address-section {
+  background: #eef4ff;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid #007bff;
+}
+
+/* PRODUCT LIST */
+.products-section h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.product-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.product-image {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.product-info {
+  flex: 1;
+}
+
+.product-name {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.item-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* BUTTONS */
+.action-btn {
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn-cancel { background: #dc3545; color: #fff; }
+.btn-return { background: #ffc107; color: #000; }
+.btn-back { background: #6c757d; color: #fff; }
+.btn-download { background: #28a745; color: #fff; }
+
+.order-actions {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+}
+
+@media (max-width: 600px) {
+
+  /* NAVBAR FIX */
+  .top-navbar {
+    height: 70px !important;
+    padding: 0 1rem !important;
   }
 
   .navbar-brand {
-      color: white;
-      font-size: 1.5rem;
-      font-weight: 700;
-      text-decoration: none;
-      background-color:#fca120;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    font-size: 1.4rem !important;
   }
 
-  .navbar-user {
-      color: white;
-      display: flex;
-      align-items: center;
+  .navbar-user i {
+    font-size: 1.3rem !important;
   }
 
-    h1 {
-      margin-bottom: 1.5rem;
-      font-size: 1.8rem;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 0.5rem;
-    }
+  /* MAIN CONTENT */
+  .main-content {
+    margin: 90px 0.5rem 1rem 0.5rem !important;
+    padding: 1.2rem !important;
+  }
 
-    .order-summary {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
+  h1 {
+    font-size: 1.5rem !important;
+  }
 
-    .order-summary p {
-      margin: 0.3rem 0;
-    }
+  /* SUMMARY SECTIONS */
+  .order-summary,
+  .coupon-summary {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+    padding: 1rem !important;
+  }
 
-    .label {
-      color: #555;
-      font-weight: 500;
-    }
+  .order-summary p,
+  .coupon-summary p {
+    font-size: 1rem !important;
+  }
 
-    .value {
-      font-weight: 600;
-      color: #111;
-    }
+  /* ADDRESS BLOCK */
+  .address-section {
+    padding: 1rem !important;
+    font-size: 1rem !important;
+  }
 
-    /* Coupon Summary Styles */
-    .coupon-summary {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-      padding: 1rem;
-      background-color: #f8f9fa;
-      border-radius: 6px;
-      border-left: 4px solid #28a745;
-    }
+  /* PRODUCTS SECTION */
+  .products-section h3 {
+    font-size: 1.3rem !important;
+    margin-bottom: 1rem !important;
+  }
 
-    .coupon-summary p {
-      margin: 0.3rem 0;
-    }
+  .product-item {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 1rem !important;
+    padding: 1.2rem 0 !important;
+  }
 
-    .coupon-code {
-      background-color: #e8f5e9;
-      color: #2e7d32;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      font-family: 'Courier New', monospace;
-      font-size: 0.9rem;
-      font-weight: 700;
-    }
+  .product-image {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 240px !important;
+    border-radius: 10px !important;
+  }
 
-    .discount-amount {
-      color: #d32f2f;
-      font-weight: 700;
-    }
+  .product-info {
+    width: 100% !important;
+  }
 
-    .final-total {
-      color: #1976d2;
-      font-weight: 700;
-      font-size: 1.05rem;
-    }
+  .product-name {
+    font-size: 1.1rem !important;
+  }
 
-    .no-coupon {
-      color: #6c757d;
-      font-style: italic;
-    }
+  .product-details {
+    font-size: 1rem !important;
+  }
 
-    .products-section {
-      margin-top: 2rem;
-    }
+  .item-status {
+    font-size: 0.95rem !important;
+    padding: 0.3rem 0.6rem !important;
+  }
 
-    .product-item {
-      display: flex;
-      align-items: center;
-      padding: 1rem 0;
-      border-bottom: 1px solid #eee;
-    }
+  /* PRODUCT ACTION BUTTONS */
+  .item-actions {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 0.7rem !important;
+  }
 
-    .product-item:last-child {
-      border-bottom: none;
-    }
+  .item-actions .action-btn {
+    width: 100% !important;
+    padding: 0.8rem !important;
+    font-size: 1rem !important;
+  }
 
-    .product-image {
-      width: 64px;
-      height: 64px;
-      object-fit: cover;
-      border-radius: 6px;
-      margin-right: 1rem;
-      border: 1px solid #ddd;
-    }
+  /* BOTTOM ACTION BUTTONS */
+  .order-actions {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 0.8rem !important;
+    margin-top: 2rem !important;
+  }
 
-    .product-info {
-      flex-grow: 1;
-    }
-
-    .product-name {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 0.2rem;
-      color: #222;
-    }
-
-    .product-details {
-      font-size: 0.9rem;
-      color: #555;
-    }
-
-    .order-actions {
-      margin-top: 2rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid #eee;
-      display: flex;
-      gap: 1rem;
-      justify-content: flex-start;
-    }
-
-    .action-btn {
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .btn-cancel {
-      background-color: #dc3545;
-      color: white;
-    }
-
-    .btn-cancel:hover {
-      background-color: #c82333;
-      transform: translateY(-1px);
-    }
-
-    .btn-return {
-      background-color: #ffc107;
-      color: #212529;
-    }
-
-    .btn-return:hover {
-      background-color: #e0a800;
-      transform: translateY(-1px);
-    }
-
-    .btn-back {
-      background-color: #6c757d;
-      color: white;
-    }
-
-    .btn-back:hover {
-      background-color: #5a6268;
-      transform: translateY(-1px);
-    }
-
-    .btn-download {
-      background-color: #28a745;
-      color: white;
-    }
-
-    .btn-download:hover {
-      background-color: #218838;
-      transform: translateY(-1px);
-    }
-
-    .address-section {
-      background-color: #f8f9fa;
-      padding: 1rem;
-      border-radius: 6px;
-      margin-bottom: 1rem;
-      border-left: 4px solid #007bff;
-    }
-
-    .address-title {
-      font-weight: 600;
-      color: #495057;
-      margin-bottom: 0.5rem;
-    }
-
-    .address-text {
-      color: #6c757d;
-      line-height: 1.5;
-    }
-
-    .item-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      margin-left: 1rem;
-    }
-
-    .btn-cancel-item {
-      background-color: #dc3545;
-      color: white;
-      padding: 0.5rem 1rem;
-      font-size: 0.8rem;
-    }
-
-    .btn-cancel-item:hover {
-      background-color: #c82333;
-      transform: translateY(-1px);
-    }
-
-    .btn-return-item {
-      background-color: #ffc107;
-      color: #212529;
-      padding: 0.5rem 1rem;
-      font-size: 0.8rem;
-    }
-
-    .btn-return-item:hover {
-      background-color: #e0a800;
-      transform: translateY(-1px);
-    }
-
-    .item-status {
-      font-weight: 600;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      display: inline-block;
-      margin-top: 0.3rem;
-    }
-
-    .status-ordered {
-      background-color: #e3f2fd;
-      color: #1976d2;
-    }
-
-    .status-cancelled {
-      background-color: #ffebee;
-      color: #d32f2f;
-    }
-
-    .status-delivered {
-      background-color: #e8f5e8;
-      color: #388e3c;
-    }
-
-    .status-return {
-      background-color: #fff3e0;
-      color: #f57c00;
-    }
-
-    .status-returned {
-      background-color: #fce4ec;
-      color: #c2185b;
-    }
-
-    .cancelled-badge {
-      background-color: #ffebee;
-      color: #d32f2f;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      display: inline-block;
-      margin-top: 0.3rem;
-    }
-
-    .order-cancelled-label {
-      background-color: #ffebee;
-      color: #d32f2f;
-      padding: 1rem;
-      border-radius: 6px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      text-align: center;
-      margin-bottom: 1rem;
-      border: 2px solid #ffcdd2;
-    }
-
-    /* Disabled button styles */
-    .action-btn:disabled {
-      background-color: #6c757d !important;
-      color: #fff !important;
-      cursor: not-allowed !important;
-      opacity: 0.6;
-      transform: none !important;
-    }
-
-    .action-btn:disabled:hover {
-      background-color: #6c757d !important;
-      transform: none !important;
-    }
-
-    .btn-processing {
-      background-color: #6c757d !important;
-      color: #fff !important;
-      cursor: not-allowed !important;
-      opacity: 0.6;
-    }
-
-    .btn-processing:hover {
-      background-color: #6c757d !important;
-      transform: none !important;
-    }
-
-    @media (max-width: 768px) {
-      .product-item {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .item-actions {
-        margin-left: 0;
-        margin-top: 1rem;
-        flex-direction: row;
-        width: 100%;
-      }
-
-      .item-actions .action-btn {
-        flex: 1;
-      }
-    }
-  </style>
+  .order-actions .action-btn {
+    width: 100% !important;
+    padding: 1rem !important;
+    font-size: 1.05rem !important;
+    border-radius: 8px !important;
+  }
+}
+</style>
+  
 </head>
 <body>
   <%- include('../partials/user/navbar', { minimalNavbar: false }) %>
@@ -403,7 +256,6 @@
     <% } %>
 
     <div class="order-summary">
-      <p><span class="label">Order ID:</span> <span class="value"><%= order._id %></span></p>
       <p><span class="label">Status:</span> <span class="value"><%= order.status %></span></p>
       <p><span class="label">Placed On:</span> <span class="value"><%= order.createdAt.toLocaleDateString('en-GB') %></span></p>
       <p><span class="label">Payment Method:</span> <span class="value">
@@ -424,7 +276,7 @@
     <div class="coupon-summary">
       <% if (order.coupon && order.coupon.code && order.coupon.discountAmount > 0) { %>
         <p><span class="label">Coupon Code:</span> <span class="value coupon-code"><%= order.coupon.code %></span></p>
-        <p><span class="label">Discount Amount:</span> <span class="value discount-amount">-₹<%= order.coupon.discountAmount.toFixed(2) %></span></p>
+        <p><span class="label">Discount Amount:</span> <span class="value discount-amount">₹<%= order.coupon.discountAmount.toFixed(2) %></span></p>
         <% 
           // Calculate subtotal before discount
           const subtotalBeforeDiscount = order.totalAmount + order.coupon.discountAmount;

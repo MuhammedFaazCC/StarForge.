@@ -295,6 +295,49 @@
   display: flex;
 }
 
+@media (max-width: 768px) {
+  .navbar {
+    padding: 10px 15px;
+  }
+  .logo {
+    left: 0;
+    font-size: 1.3rem;
+    margin-left: 10px;
+  }
+  .nav-buttons {
+    gap: 10px;
+  }
+  .nav-buttons .nav-link i {
+    font-size: 1.1rem;
+  }
+  .profile-container1 {
+    margin-left: 10px;
+  }
+  .auth-buttons,
+  .nav-buttons {
+    display: flex;
+    align-items: center;
+  }
+  .auth-button {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo {
+    font-size: 1.1rem;
+    margin-left: 5px;
+  }
+  .nav-buttons .nav-link i {
+    font-size: 1rem;
+  }
+  .auth-button {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+  }
+}
+
 </style>
 <header class="navbar">
     <% if (!minimalNavbar) { %>
