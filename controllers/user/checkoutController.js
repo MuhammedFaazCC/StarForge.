@@ -20,22 +20,34 @@ async function validateStock(items) {
   return { valid: true };
 }
 
+async function cleanInvalidCartItems(userId) {
+  const cart = await Cart.findOne({ userId }).populate('items.productId');
+  if (!cart) return null;
+
+  const invalidIds = cart.items
+    .filter(i => !i.productId || !i.productId.isListed)
+    .map(i => i._id);
+
+  if (invalidIds.length > 0) {
+    await Cart.updateOne(
+      { userId },
+      { $pull: { items: { _id: { $in: invalidIds } } } }
+    );
+  }
+
+  return await Cart.findOne({ userId }).populate('items.productId');
+}
+
 function calculateDiscount(subtotal, coupon) {
   if (!coupon) return 0;
 
-  if (coupon.minimumAmount && subtotal < coupon.minimumAmount) {
-    return 0;
-  }
+  if (coupon.minimumAmount && subtotal < coupon.minimumAmount) return 0;
 
-  // orderMaxAmount is a cap on the portion of subtotal eligible for discount
-  let eligibleAmount = subtotal;
-  if (coupon.orderMaxAmount > 0) {
-    eligibleAmount = Math.min(subtotal, coupon.orderMaxAmount);
-  }
+  let eligible = subtotal;
+  if (coupon.orderMaxAmount > 0) eligible = Math.min(subtotal, coupon.orderMaxAmount);
 
-  const calculated = (eligibleAmount * coupon.discount) / 100;
-  const capped = coupon.maxAmount > 0 ? Math.min(calculated, coupon.maxAmount) : calculated;
-  return capped;
+  const raw = (eligible * coupon.discount) / 100;
+  return coupon.maxAmount > 0 ? Math.min(raw, coupon.maxAmount) : raw;
 }
 
 async function updateCouponUsage(userId, couponCode) {
@@ -101,72 +113,45 @@ const getCheckoutPage = async (req, res) => {
   try {
     if (!req.session.user) return res.redirect('/login?redirect=/checkout');
 
-    req.session.coupon = null;
-
-    const userId = req.session.user._id;
-    const cart = await Cart.findOne({ userId }).populate('items.productId');
+    let cart = await cleanInvalidCartItems(req.session.user._id);
     if (!cart || cart.items.length === 0) return res.redirect('/cart');
 
-    const addresses = await Address.find({ userId }).sort({ isDefault: -1, createdAt: -1 });
-    const userWithWallet = await User.findById(userId);
-    const walletBalance = userWithWallet?.wallet?.balance || 0;
+    const userId = req.session.user._id;
+    const addresses = await Address.find({ userId }).sort({ isDefault: -1 });
+    const userWallet = await User.findById(userId);
+    const walletBalance = userWallet?.wallet?.balance || 0;
 
-    const cartItems = cart.items.map(item => ({
-      name: item.productId.name,
-      quantity: item.quantity,
-      salesPrice: item.productId.salesPrice,
-      subtotal: item.quantity * item.productId.salesPrice,
+    const cartItems = cart.items.map(i => ({
+      name: i.productId.name,
+      quantity: i.quantity,
+      salesPrice: i.productId.salesPrice,
+      subtotal: i.quantity * i.productId.salesPrice
     }));
 
-    const subtotal = cartItems.reduce((acc, item) => acc + item.subtotal, 0);
+    const subtotal = cartItems.reduce((s, i) => s + i.subtotal, 0);
 
-    let discount = 0, grandTotal = subtotal, appliedCoupon = null;
+    let discount = 0;
+    let appliedCoupon = null;
+    let grandTotal = subtotal;
 
     if (req.session.coupon) {
-      const dbCoupon = await Coupon.findOne({ code: req.session.coupon.code });
-
-      if (dbCoupon) {
-        discount = calculateDiscount(subtotal, dbCoupon);
-        appliedCoupon = {
-          code: dbCoupon.code,
-          discountAmount: discount,
-          minimumAmount: dbCoupon.minimumAmount || 0,
-          maxAmount: dbCoupon.maxAmount || 0
-        };
+      const c = await Coupon.findOne({ code: req.session.coupon.code });
+      if (c) {
+        discount = calculateDiscount(subtotal, c);
+        appliedCoupon = { code: c.code, discountAmount: discount };
       }
-
       grandTotal = subtotal - discount;
     }
 
-
-    // handle address selection
-    let selectedAddressId = req.session.selectedAddressId || null;
-    if (!selectedAddressId && addresses.length > 0) {
-      const defaultAddress = addresses.find(addr => addr.isDefault === true);
-      if (defaultAddress) {
-        selectedAddressId = defaultAddress._id.toString();
-        req.session.selectedAddressId = selectedAddressId;
-      }
-    } else if (selectedAddressId) {
-      const addressExists = addresses.find(addr => addr._id.toString() === selectedAddressId);
-      if (!addressExists) req.session.selectedAddressId = null;
-    }
-
-    // coupons
-    const allCoupons = await Coupon.find({
-      status: 'Active',
+    const coupons = await Coupon.find({
+      status: "Active",
       expiryDate: { $gt: new Date() }
     }).sort({ createdAt: -1 });
 
-    const availableCoupons = allCoupons.filter(coupon => {
-      const usedEntry = coupon.usedBy.find(u => u.userId.toString() === userId.toString());
-      const usedCount = usedEntry ? usedEntry.usedCount : 0;
-      return usedCount < coupon.usageLimit;
+    const availableCoupons = coupons.filter(c => {
+      const entry = c.usedBy.find(u => u.userId.toString() === userId.toString());
+      return !entry || entry.usedCount < c.usageLimit;
     });
-
-const errorMessage = req.query.error 
-  ? getPaymentErrorMessage(req.query.error) 
-  : null;
 
     res.render("checkout", {
       user: { ...req.session.user, walletBalance },
@@ -177,12 +162,11 @@ const errorMessage = req.query.error
       addresses,
       razorpayKey: process.env.RAZORPAY_KEY_ID,
       coupon: appliedCoupon,
-      error: errorMessage,
-      selectedAddressId,
-      availableCoupons,
+      error: null,
+      selectedAddressId: null,
+      availableCoupons
     });
-  } catch (error) {
-    console.error("Checkout page error:", error);
+  } catch {
     res.status(500).render("checkout", {
       user: req.session.user || null,
       cartItems: [],
@@ -191,7 +175,7 @@ const errorMessage = req.query.error
       grandTotal: 0,
       addresses: [],
       coupon: null,
-      error: "Unable to load checkout page",
+      error: "Unable to load",
       selectedAddressId: null,
       availableCoupons: []
     });
@@ -200,93 +184,106 @@ const errorMessage = req.query.error
 
 const postCheckoutPage = async (req, res) => {
   try {
-    if (!req.session.user) return res.status(401).json({ error: "Please log in to place an order" });
+    if (!req.session.user) return res.status(401).json({ error: "Login required" });
 
     const userId = req.session.user._id;
+    let cart = await cleanInvalidCartItems(userId);
+    if (!cart || cart.items.length === 0) return res.status(400).json({ error: "Cart empty" });
+
     const { addressId, paymentMethod } = req.body;
-    if (!addressId) return res.status(400).json({ error: "Please select a shipping address" });
+    if (!addressId) return res.status(400).json({ error: "Select address" });
     if (!['COD', 'Online', 'Wallet'].includes(paymentMethod)) {
-      return res.status(400).json({ error: "Invalid payment method selected" });
+      return res.status(400).json({ error: "Invalid payment" });
     }
 
-    const cart = await Cart.findOne({ userId }).populate('items.productId');
-    if (!cart || cart.items.length === 0) return res.status(400).json({ error: "Cart is empty" });
-
-    const selectedAddress = await Address.findById(addressId);
-    if (!selectedAddress || selectedAddress.userId.toString() !== userId.toString()) {
-      return res.status(400).json({ error: "Invalid address selected" });
+    const address = await Address.findById(addressId);
+    if (!address || address.userId.toString() !== userId.toString()) {
+      return res.status(400).json({ error: "Invalid address" });
     }
 
-    const stockValidation = await validateStock(cart.items);
-    if (!stockValidation.valid) return res.status(400).json({ error: stockValidation.message });
+    for (const item of cart.items) {
+      if (item.productId.stock < item.quantity) {
+        return res.status(400).json({ error: `Insufficient stock for ${item.productId.name}` });
+      }
+    }
 
-    let totalAmount = cart.items.reduce((total, item) => total + (item.quantity * item.productId.salesPrice), 0);
+    let totalAmount = cart.items.reduce((s, i) => s + i.quantity * i.productId.salesPrice, 0);
     let couponData = null;
+
     if (req.session.coupon) {
-      const dbCoupon = await Coupon.findOne({ code: req.session.coupon.code });
-      if (dbCoupon) {
+      const c = await Coupon.findOne({ code: req.session.coupon.code });
+      if (c) {
         const discountAmount = calculateDiscount(
-          cart.items.reduce((t, i) => t + (i.quantity * i.productId.salesPrice), 0),
-          dbCoupon
+          cart.items.reduce((s, i) => s + i.quantity * i.productId.salesPrice, 0),
+          c
         );
-
         totalAmount -= discountAmount;
-
-        couponData = {
-          code: dbCoupon.code,
-          discountAmount
-        };
+        couponData = { code: c.code, discountAmount };
       }
     }
 
     if (paymentMethod === 'COD' && totalAmount > 1000) {
-      return res.status(400).json({ error: "Cash on Delivery is available only for orders up to ₹1,000. Please choose another payment method." });
+      return res.status(400).json({ error: "COD allowed only ≤ 1000" });
     }
-
 
     if (paymentMethod === 'Wallet') {
       const user = await User.findById(userId);
-      if (!user || (user.wallet?.balance || 0) < totalAmount) {
+      if ((user.wallet?.balance || 0) < totalAmount) {
         return res.status(400).json({ error: "Insufficient wallet balance" });
       }
     }
 
-    const newOrder = buildOrderObject({
+    const order = new Order({
       userId,
-      cart,
-      address: selectedAddress,
+      items: cart.items.map(i => ({
+        productId: i.productId._id,
+        name: i.productId.name,
+        quantity: i.quantity,
+        salesPrice: i.productId.salesPrice
+      })),
+      address: `${address.name}, ${address.address}, ${address.city}, ${address.district}, ${address.state} - ${address.pinCode}`,
       paymentMethod,
       totalAmount,
-      couponData,
-      status: "Processing"
+      coupon: couponData,
+      status: "Processing",
+      createdAt: new Date(),
+      offeredPrice: totalAmount
     });
-    await newOrder.save();
+
+    await order.save();
 
     if (paymentMethod === 'Wallet') {
       const walletController = require('./walletController');
-      await walletController.updateWallet(userId, totalAmount, `Order payment - Order #${newOrder._id}`, "Debit");
+      await walletController.updateWallet(userId, totalAmount, `Order payment - #${order._id}`, "Debit");
     }
 
-    for (const item of cart.items) {
-      await Product.updateOne({ _id: item.productId._id }, { $inc: { stock: -item.quantity } });
+    for (const i of cart.items) {
+      await Product.updateOne({ _id: i.productId._id }, { $inc: { stock: -i.quantity } });
     }
 
-    if (couponData) await updateCouponUsage(userId, couponData.code);
+    if (couponData) {
+      const dbCoupon = await Coupon.findOne({ code: couponData.code });
+      if (dbCoupon) {
+        const entry = dbCoupon.usedBy.find(u => u.userId.toString() === userId.toString());
+        if (entry) entry.usedCount += 1;
+        else dbCoupon.usedBy.push({ userId, usedCount: 1 });
+        await dbCoupon.save();
+      }
+    }
 
     await Cart.deleteOne({ userId });
+
     req.session.coupon = null;
     req.session.selectedAddressId = null;
     req.session.lastOrder = {
-      orderId: newOrder._id,
+      orderId: order._id,
       paymentMethod,
       totalAmount
     };
 
     res.json({ success: true, redirect: '/order/placed' });
-
-  } catch (error) {
-    console.error("Checkout error:", error);
-    res.status(500).json({ error: `Checkout failed: ${error.message}` });
+  } catch (err) {
+    res.status(500).json({ error: "Checkout failed" });
   }
 };
 
