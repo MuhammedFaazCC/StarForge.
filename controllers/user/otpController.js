@@ -159,11 +159,16 @@ const verifyOTP = async (req, res) => {
       });
 
       if (referralCode) {
-        try {
-          const { processReferralSignup } = require('./referralController');
-          await processReferralSignup(referralCode, newUser._id);
-        } catch (referralError) {
-          console.error('Error processing referral:', referralError);
+        const { processReferralSignup } = require("./referralController");
+
+        const referralIdentifier = req.session.otp.userData.referralIdentifier || referralCode;
+
+        if (referralIdentifier) {
+          try {
+            await processReferralSignup(referralIdentifier, newUser._id);
+          } catch (referralErr) {
+            console.error("Referral processing failed:", referralErr);
+          }
         }
       }
 

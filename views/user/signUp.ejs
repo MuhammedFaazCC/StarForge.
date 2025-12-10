@@ -77,21 +77,26 @@
                         <div class="input-group">
                             <label for="referralCode">Referral Code (Optional)</label>
                             <div class="input-wrapper">
-                                <input type="text" id="referralCode" name="referralCode"
-                                    aria-describedby="referralCode-icon" 
-                                    <% if (typeof referrerInfo !== 'undefined' && referrerInfo) { %>
-                                        value="<%= referrerInfo.token %>"
-                                    <% } %> />
+                                <input
+                                    type="text"
+                                    id="referralCode"
+                                    name="referralCode"
+                                    aria-describedby="referralCode-icon"
+                                    value="<%= (referrerInfo && referrerInfo.code) ? referrerInfo.code : '' %>"
+                                />
                                 <span class="icon" id="referralCode-icon"><i class="fas fa-gift"></i></span>
                             </div>
-                            <% if (typeof referrerInfo !== 'undefined' && referrerInfo) { %>
+
+                            <% if (referrerInfo) { %>
                                 <small class="text-success">
                                     <i class="fas fa-check-circle"></i>
-                                    You're signing up through <%= referrerInfo.name %>'s referral! You'll both get exclusive benefits.
+                                    You're signing up through <%= referrerInfo.name %>'s referral! You'll both get benefits.
                                 </small>
                             <% } %>
+
                             <small class="error-message" id="referralCodeError"></small>
                         </div>
+
 
                         <button type="submit">Sign Up</button>
 

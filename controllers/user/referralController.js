@@ -39,7 +39,7 @@ const getReferralInfo = async (req, res) => {
             referralPoints: user.referralPoints,
             referralCount,
             unusedRewards,
-            referralUrl: `${req.protocol}://${req.get('host')}/signup?ref=${user.referralToken}`
+            referralUrl: `${req.protocol}://${req.get('host')}/signup?ref=${user.referralCode}`
         };
 
         res.json({
@@ -112,8 +112,6 @@ const processReferralSignup = async (referralIdentifier, newUserId) => {
                 }
             }
         });
-
-        console.log(`Referral processed: ${referringUser.email} referred ${newUser.email}, earned ₹${referrerBonus} wallet bonus`);
 
         return {
             success: true,
@@ -219,7 +217,7 @@ const getReferralDashboard = async (req, res) => {
             referrerBonus,
             newUserBonus,
             walletBalance: user.wallet.balance,
-            referralUrl: `${req.protocol}://${req.get('host')}/signup?ref=${user.referralToken}`,
+            referralUrl: `${req.protocol}://${req.get('host')}/signup?ref=${user.referralCode}`,
             currentPage: 'referral',
             cartCount: 0
         };
