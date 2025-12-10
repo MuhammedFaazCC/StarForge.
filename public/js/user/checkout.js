@@ -124,6 +124,7 @@ function closeModal() {
   const modal = document.getElementById('addressModal');
   if (modal) {
     modal.classList.remove('show');
+    resetAddressForm();
   }
 }
 
@@ -419,6 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[data-add-address]').forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
+      resetAddressForm();
       openModal();
     });
   });
@@ -437,6 +439,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (toggleBtn && couponSection) {
     toggleBtn.addEventListener('click', (e) => {
       e.preventDefault();
+      resetAddressForm();
+
       const visible = couponSection.style.display === 'block';
       couponSection.style.display = visible ? 'none' : 'block';
       toggleBtn.textContent = visible ? 'View Available Coupons' : 'Hide Coupons';
@@ -684,6 +688,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const addressForm = document.getElementById('addressForm');
   if (addressForm) {
     const submitButton = addressForm.querySelector('button[type="submit"]');
+
+    function resetAddressForm() {
+        // Reset tracking
+        hasAttemptedSubmit = false;
+        for (const key in fieldTouched) {
+            fieldTouched[key] = false;
+        }
+
+        // Clear errors and classes
+        Object.keys(validationRules).forEach(fieldName => {
+            const field = document.getElementById(fieldName);
+            const errorElement = document.getElementById(fieldName + "Error");
+
+            if (field) {
+                field.classList.remove("error");
+                field.classList.remove("valid");
+            }
+
+            if (errorElement) {
+                errorElement.textContent = "";
+            }
+        });
+    }
+
+    let hasAttemptedSubmit = false;
+    const fieldTouched = {};
     
     // Validation rules
     const validationRules = {
@@ -785,24 +815,21 @@ document.addEventListener('DOMContentLoaded', () => {
     function validateAllFields() {
       let isFormValid = true;
       const formData = new FormData(addressForm);
-      
+
       for (const [fieldName] of formData.entries()) {
         const value = formData.get(fieldName);
         const validation = validateField(fieldName, value);
-        
+
+        const shouldShowError = hasAttemptedSubmit || fieldTouched[fieldName];
+
         if (!validation.isValid) {
-          showError(fieldName, validation.message);
+          if (shouldShowError) showError(fieldName, validation.message);
           isFormValid = false;
         } else {
-          clearError(fieldName);
+          if (shouldShowError) clearError(fieldName);
         }
       }
-      
-      // Update submit button state
-      if (submitButton) {
-        submitButton.disabled = !isFormValid;
-      }
-      
+
       return isFormValid;
     }
 
@@ -812,23 +839,23 @@ document.addEventListener('DOMContentLoaded', () => {
       if (field) {
         // Validate on blur
         field.addEventListener('blur', () => {
+          fieldTouched[fieldName] = true; // enable validation for this field only
+
           const validation = validateField(fieldName, field.value);
           if (!validation.isValid) {
             showError(fieldName, validation.message);
           } else {
             clearError(fieldName);
           }
-          validateAllFields(); // Re-validate entire form
         });
 
         // Clear errors on input
         field.addEventListener('input', () => {
-          if (field.classList.contains('error')) {
-            const validation = validateField(fieldName, field.value);
-            if (validation.isValid) {
-              clearError(fieldName);
-              validateAllFields(); // Re-validate entire form
-            }
+          if (!fieldTouched[fieldName] && !hasAttemptedSubmit) return;
+
+          const validation = validateField(fieldName, field.value);
+          if (validation.isValid) {
+            clearError(fieldName);
           }
         });
       }
@@ -837,6 +864,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle form submission
     addressForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      hasAttemptedSubmit = true;
       
       // Validate all fields before submission
       if (!validateAllFields()) {
@@ -933,8 +962,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Initial validation state
-    validateAllFields();
   }
 
   document.addEventListener('click', function(event) {
