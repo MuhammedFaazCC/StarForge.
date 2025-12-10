@@ -28,13 +28,13 @@ router.get("/auth/google/callback", passport.authenticate("google", { failureRed
 router.get("/login", noCache, userController.loginPage);
 router.post("/login", userController.login);
 router.get("/pageNotFound", userAuth, userController.pageNotFound);
-router.get("/", userAuth, userController.loadHomepage);
+router.get("/", userController.loadHomepage);
 router.get("/logout", userAuth, userController.logout);
 router.get("/LoadProfile", userAuth, userController.userDetails);
 router.get('/profile', userAuth, profileController.getProfilePage);
 
-router.get("/products", userAuth, productController.getAllProduct);
-router.get("/product/:id", userAuth, productController.getProductDetails);
+router.get("/products", productController.getAllProduct);
+router.get("/product/:id", productController.getProductDetails);
 router.post('/product/:id/review', productController.postReview);
 
 router.get("/cart", userAuth, cartController.viewCart);
