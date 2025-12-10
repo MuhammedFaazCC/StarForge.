@@ -26,53 +26,73 @@ const pageNotFound = async (req, res) => {
 
 const loadHomepage = async (req, res) => {
   try {
-    const user = res.locals.userData;
+
+    // Always read user from session
+    const user = req.session.user || null;
+
+    let cartCount = 0;
+    let wishlistCount = 0;
+
+    if (user) {
+      const cart = await Cart.findOne({ userId: user._id });
+      cartCount = cart ? cart.items.length : 0;
+
+      const wishlist = await Wishlist.findOne({ userId: user._id });
+      wishlistCount = wishlist ? wishlist.items.length : 0;
+    }
+
     const products = await Product.find({
       isListed: true,
       isDeleted: false,
       stock: { $gt: 0 }
     })
-    .populate('category')
-    .sort({ createdAt: -1 })
-    .limit(6) 
-    .select('name price offer categoryOffer salesPrice mainImage stock brand');
+      .populate("category")
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .select("name price offer categoryOffer salesPrice mainImage stock brand");
 
     const productsWithFinalPrice = products.map(product => {
       let finalPrice = product.price;
-      
+
       const productOffer = product.offer || 0;
       const categoryOffer = product.categoryOffer || 0;
       const bestOffer = Math.max(productOffer, categoryOffer);
-      
+
       if (bestOffer > 0) {
         finalPrice = product.price - (product.price * bestOffer / 100);
       }
-      
+
       if (product.salesPrice && product.salesPrice < finalPrice) {
         finalPrice = product.salesPrice;
       }
-      
+
       return {
         ...product.toObject(),
         finalPrice: Math.round(finalPrice * 100) / 100,
         hasOffer: bestOffer > 0,
-        offerPercentage: bestOffer
+        offerPercentage: bestOffer,
       };
     });
 
     return res.render("landingPage", {
       products: productsWithFinalPrice,
       user,
+      cartCount,
+      wishlistCount,
     });
+
   } catch (error) {
     console.error("Homepage loading error:", error);
-    
+
     return res.render("landingPage", {
       products: [],
-      user: res.locals.userData,
+      user: req.session.user || null,
+      cartCount: 0,
+      wishlistCount: 0,
     });
   }
 };
+
 
 const loginPage = async (req, res) => {
   try {
@@ -178,7 +198,7 @@ const logout = async (req, res) => {
         console.error("Error destroying user session during logout:", err);
       }
       res.clearCookie("user_session");
-      return res.redirect("/login");
+      return res.redirect("/");
     });
   } catch (error) {
     console.error("Error during logout:", error);
