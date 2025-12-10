@@ -18,21 +18,35 @@
               <% order.items.forEach(item => { %>
                 <li class="product-item" data-product-id="<%= item.productId?._id %>">
                   <div class="product-info">
-                    <div class="product-name">
-                      <% 
-                        let productName = 'Deleted Product';
-                        if (item.productId && item.productId.name) {
-                          productName = item.productId.name;
-                        } else if (item.name) {
-                          productName = item.name;
-                        }
-                      %>
-                      <%= productName %> × <%= item.quantity %>
+                    <%
+                      const productImg =
+                        item.productId && item.productId.mainImage
+                          ? item.productId.mainImage
+                          : '/images/no-image.png';
+                    %>
+                    <div class="product-image">
+                      <img src="<%= productImg %>" alt="Product Image">
                     </div>
-                    <span class="orderStatus <%= item.status ? item.status.toLowerCase().replace(' ', '-') : 'unknown' %>">
-                      <%= item.status || 'Placed' %>
-                    </span>
+
+                    <div class="product-details">
+                      <div class="product-name">
+                        <% 
+                          let productName = 'Deleted Product';
+                          if (item.productId && item.productId.name) {
+                            productName = item.productId.name;
+                          } else if (item.name) {
+                            productName = item.name;
+                          }
+                        %>
+                        <%= productName %> × <%= item.quantity %>
+                      </div>
+
+                      <span class="orderStatus <%= item.status ? item.status.toLowerCase().replace(' ', '-') : 'unknown' %>">
+                        <%= item.status || 'Placed' %>
+                      </span>
+                    </div>
                   </div>
+
                   <div class="product-actions">
                     <% 
                       const itemStatus = item.status || 'Placed';
@@ -48,11 +62,11 @@
                     %>
 
                     <% if (itemStatus === 'Cancelled') { %>
-                      <span class="status-badge cancelled">❌ Cancelled</span>
+                      <span class="status-badge cancelled">Cancelled</span>
                     <% } else if (itemStatus === 'Return Requested') { %>
-                      <span class="status-badge return-requested">🔄 Return Requested</span>
+                      <span class="status-badge return-requested">Return Requested</span>
                     <% } else if (itemStatus === 'Returned') { %>
-                      <span class="status-badge returned">↩️ Returned</span>
+                      <span class="status-badge returned">Returned</span>
                     <% } else if (canCancelItem && item.productId) { %>
                       <button class="btn btn-sm btn-outline-danger cancel-item-btn" 
                               onclick="cancelItem('<%= order._id %>', '<%= item.productId._id %>')">

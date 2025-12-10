@@ -56,7 +56,7 @@ const getUserOrders = async (req, res) => {
       .limit(limit)
       .populate({
         path: 'items.productId',
-        select: 'name brand images price salePrice offer',
+        select: 'name brand images price salePrice offer mainImage',
         options: { strictPopulate: false }
       });
 

@@ -64,7 +64,6 @@
   <h2>Invoice</h2>
 
   <div class="details">
-    <p><strong>Order ID:</strong> <%= order._id %></p>
     <p><strong>Date:</strong> <%= order.createdAt.toDateString() %></p>
     <p><strong>Customer:</strong> <%= order.userId.fullName || order.userId.email %></p>
     <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
