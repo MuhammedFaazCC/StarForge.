@@ -221,6 +221,25 @@
                 </div>
             </div>
         <% } %>
+        <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2><i class="fas fa-gift me-2"></i>Refer Friends & Earn Wallet Money!</h2>
+                    <p class="mb-3">Share your referral link and earn ₹<%= referrerBonus %> in your wallet when friends sign up. Your friends get ₹<%= newUserBonus %> signup bonus too!</p>
+                    
+                    <div class="mt-3">
+                        <label class="form-label">Your Referral Link:</label>
+                        <div class="input-group">
+                            <input class="form-control" id="referralLink" value=<%= `/signup?ref=${user.referralToken}` %> readonly>
+                            <button class="copy-btn" onclick="copyReferralLink()">
+                                <i class="fas fa-copy me-1">Copy</i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <i class="fas fa-users fa-5x opacity-50"></i>
+                </div>
+            </div>
 
         <div class="card mb-4">
             <div class="card-header">
