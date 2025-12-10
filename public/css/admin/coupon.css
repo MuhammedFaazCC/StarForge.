@@ -601,6 +601,13 @@ body {
   opacity: 0.9;
 }
 
+.exclusive-disabled {
+  background-color: #f5f5f5 !important;
+  border-color: #ccc !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
 .pagination {
   margin-top: 20px;
   display: flex;

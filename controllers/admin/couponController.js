@@ -30,8 +30,8 @@ const couponsPage = async (req, res) => {
         expiry: coupon.expiryDate.toISOString().split('T')[0],
         status: coupon.status,
         minimumAmount: coupon.minimumAmount || 0,
-        orderMaxAmount: coupon.orderMaxAmount || 0,
-        maxAmount: coupon.maxAmount || 0
+        orderMaxAmount: coupon.orderMaxAmount || null,
+        maxAmount: coupon.maxAmount || null
       })),
       currentPage: parseInt(page),
       totalPages,
@@ -81,7 +81,7 @@ const postCreateCoupon = async (req, res) => {
       return res.json({ success: false, message: "Minimum amount cannot be negative" });
     }
 
-    const orderMax = orderMaxAmount ? parseFloat(orderMaxAmount) : 0;
+    const orderMax = orderMaxAmount ? parseFloat(orderMaxAmount) : null;
     if (orderMax < 0) {
       return res.json({ success: false, message: "Maximum order amount cannot be negative" });
     }
@@ -166,12 +166,12 @@ const updateCoupon = async (req, res) => {
       return res.json({ success: false, message: "Minimum amount cannot be negative" });
     }
 
-    const orderMax = orderMaxAmount ? parseFloat(orderMaxAmount) : 0;
+    const orderMax = orderMaxAmount ? parseFloat(orderMaxAmount) : null;
     if (orderMax < 0) {
       return res.json({ success: false, message: "Maximum order amount cannot be negative" });
     }
 
-    const maxAmt = maxAmount ? parseFloat(maxAmount) : 0;
+    const maxAmt = maxAmount ? parseFloat(maxAmount) : null;
     if (maxAmt < 0) {
       return res.json({ success: false, message: "Maximum discount amount cannot be negative" });
     }

@@ -658,6 +658,66 @@ function openAddCouponModal() {
   }
 }
 
+const addMaxAmountInput = document.getElementById("modal-maxAmount");
+const addOrderMaxAmountInput = document.getElementById("modal-orderMaxAmount");
+
+function enforceExclusiveAddFields() {
+  if (!addMaxAmountInput || !addOrderMaxAmountInput) return;
+
+  const info = document.getElementById("maxRuleInfo");
+
+  function updateMessage() {
+    if (addMaxAmountInput.value.trim() !== "") {
+      info.textContent =
+        "Maximum Discount Amount is active. Maximum Order Amount has been disabled.";
+    } else if (addOrderMaxAmountInput.value.trim() !== "") {
+      info.textContent =
+        "Maximum Order Amount is active. Maximum Discount Amount has been disabled.";
+    } else {
+      info.textContent =
+        "You can set either “Maximum Discount Amount” or “Maximum Order Amount”, but not both.";
+    }
+  }
+
+  // When typing in maxAmount field
+  addMaxAmountInput.addEventListener("input", () => {
+    if (addMaxAmountInput.value.trim() !== "") {
+      addOrderMaxAmountInput.value = "";
+      addOrderMaxAmountInput.disabled = true;
+      addOrderMaxAmountInput.classList.add("exclusive-disabled");
+      addOrderMaxAmountInput.title =
+        "Disabled because Maximum Discount Amount is set.";
+    } else {
+      addOrderMaxAmountInput.disabled = false;
+      addOrderMaxAmountInput.classList.remove("exclusive-disabled");
+      addOrderMaxAmountInput.removeAttribute("title");
+    }
+    updateMessage();
+  });
+
+  // When typing in orderMaxAmount field
+  addOrderMaxAmountInput.addEventListener("input", () => {
+    if (addOrderMaxAmountInput.value.trim() !== "") {
+      addMaxAmountInput.value = "";
+      addMaxAmountInput.disabled = true;
+      addMaxAmountInput.classList.add("exclusive-disabled");
+      addMaxAmountInput.title =
+        "Disabled because Maximum Order Amount is set.";
+    } else {
+      addMaxAmountInput.disabled = false;
+      addMaxAmountInput.classList.remove("exclusive-disabled");
+      addMaxAmountInput.removeAttribute("title");
+    }
+    updateMessage();
+  });
+
+  // Initialize initial message
+  updateMessage();
+}
+
+enforceExclusiveAddFields();
+
+
 function closeAddCouponModal() {
   const modal = document.getElementById('add-coupon-modal');
   if (modal) {
@@ -898,6 +958,88 @@ async function openEditCouponModal(couponId) {
     document.getElementById('edit-modal-orderMaxAmount').value = coupon.orderMaxAmount || '';
 
     document.getElementById('edit-modal-maxAmount').value = coupon.maxAmount || '';
+
+    /* ======= EXCLUSIVE MAX FIELDS (Edit Coupon Modal) ======= */
+    const editMaxAmountInput = document.getElementById("edit-modal-maxAmount");
+    const editOrderMaxAmountInput = document.getElementById("edit-modal-orderMaxAmount");
+
+    function enforceExclusiveEditFields() {
+  if (!editMaxAmountInput || !editOrderMaxAmountInput) return;
+
+  const info = document.getElementById("edit-maxRuleInfo"); // Separate message for Edit modal
+
+  function updateMessage() {
+    if (editMaxAmountInput.value.trim() !== "") {
+      info.textContent =
+        "Maximum Discount Amount is active. Maximum Order Amount has been disabled.";
+    } else if (editOrderMaxAmountInput.value.trim() !== "") {
+      info.textContent =
+        "Maximum Order Amount is active. Maximum Discount Amount has been disabled.";
+    } else {
+      info.textContent =
+        "You can set either “Maximum Discount Amount” or “Maximum Order Amount”, but not both.";
+    }
+  }
+
+  // Initial cleanup of classes + tooltips
+  editMaxAmountInput.classList.remove("exclusive-disabled");
+  editOrderMaxAmountInput.classList.remove("exclusive-disabled");
+  editMaxAmountInput.removeAttribute("title");
+  editOrderMaxAmountInput.removeAttribute("title");
+
+  // Apply pre-filled state logic
+  if (editMaxAmountInput.value.trim() !== "") {
+    editOrderMaxAmountInput.disabled = true;
+    editOrderMaxAmountInput.classList.add("exclusive-disabled");
+    editOrderMaxAmountInput.title =
+      "Disabled because Maximum Discount Amount is set.";
+  } else if (editOrderMaxAmountInput.value.trim() !== "") {
+    editMaxAmountInput.disabled = true;
+    editMaxAmountInput.classList.add("exclusive-disabled");
+    editMaxAmountInput.title =
+      "Disabled because Maximum Order Amount is set.";
+  } else {
+    editMaxAmountInput.disabled = false;
+    editOrderMaxAmountInput.disabled = false;
+  }
+
+  // When editing maxAmount
+  editMaxAmountInput.addEventListener("input", () => {
+    if (editMaxAmountInput.value.trim() !== "") {
+      editOrderMaxAmountInput.value = "";
+      editOrderMaxAmountInput.disabled = true;
+      editOrderMaxAmountInput.classList.add("exclusive-disabled");
+      editOrderMaxAmountInput.title =
+        "Disabled because Maximum Discount Amount is set.";
+    } else {
+      editOrderMaxAmountInput.disabled = false;
+      editOrderMaxAmountInput.classList.remove("exclusive-disabled");
+      editOrderMaxAmountInput.removeAttribute("title");
+    }
+    updateMessage();
+  });
+
+  // When editing orderMaxAmount
+  editOrderMaxAmountInput.addEventListener("input", () => {
+    if (editOrderMaxAmountInput.value.trim() !== "") {
+      editMaxAmountInput.value = "";
+      editMaxAmountInput.disabled = true;
+      editMaxAmountInput.classList.add("exclusive-disabled");
+      editMaxAmountInput.title =
+        "Disabled because Maximum Order Amount is set.";
+    } else {
+      editMaxAmountInput.disabled = false;
+      editMaxAmountInput.classList.remove("exclusive-disabled");
+      editMaxAmountInput.removeAttribute("title");
+    }
+    updateMessage();
+  });
+
+  updateMessage(); // Set initial message
+}
+
+enforceExclusiveEditFields();
+
 
 
     // Clear any previous errors
