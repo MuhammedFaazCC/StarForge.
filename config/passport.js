@@ -5,7 +5,7 @@ const User = require('../models/userSchema');
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "http://localhost:8080/auth/google/callback"
+  callbackURL: "http://starforge.autos/auth/google/callback" 
 }, async (accessToken, refreshToken, profile, done) => {
   console.log("✅ Raw Google profile:", JSON.stringify(profile, null, 2));
 
