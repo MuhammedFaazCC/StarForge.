@@ -25,7 +25,7 @@ app.set("views", [
 ]);
 
 // Setup a shared Mongo session store
-const mongoUrl = process.env.MONGODB_URI || 'mongodb://localhost:27017/StarForge';
+const mongoUrl = process.env.MONGODB_URI;
 const sessionStore = MongoStore.create({
   mongoUrl,
   collectionName: 'sessions',
