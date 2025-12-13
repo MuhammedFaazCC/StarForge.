@@ -279,7 +279,7 @@ const getAllProduct = async (req, res) => {
       maxPrice: priceRange.max,
     };
 
-    res.render("allproduct", {
+    res.render("allProduct", {
       user: userData,
       products: formattedProducts,
       totalProducts,
