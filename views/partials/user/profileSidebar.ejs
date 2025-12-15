@@ -316,15 +316,19 @@
                 <hr class="sidebar-divider1">
             </li>
             
-            <li class="nav-item1">
-                <a href="/changePassword" class="nav-link1 <%= currentPage === 'password' ? 'active1' : '' %>" data-page="password">
-                    <i class="nav-icon1 fas fa-lock"></i>
-                    <span class="nav-text1">Change Password</span>
-                    <% if (currentPage === 'password') { %>
-                        <span class="active-indicator1"></span>
-                    <% } %>
+            <% if (!user.googleId) { %>
+              <li class="nav-item1">
+                <a href="/changePassword"
+                  class="nav-link1 <%= currentPage === 'password' ? 'active1' : '' %>"
+                  data-page="password">
+                  <i class="nav-icon1 fas fa-lock"></i>
+                  <span class="nav-text1">Change Password</span>
+                  <% if (currentPage === 'password') { %>
+                    <span class="active-indicator1"></span>
+                  <% } %>
                 </a>
-            </li>
+              </li>
+            <% } %>
 
             <li class="nav-item1">
                 <a href="#" id="logout-btn1" class="nav-link1 logout-link1">

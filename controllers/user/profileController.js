@@ -198,6 +198,13 @@ const removeProfileImage = async (req, res) => {
 
 const getChangePasswordPage = async (req, res) => {
   try {
+    const user = await User.findById(req.session.user._id);
+
+    if (user.googleId) {
+      req.flash("error", "Password change is not available for Google accounts.");
+      return res.redirect("/profile");
+    }
+
     res.render("changePassword", {
       user: req.session.user,
       error: req.flash("error"),
@@ -214,9 +221,9 @@ const postChangePassword = async (req, res) => {
     const { currentPassword, newPassword, confirmPassword } = req.body;
     const user = await User.findById(req.session.user._id);
 
-    if (!user) {
-      req.flash("error", "User not found.");
-      return res.redirect("/pageNotFound");
+    if (user.googleId) {
+      req.flash("error", "Password change is not available for Google accounts.");
+      return res.redirect("/profile");
     }
 
     const isMatch = await bcrypt.compare(currentPassword, user.password);

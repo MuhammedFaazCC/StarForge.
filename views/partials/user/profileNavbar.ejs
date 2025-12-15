@@ -1,44 +1,3 @@
-<nav class="profile-navbar">
-  <div class="navbar-container">
-    <button class="mobile-menu-btn" onclick="toggleSidebar()" style="display: none;">
-      <i class="fas fa-bars"></i>
-    </button>
-
-    <a href="/" class="navbar-brand">
-      <span class="brand-text">StarForge</span>
-    </a>
-
-    <div class="user-greeting">
-      <span class="greeting-text">Welcome, <%= user.fullName %></span>
-    </div>
-  </div>
-</nav>
-
-<script>
-  function toggleSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    if (sidebar) {
-      sidebar.classList.toggle('show');
-    }
-  }
-
-  function checkMobileView() {
-    const mobileBtn = document.querySelector('.mobile-menu-btn');
-    if (window.innerWidth <= 768) {
-      mobileBtn.style.display = 'block';
-    } else {
-      mobileBtn.style.display = 'none';
-      const sidebar = document.querySelector('.sidebar');
-      if (sidebar) {
-        sidebar.classList.remove('show');
-      }
-    }
-  }
-
-  window.addEventListener('load', checkMobileView);
-  window.addEventListener('resize', checkMobileView);
-</script>
-
 <style>
   .profile-navbar {
     position: fixed;
@@ -132,3 +91,44 @@
     }
   }
 </style>
+
+<nav class="profile-navbar">
+  <div class="navbar-container">
+    <button class="mobile-menu-btn" onclick="toggleSidebar()" style="display: none;">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <a href="/" class="navbar-brand">
+      <span class="brand-text">StarForge</span>
+    </a>
+
+    <div class="user-greeting">
+      <span class="greeting-text">Welcome, <%= user.fullName %></span>
+    </div>
+  </div>
+</nav>
+
+<script>
+  function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+      sidebar.classList.toggle('show');
+    }
+  }
+
+  function checkMobileView() {
+    const mobileBtn = document.querySelector('.mobile-menu-btn');
+    if (window.innerWidth <= 768) {
+      mobileBtn.style.display = 'block';
+    } else {
+      mobileBtn.style.display = 'none';
+      const sidebar = document.querySelector('.sidebar');
+      if (sidebar) {
+        sidebar.classList.remove('show');
+      }
+    }
+  }
+
+  window.addEventListener('load', checkMobileView);
+  window.addEventListener('resize', checkMobileView);
+</script>
