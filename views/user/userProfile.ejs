@@ -839,38 +839,7 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="/js/user/landingPage.js"></script>
   <script>
-    function validateForm(form) {
-      let isValid = true;
-      const requiredFields = form.querySelectorAll('[required]');
-      
-      requiredFields.forEach(field => {
-        const value = field.value.trim();
-        const feedback = field.nextElementSibling;
-        
-        field.classList.remove('is-invalid', 'is-valid');
-        if (feedback && feedback.classList.contains('invalid-feedback')) {
-          feedback.textContent = '';
-        }
-        
-        if (!value) {
-          showFieldError(field, 'This field is required');
-          isValid = false;
-        } else if (field.type === 'email' && !isValidEmail(value)) {
-          showFieldError(field, 'Please enter a valid email address');
-          isValid = false;
-        } else if (field.name === 'mobile' && value && !isValidMobile(value)) {
-          showFieldError(field, 'Please enter a valid 10-digit mobile number');
-          isValid = false;
-        } else if (field.name === 'name' && value.length < 2) {
-          showFieldError(field, 'Name must be at least 2 characters long');
-          isValid = false;
-        } else {
-          field.classList.add('is-valid');
-        }
-      });
-      
-      return isValid;
-    }
+    
     
     function showFieldError(field, message) {
       field.classList.add('is-invalid');
@@ -891,6 +860,7 @@
     }
 
     function openEditProfileModal() {
+      resetEditProfileModal();
       document.getElementById('editProfileModal').classList.add('active');
       document.body.classList.add('modal-open');
     }
@@ -933,6 +903,118 @@
           console.error('Error:', error);
           showToast('An error occurred while removing profile picture', 'error');
         });
+      }
+    }
+
+    function validateEditProfileForm(form) {
+      let valid = true;
+
+      const nameInput = form.querySelector('input[name="name"]');
+      const emailInput = form.querySelector('input[name="email"]');
+      const mobileInput = form.querySelector('input[name="mobile"]');
+
+      clearField(nameInput);
+      clearField(emailInput);
+      clearField(mobileInput);
+
+      // ===== Full Name =====
+      const name = nameInput.value.trim();
+      const nameRegex = /^[A-Za-z\s'-]+$/;
+
+      if (!name) {
+        setError(nameInput, 'Full name is required');
+        valid = false;
+      } else if (name.length < 2 || name.length > 50) {
+        setError(nameInput, 'Name must be 2–50 characters');
+        valid = false;
+      } else if (!nameRegex.test(name)) {
+        setError(nameInput, 'Only letters, spaces, hyphens and apostrophes allowed');
+        valid = false;
+      } else if (!/[A-Za-z]/.test(name)) {
+        setError(nameInput, 'Name must contain letters');
+        valid = false;
+      } else if (/([\-'])\1{2,}/.test(name)) {
+        setError(nameInput, 'Repeated symbols are not allowed');
+        valid = false;
+      } else if (/^[-']|[-']$/.test(name)) {
+        setError(nameInput, 'Name cannot start or end with symbols');
+        valid = false;
+      } else {
+        setValid(nameInput);
+      }
+
+      // ===== Email =====
+      const email = emailInput.value.trim().toLowerCase();
+
+      if (!email) {
+        setError(emailInput, 'Email is required');
+        valid = false;
+      } else if (!isValidEmail(email)) {
+        setError(emailInput, 'Invalid email format');
+        valid = false;
+      } else {
+        emailInput.value = email;
+        setValid(emailInput);
+      }
+
+      // ===== Mobile =====
+      const mobile = mobileInput.value.trim();
+
+      if (mobile) {
+        if (!/^[6-9]\d{9}$/.test(mobile)) {
+          setError(mobileInput, 'Enter a valid 10-digit mobile number');
+          valid = false;
+        } else {
+          setValid(mobileInput);
+        }
+      }
+
+      return valid;
+    }
+
+    function resetEditProfileModal() {
+      const modal = document.getElementById('editProfileModal');
+      const form = document.getElementById('editProfileForm');
+
+      if (!form) return;
+
+      // Reset form values to original values rendered by EJS
+      form.reset();
+
+      // Clear validation states
+      form.querySelectorAll('.is-valid, .is-invalid').forEach(el => {
+        el.classList.remove('is-valid', 'is-invalid');
+      });
+
+      // Clear error messages
+      form.querySelectorAll('.invalid-feedback').forEach(el => {
+        el.textContent = '';
+      });
+    }
+
+    function setError(input, message) {
+      input.classList.add('is-invalid');
+      input.classList.remove('is-valid');
+      const feedback = input.nextElementSibling;
+      if (feedback && feedback.classList.contains('invalid-feedback')) {
+        feedback.textContent = message;
+      }
+    }
+
+    function setValid(input) {
+      input.classList.remove('is-invalid');
+      input.classList.add('is-valid');
+      const feedback = input.nextElementSibling;
+      if (feedback && feedback.classList.contains('invalid-feedback')) {
+        feedback.textContent = '';
+      }
+    }
+
+    function clearField(input) {
+      input.classList.remove('is-invalid', 'is-valid');
+      const feedback = input.nextElementSibling;
+      if (feedback && feedback.classList.contains('invalid-feedback')) {
+        feedback.textContent = '';
       }
     }
 
@@ -990,100 +1072,35 @@
       }
     });
 
-    document.addEventListener('DOMContentLoaded', function() {
-      const form = document.getElementById('editProfileForm');
-      if (form) {
-        const inputs = form.querySelectorAll('input');
-        
-        inputs.forEach(input => {
-          input.addEventListener('blur', function() {
-            if (this.hasAttribute('required') || this.value.trim()) {
-              validateSingleField(this);
-            }
-          });
-          
-          input.addEventListener('input', function() {
-            if (this.classList.contains('is-invalid')) {
-              validateSingleField(this);
-            }
-          });
-        });
-      }
-    });
 
-    function validateSingleField(field) {
-      const value = field.value.trim();
-      field.classList.remove('is-invalid', 'is-valid');
-      
-      const feedback = field.nextElementSibling;
-      if (feedback && feedback.classList.contains('invalid-feedback')) {
-        feedback.textContent = '';
-      }
-      
-      if (field.hasAttribute('required') && !value) {
-        showFieldError(field, 'This field is required');
-        return false;
-      }
-      
-      if (field.type === 'email' && value && !isValidEmail(value)) {
-        showFieldError(field, 'Please enter a valid email address');
-        return false;
-      }
-      
-      if (field.name === 'mobile' && value && !isValidMobile(value)) {
-        showFieldError(field, 'Please enter a valid 10-digit mobile number');
-        return false;
-      }
-      
-      if (field.name === 'name' && value && value.length < 2) {
-        showFieldError(field, 'Name must be at least 2 characters long');
-        return false;
-      }
-      
-      if (value) {
-        field.classList.add('is-valid');
-      }
-      
-      return true;
-    }
 
-    document.getElementById('editProfileForm').addEventListener('submit', function(e) {
+    document.getElementById('editProfileForm').addEventListener('submit', function (e) {
       e.preventDefault();
-      
-      if (!validateForm(this)) {
-        return;
-      }
-      
+
+      if (!validateEditProfileForm(this)) return;
+
       const formData = new FormData(this);
       const submitBtn = this.querySelector('button[type="submit"]');
-      
+
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-      
+
       fetch('/user/updateProfile', {
         method: 'POST',
         body: formData
       })
-      .then(response => {
-        if (response.redirected) {
-          window.location.href = response.url;
-        } else {
-          return response.json();
-        }
-      })
-      .then(data => {
-        if (data && data.success === false) {
-          showToast(data.message || 'Failed to update profile', 'error');
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        showToast('An error occurred while updating profile', 'error');
-      })
-      .finally(() => {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
-      });
+        .then(res => {
+          if (res.redirected) {
+            window.location.href = res.url;
+          } else {
+            return res.json();
+          }
+        })
+        .catch(() => showToast('Profile update failed', 'error'))
+        .finally(() => {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+        });
     });
 
     document.getElementById('imageUploadForm').addEventListener('submit', function(e) {

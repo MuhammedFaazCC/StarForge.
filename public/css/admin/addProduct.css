@@ -280,8 +280,6 @@ input[type="file"]::-webkit-file-upload-button:hover {
   inset: 0;
   background-color: rgba(0, 0, 0, 0.6);
   z-index: 1000;
-
-  display: flex;
   align-items: center;
   justify-content: center;
 }
