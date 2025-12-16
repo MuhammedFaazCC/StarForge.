@@ -1,4 +1,4 @@
-const pdf = require('html-pdf');
+const puppeteer = require('puppeteer')
 const ejs = require('ejs');
 const path = require('path');
 const ExcelJS = require('exceljs');
@@ -6,6 +6,18 @@ const User = require("../../models/userSchema");
 const Order = require("../../models/orderSchema");
 const Product = require("../../models/productSchema");
 const mongoose = require('mongoose');
+
+let browser;
+
+async function getBrowser() {
+  if (!browser) {
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+  }
+  return browser;
+}
 
 // Helper to compute IST (UTC+05:30) start and end of current day, returned in UTC
 const IST_OFFSET_MINUTES = 330;
@@ -43,7 +55,10 @@ const salesPage = async (req, res) => {
         dateQuery = { orderDate: { $gte: sod1, $lt: eod1 } };
         break;
       case 'week':
-        const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+        const base = new Date();
+        const startOfWeek = new Date(base);
+        startOfWeek.setDate(base.getDate() - base.getDay());
+
         startOfWeek.setHours(0, 0, 0, 0);
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 7);
@@ -201,7 +216,10 @@ const getSalesData = async (req, res) => {
         dateQuery = { orderDate: { $gte: sod2, $lt: eod2 } };
         break;
       case 'week':
-        const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+        const base = new Date();
+        const startOfWeek = new Date(base);
+        startOfWeek.setDate(base.getDate() - base.getDay());
+
         startOfWeek.setHours(0, 0, 0, 0);
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 7);
@@ -355,7 +373,10 @@ const exportSalesReportPDF = async (req, res) => {
         dateQuery = { orderDate: { $gte: sod3, $lt: eod3 } };
         break;
       case 'week':
-        const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+        const base = new Date();
+        const startOfWeek = new Date(base);
+        startOfWeek.setDate(base.getDate() - base.getDay());
+
         startOfWeek.setHours(0, 0, 0, 0);
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 7);
@@ -451,27 +472,42 @@ const exportSalesReportPDF = async (req, res) => {
         return res.status(500).send("Could not render sales report template");
       }
 
-      const options = {
-        format: 'A4',
-        orientation: 'landscape',
-        border: '10mm'
-      };
+      (async () => {
+        try {
+          const browser = await getBrowser();
 
-      pdf.create(html, options).toBuffer((err, buffer) => {
-        if (err) {
-          console.error("PDF generation error:", err);
+          const page = await browser.newPage();
+
+          await page.setContent(html, {
+            waitUntil: 'networkidle0'
+          });
+
+          const buffer = await page.pdf({
+            format: 'A4',
+            landscape: true,
+            printBackground: true,
+            margin: {
+              top: '10mm',
+              right: '10mm',
+              bottom: '10mm',
+              left: '10mm'
+            }
+          });
+
+          res.set({
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename=sales_report_${new Date().toISOString().split('T')[0]}.pdf`,
+            'Content-Length': buffer.length
+          });
+
+          return res.send(buffer);
+        } catch (err) {
+          console.error("Puppeteer PDF error:", err);
           return res.status(500).send("Could not generate PDF");
         }
-
-        res.set({
-          'Content-Type': 'application/pdf',
-          'Content-Disposition': `attachment; filename=sales_report_${new Date().toISOString().split('T')[0]}.pdf`,
-          'Content-Length': buffer.length
-        });
-
-        return res.send(buffer);
-      });
+      })();
     });
+
 
   } catch (error) {
     console.error("Error generating sales report PDF:", error);
@@ -501,7 +537,10 @@ const exportSalesReportExcel = async (req, res) => {
         dateQuery = { orderDate: { $gte: sod3, $lt: eod3 } };
         break;
       case 'week':
-        const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+      const base = new Date();
+      const startOfWeek = new Date(base);
+      startOfWeek.setDate(base.getDate() - base.getDay());
+
         startOfWeek.setHours(0, 0, 0, 0);
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 7);

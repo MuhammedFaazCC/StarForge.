@@ -147,34 +147,29 @@ const postEditProfile = async (req, res) => {
 
 const uploadProfileImage = async (req, res) => {
   try {
-    upload.single("profileImage")(req, res, async (err) => {
-      if (err) {
-        req.flash("error", err.message || "Upload failed.");
-        return res.redirect("/profile");
-      }
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No file uploaded" });
+    }
 
-      const user = await User.findById(req.session.user._id);
-      if (!user) {
-        req.flash("error", "User not found.");
-        return res.redirect("/pageNotFound");
-      }
+    const user = await User.findById(req.session.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
 
-      if (user.profileImage) {
-        await deleteImage(user.profileImage);
-      }
+    if (user.profileImage) {
+      await deleteImage(user.profileImage);
+    }
 
-      user.profileImage = req.file.filename;
-      await user.save();
+    user.profileImage = req.file.filename;
+    await user.save();
 
-      req.flash("success", "Profile image updated successfully.");
-      res.redirect("/profile");
-    });
+    return res.json({ success: true });
   } catch (err) {
-    console.error("Error uploading profile image:", err);
-    req.flash("error", "Error uploading profile image.");
-    res.redirect("/profile");
+    console.error(err);
+    return res.status(500).json({ success: false, message: "Upload failed" });
   }
 };
+
 
 const removeProfileImage = async (req, res) => {
   try {

@@ -3,7 +3,19 @@ const User = require("../../models/userSchema");
 const Order = require("../../models/orderSchema");
 const ejs = require('ejs');
 const path = require('path');
-const pdf = require('html-pdf');
+const puppeteer = require('puppeteer');
+
+let browser;
+
+async function getBrowser() {
+  if (!browser) {
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+  }
+  return browser;
+}
 
 const loginPage = async (req, res) => {
   try {
@@ -193,6 +205,20 @@ const getOrderDetails = async (req, res) => {
       .populate('userId')
       .populate('items.productId');
 
+      if (status === 'Cancelled') {
+        const hasBlockedItem = order.items.some(item =>
+          ['Delivered', 'Returned', 'Return Requested'].includes(item.status)
+        );
+
+        if (hasBlockedItem) {
+          return res.status(400).json({
+            success: false,
+            message:
+              'Cannot cancel order. One or more items are delivered, returned, or under return request.'
+          });
+        }
+      }
+
     if (!order) return res.status(404).send('Order not found');
 
     res.render('adminOrderDetails', { order });
@@ -227,26 +253,37 @@ const getInvoicePDF = async (req, res) => {
         return res.status(500).send("Could not render invoice template");
       }
 
-      const options = {
-        format: 'A4',
-        orientation: 'portrait',
-        border: '10mm'
-      };
+      (async () => {
+        try {
+          const browser = await getBrowser();
+          const page = await browser.newPage();
 
-      pdf.create(html, options).toBuffer((err, buffer) => {
-        if (err) {
-          console.error("PDF generation error:", err);
-          return res.status(500).send("Could not generate PDF");
+          await page.setContent(html, { waitUntil: 'networkidle0' });
+
+          const buffer = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            margin: {
+              top: '10mm',
+              right: '10mm',
+              bottom: '10mm',
+              left: '10mm'
+            }
+          });
+
+          res.set({
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename=invoice_${order._id}.pdf`,
+            'Content-Length': buffer.length
+          });
+
+          return res.send(buffer);
+        } catch (err) {
+          console.error("Invoice PDF error:", err);
+          return res.status(500).send("Could not generate invoice PDF");
         }
+      })();
 
-        res.set({
-          'Content-Type': 'application/pdf',
-          'Content-Disposition': `attachment; filename=invoice_${order._id}.pdf`,
-          'Content-Length': buffer.length
-        });
-
-        return res.send(buffer);
-      });
     });
 
   } catch (err) {

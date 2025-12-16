@@ -243,10 +243,16 @@ h1 {
   <main class="main-content">
     <h1>Order Details</h1>
 
-    <% 
-      // Check if entire order is cancelled
-      const allItemsCancelled = order.items.every(item => (item.status || 'Ordered') === 'Cancelled');
-      const hasAnyCancelledItems = order.items.some(item => (item.status || 'Ordered') === 'Cancelled');
+    <%
+      const finalItemStates = ['Delivered', 'Returned', 'Return Requested'];
+
+      const hasAnyFinalItem = order.items.some(item =>
+        finalItemStates.includes(item.status)
+      );
+
+      const allItemsCancelled = order.items.every(item =>
+        (item.status || 'Ordered') === 'Cancelled'
+      );
     %>
 
     <% if (order.status === 'Cancelled' || allItemsCancelled) { %>
@@ -312,7 +318,7 @@ h1 {
         <div class="product-item">
           <img class="product-image" src="<%= item.productId?.mainImage || '/images/no-image.png' %>" alt="<%= item.productId?.name || 'Product' %>">
           <div class="product-info">
-            <div class="product-name"><%= item.productId?.name || 'Unknown Product' %></div>
+            <div class="product-name"><% if (!item.productId) { %> <span class="badge bg-secondary">Product removed</span> <% } %> <%= item.productId?.name || 'Unknown Product' %></div>
             <div class="product-details">
               Quantity: <%= item.quantity %> × ₹<%= item.adjustedUnitPrice.toFixed(2) %> = ₹<%= (item.adjustedUnitPrice * item.quantity).toFixed(2) %>
               <br>
@@ -321,7 +327,7 @@ h1 {
               </span>
             </div>
           </div>
-          <div class="item-actions" data-product-id="<%= item.productId._id %>">
+          <div class="item-actions" data-product-id="<%= item.productId ? item.productId._id : '' %>">
             <% 
               const itemStatus = item.status || 'Placed';
               const orderStatus = order.status;
@@ -365,13 +371,14 @@ h1 {
                 Return Declined
               </div>
             <% } else if (canCancelItem) { %>
-              <button class="action-btn btn-cancel-item" onclick="cancelSingleItem('<%= order._id %>', '<%= item.productId._id %>')">
+              <button class="action-btn btn-cancel-item" onclick="cancelSingleItem('<%= order._id %>', '<%= item.productId ? item.productId._id : '' %>')" <%= !item.productId ? 'disabled' : '' %>>
+
                 Cancel Item
               </button>
             <% } %>
             
             <% if (canReturnItem) { %>
-              <button class="action-btn btn-return-item" onclick="requestReturnItem('<%= order._id %>', '<%= item.productId._id %>')">
+              <button class="action-btn btn-return-item" onclick="requestReturnItem('<%= order._id %>', '<%= item.productId ? item.productId._id : '' %>')" <%= !item.productId ? 'disabled' : '' %>>
                 Return Item
               </button>
               <div class="return-info" style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
@@ -390,9 +397,14 @@ h1 {
     <div class="order-actions">
       <% 
         // Enhanced logic to properly check if order can be cancelled
-        const canCancelOrder = (order.status === 'Pending' || order.status === 'Placed' || order.status === 'Processing') && 
-                               order.status !== 'Cancelled' && 
-                               !allItemsCancelled;
+        const cancellableOrderStatuses = ['Pending', 'Placed', 'Processing'];
+
+        const canCancelOrder =
+          cancellableOrderStatuses.includes(order.status) &&
+          order.status !== 'Cancelled' &&
+          !allItemsCancelled &&
+          !hasAnyFinalItem;
+
         const canReturnOrder = order.status === 'Delivered' && 
                                order.status !== 'Cancelled' && 
                                !allItemsCancelled;

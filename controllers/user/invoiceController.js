@@ -1,4 +1,4 @@
-const pdf = require("html-pdf");
+const puppeteer = require("puppeteer");
 const Order = require("../../models/orderSchema");
 
 const downloadInvoice = async (req, res) => {
@@ -43,7 +43,6 @@ const downloadInvoice = async (req, res) => {
       };
     });
 
-    // Generate HTML for the invoice
     const invoiceHTML = `
     <!DOCTYPE html>
     <html>
@@ -339,23 +338,37 @@ const downloadInvoice = async (req, res) => {
     };
 
     // Generate PDF
-    pdf.create(invoiceHTML, options).toBuffer((err, buffer) => {
-      if (err) {
-        console.error('PDF generation error:', err);
-        return res.status(500).json({ 
-          success: false, 
-          message: 'Failed to generate invoice PDF' 
-        });
-      }
-
-      // Set response headers for PDF download
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="Invoice-${order._id}.pdf"`);
-      res.setHeader('Content-Length', buffer.length);
-
-      // Send the PDF buffer
-      res.send(buffer);
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
+
+    const page = await browser.newPage();
+
+    await page.setContent(invoiceHTML, {
+      waitUntil: 'networkidle0'
+    });
+
+    const buffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: {
+        top: '0.5in',
+        right: '0.5in',
+        bottom: '0.5in',
+        left: '0.5in'
+      }
+    });
+
+    await browser.close();
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="Invoice-${order._id}.pdf"`
+    );
+
+    return res.send(buffer);
 
   } catch (error) {
     console.error('Error generating invoice:', error);

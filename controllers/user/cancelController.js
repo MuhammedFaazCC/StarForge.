@@ -118,6 +118,20 @@ const cancelOrderNew = async (req, res) => {
       });
     }
 
+    const blockedItemStatuses = ['Delivered', 'Returned', 'Return Requested'];
+
+    const hasBlockedItem = order.items.some(item =>
+      blockedItemStatuses.includes(item.status)
+    );
+
+    if (hasBlockedItem) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Order cannot be cancelled because one or more items are delivered or under return process'
+      });
+    }
+
     const validCancelStatuses = ['Pending', 'Placed', 'Processing'];
     if (!validCancelStatuses.includes(order.status)) {
       console.error(`Order cannot be cancelled, current status: ${order.status}`);

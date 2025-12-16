@@ -82,28 +82,28 @@
           </div>
           <div class="filter-content">
             <div class="filter-group">
-  <h5 class="fs-6 fw-semibold">Price Range</h5>
-  <div class="dual-range-slider">
-    <div class="track" id="priceTrack"></div>
-    <input type="range" id="minPriceSlider" min="<%= priceRange.min %>" max="<%= priceRange.max %>" value="<%= filters.minPrice || priceRange.min %>" step="10">
-    <input type="range" id="maxPriceSlider" min="<%= priceRange.min %>" max="<%= priceRange.max %>" value="<%= filters.maxPrice || priceRange.max %>" step="10">
-  </div>
-  <div class="range-labels">
-    <span>₹<%= priceRange.min %></span>
-    <span>₹<%= priceRange.max %></span>
-  </div>
-  <div class="price-inputs">
-    <div class="input-group input-group-sm">
-      <span class="input-group-text">₹</span>
-      <input type="number" class="form-control" id="minPrice" value="<%= filters.minPrice || priceRange.min %>" min="<%= priceRange.min %>" max="<%= priceRange.max %>">
-    </div>
-    <div class="input-group input-group-sm">
-      <span class="input-group-text">₹</span>
-      <input type="number" class="form-control" id="maxPrice" value="<%= filters.maxPrice || priceRange.max %>" min="<%= priceRange.min %>" max="<%= priceRange.max %>">
-    </div>
-  </div>
-  <button class="btn btn-sm btn-primary w-100 mt-2" id="applyPriceFilter">Apply</button>
-</div>
+              <h5 class="fs-6 fw-semibold">Price Range</h5>
+              <div class="dual-range-slider">
+                <div class="track" id="priceTrack"></div>
+                <input type="range" id="minPriceSlider" min="<%= priceRange.min %>" max="<%= priceRange.max %>" value="<%= filters.minPrice || priceRange.min %>" step="10">
+                <input type="range" id="maxPriceSlider" min="<%= priceRange.min %>" max="<%= priceRange.max %>" value="<%= filters.maxPrice || priceRange.max %>" step="10">
+              </div>
+              <div class="range-labels">
+                <span>₹<%= priceRange.min %></span>
+                <span>₹<%= priceRange.max %></span>
+              </div>
+              <div class="price-inputs">
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text">₹</span>
+                  <input type="number" class="form-control" id="minPrice" value="<%= filters.minPrice || priceRange.min %>" min="<%= priceRange.min %>" max="<%= priceRange.max %>">
+                </div>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text">₹</span>
+                  <input type="number" class="form-control" id="maxPrice" value="<%= filters.maxPrice || priceRange.max %>" min="<%= priceRange.min %>" max="<%= priceRange.max %>">
+                </div>
+              </div>
+              <button class="btn btn-sm btn-primary w-100 mt-2" id="applyPriceFilter">Apply</button>
+            </div>
             <div class="filter-group">
               <h5 class="fs-6 fw-semibold">Category</h5>
               <div class="form-check">
@@ -161,7 +161,7 @@
                   <% } %>
                   <div class="position-relative" style="height: 200px;">
                     <% if (product.mainImage) { %>
-                      <img src="<%= product.mainImage %>" class="card-img-top" alt="<%= product.name %>" style="position: absolute; width: 100%; height: 100%; object-fit: contain; padding: 10px;">
+                      <a href="/product/<%= product._id %>"><img src="<%= product.mainImage %>" class="card-img-top" alt="<%= product.name %>" style="position: absolute; width: 100%; height: 100%; object-fit: contain; padding: 10px;"></a>
                     <% } else { %>
                       <div class="d-flex align-items-center justify-content-center" style="position:absolute;inset:0;border:1px dashed #ccc;border-radius:6px;color:#888;font-size:12px;">No image</div>
                     <% } %>
