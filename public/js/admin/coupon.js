@@ -865,8 +865,8 @@ const couponData = {
   expiryDate: formData.get('expiryDate'),
   usageLimit: formData.get('usageLimit'),
   minimumAmount: formData.get('minimumAmount') || 0,
-  orderMaxAmount: formData.get('orderMaxAmount') || 0,
-  maxAmount: formData.get('maxAmount') || 0
+  orderMaxAmount: formData.get('orderMaxAmount') || "",
+  maxAmount: formData.get('maxAmount') || ""
 };
     // Frontend validation
     const errors = validateCouponForm(couponData);
