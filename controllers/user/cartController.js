@@ -12,108 +12,107 @@ const viewCart = async (req, res) => {
 
 const addToCart = async (req, res) => {
   try {
+    // AUTH CHECK FIRST — BEFORE ANY ACCESS
+    if (!req.session || !req.session.user || !req.session.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not logged in'
+      });
+    }
+
     const productId = req.params.id;
     const userId = req.session.user._id;
     const quantity = parseInt(req.body.quantity) || 1;
     const source = req.body.source;
-    
-    if (!req.session || !req.session.user || !req.session.user._id) {
-      return res.status(401).json({ success: false, message: 'User not logged in' });
-    }
 
     const product = await Product.findById(productId).populate('category');
-    
+
     if (!product || !product.isListed || !product.category?.isActive) {
-      return res.status(400).json({ success: false, message: 'Product not available' });
-    }
-    
-    if (product.stock === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'This product is currently out of stock',
-        outOfStock: true 
+      return res.status(400).json({
+        success: false,
+        message: 'Product not available'
       });
     }
 
-    let cart = await Cart.findOne({ userId: userId });
-
-    if (!cart) {
-      cart = new Cart({ userId: userId, items: [] });
+    if (product.stock === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'This product is currently out of stock',
+        outOfStock: true
+      });
     }
 
-    const itemIndex = cart.items.findIndex(item => 
-      item.productId && item.productId.toString() === productId.toString()
+    let cart = await Cart.findOne({ userId });
+
+    if (!cart) {
+      cart = new Cart({ userId, items: [] });
+    }
+
+    const itemIndex = cart.items.findIndex(
+      item => item.productId.toString() === productId
     );
 
     if (itemIndex !== -1) {
       const newTotal = cart.items[itemIndex].quantity + quantity;
 
       if (newTotal > 5) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'You can only add up to 5 units of this product to your cart'
+        return res.status(400).json({
+          success: false,
+          message: 'You can only add up to 5 units of this product'
         });
       }
 
       if (newTotal > product.stock) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'Cannot exceed available stock quantity',
-          outOfStock: true 
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot exceed available stock',
+          outOfStock: true
         });
       }
 
       cart.items[itemIndex].quantity = newTotal;
-
     } else {
       if (quantity > 5) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'You can only add up to 5 units of this product to your cart'
+        return res.status(400).json({
+          success: false,
+          message: 'You can only add up to 5 units of this product'
         });
       }
 
       if (quantity > product.stock) {
-        return res.status(400).json({ 
-          success: false, 
+        return res.status(400).json({
+          success: false,
           message: 'Not enough stock available',
-          outOfStock: true 
+          outOfStock: true
         });
       }
 
-      cart.items.push({ productId: productId, quantity: quantity });
+      cart.items.push({ productId, quantity });
     }
 
     if (source === 'wishlist') {
       await Wishlist.updateOne(
-        { userId: userId },
-        { $pull: { items: { productId: productId } } }
+        { userId },
+        { $pull: { items: { productId } } }
       );
     }
 
     await cart.save();
-    // compute updated counts
-    const updatedCart = await Cart.findOne({ userId });
-    const cartCount = updatedCart && updatedCart.items ? updatedCart.items.length : 0;
-    let wishlistCount;
-    if (source === 'wishlist') {
-      const updatedWishlist = await Wishlist.findOne({ userId });
-      wishlistCount = updatedWishlist && updatedWishlist.items ? updatedWishlist.items.length : 0;
-    }
 
-    if (req.headers.accept && req.headers.accept.includes('application/json')) {
-      return res.json({ success: true, message: 'Product added to cart successfully', cartCount, ...(typeof wishlistCount !== 'undefined' ? { wishlistCount } : {}) });
-    }
-    
-    res.redirect('/cart');
+    const cartCount = cart.items.length;
+
+    return res.json({
+      success: true,
+      message: 'Product added to cart successfully',
+      cartCount
+    });
+
   } catch (error) {
     console.error('Error in addToCart:', error);
-    
-    if (req.headers.accept && req.headers.accept.includes('application/json')) {
-      return res.status(500).json({ success: false, message: 'Internal server error' });
-    }
-    
-    res.status(500).send('Internal server error');
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
   }
 };
 
