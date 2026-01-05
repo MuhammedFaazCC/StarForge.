@@ -15,168 +15,224 @@
 <body>
     <%- include('../partials/admin/navbar') %>
 
-    <%- include('../partials/admin/sidepanel', { active: 'products' }) %>
-    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+        <%- include('../partials/admin/sidepanel', { active: 'products' }) %>
+            <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
-    <div class="main-content" id="main-content">
-        <div class="products-section">
-            <div class="products-header">
-                <h2>Products</h2>
-                <button class="add-product-btn" onclick="handleAddProduct()">Add Product</button>
-            </div>
+            <div class="main-content" id="main-content">
+                <div class="products-section">
+                    <div class="products-header">
+                        <h2>Products</h2>
+                        <button class="add-product-btn" onclick="handleAddProduct()">Add Product</button>
+                    </div>
 
-            <div class="products-controls">
-                <input type="text" id="searchInput" placeholder="Search by name..." oninput="filterTable()" />
-            </div>
+                    <div class="products-controls">
+                        <input type="text" id="searchInput" placeholder="Search by name..." value="<%= search || '' %>"/>
+                    </div>
 
-            <div class="table-responsive">
-                <table class="products-table" id="productsTable">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Category</th>
-                            <th>Price</th>
-                            <th>Stock</th>
-                            <th>List</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-  <% if (products && products.length > 0) { %>
-    <% products.forEach(product => { %>
-      <tr>
-        <td><%= product.name %></td>
-        <td><%= product.category?.name || 'Uncategorized' %></td>
-        <td>₹<%= product.price %></td>
-        <td>
-          <span class="stock-badge <%= product.stock > 10 ? 'stock-high' : product.stock > 0 ? 'stock-low' : 'stock-out' %>">
-            <%= product.stock %>
-          </span>
-        </td>
-        <td>
-          <label class="switch">
-            <input type="checkbox" <%= product.isListed ? "checked" : "" %> onchange="toggleProductListing('<%= product._id %>', this)">
-            <span class="slider round"></span>
-          </label>
-        </td>
-        <td>
-          <button class="view-btn" onclick="handleViewProduct('<%= product._id %>')">View</button>
-          <button class="edit-btn" onclick="handleEditProduct('<%= product._id %>')">Edit</button>
-          <button class="delete-btn" onclick="deleteProduct('<%= product._id %>')">Delete</button>
-        </td>
-      </tr>
-    <% }) %>
-  <% } else { %>
-    <tr>
-      <td colspan="7" style="text-align: center; padding: 20px; color: #6b7280;">
-        No products found. <a href="/admin/products/add" style="color: #3b82f6;">Add your first product</a>
-      </td>
-    </tr>
-  <% } %>
-</tbody>
+                    <div class="table-responsive">
+                        <table class="products-table" id="productsTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>List</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (products && products.length> 0) { %>
+                                    <% products.forEach(product=> { %>
+                                        <tr>
+                                            <td>
+                                                <%= product.name %>
+                                            </td>
+                                            <td>
+                                                <%= product.category?.name || 'Uncategorized' %>
+                                            </td>
+                                            <td>₹<%= product.price %>
+                                            </td>
+                                            <td>
+                                                <span
+                                                    class="stock-badge <%= product.stock > 10 ? 'stock-high' : product.stock > 0 ? 'stock-low' : 'stock-out' %>">
+                                                    <%= product.stock %>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <label class="switch">
+                                                    <input type="checkbox" <%=product.isListed ? "checked" : "" %>
+                                                    onchange="toggleProductListing('<%= product._id %>', this)">
+                                                        <span class="slider round"></span>
+                                                </label>
+                                            </td>
+                                            <td>
+                                                <button class="view-btn"
+                                                    onclick="handleViewProduct('<%= product._id %>')">View</button>
+                                                <button class="edit-btn"
+                                                    onclick="handleEditProduct('<%= product._id %>')">Edit</button>
+                                                <button class="delete-btn"
+                                                    onclick="deleteProduct('<%= product._id %>')">Delete</button>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                            <% } else { %>
+                                                <tr>
+                                                    <td colspan="7"
+                                                        style="text-align: center; padding: 20px; color: #6b7280;">
+                                                        No products found. <a href="/admin/products/add"
+                                                            style="color: #3b82f6;">Add your first product</a>
+                                                    </td>
+                                                </tr>
+                                                <% } %>
+                            </tbody>
 
-            </table>
+                        </table>
 
-            <div class="pagination">
-                <% if (hasPrevPage) { %>
-                    <a href="/admin/products?page=<%= prevPage %>" class="page-link">Previous</a>
-                <% } %>
-                <% for (let i = 1; i <= totalPages; i++) { %>
-                    <a href="/admin/products?page=<%= i %>" class="page-link <%= i === currentPage ? 'active' : '' %>">
-                        <%= i %>
-                    </a>
-                <% } %>
-                <% if (hasNextPage) { %>
-                    <a href="/admin/products?page=<%= nextPage %>" class="page-link">Next</a>
-                <% } %>
-            </div>
-        </div>
-    </div>
+                        <div class="pagination">
 
-    <%- include('../partials/admin/footer') %>
+                            <% if (hasPrevPage) { %>
+                                <a
+                                href="/admin/products?page=<%= prevPage %><%= search ? `&search=${search}` : '' %>"
+                                class="page-link"
+                                >
+                                Previous
+                                </a>
+                            <% } else { %>
+                                <span class="page-link disabled">Previous</span>
+                            <% } %>
 
-    <script src="/js/admin/common.js"></script>
-    <script src="/js/admin/products.js"></script>
-    <script>
-        function handleAddProduct() {
-            Swal.fire({
-                title: 'Loading...',
-                text: 'Redirecting to add product page',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-            setTimeout(() => {
-                window.location.href = '/admin/products/add';
-            }, 500);
-        }
+                            <% for (let i = 1; i <= totalPages; i++) { %>
+                                <a
+                                href="/admin/products?page=<%= i %><%= search ? `&search=${search}` : '' %>"
+                                class="page-link <%= i === currentPage ? 'active' : '' %>"
+                                >
+                                <%= i %>
+                                </a>
+                            <% } %>
 
-        function handleViewProduct(productId) {
-            Swal.fire({
-                title: 'Loading...',
-                text: 'Loading product details',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-            setTimeout(() => {
-                window.location.href = `/admin/products/view/${productId}`;
-            }, 500);
-        }
+                            <% if (hasNextPage) { %>
+                                <a
+                                href="/admin/products?page=<%= nextPage %><%= search ? `&search=${search}` : '' %>"
+                                class="page-link"
+                                >
+                                Next
+                                </a>
+                            <% } else { %>
+                                <span class="page-link disabled">Next</span>
+                            <% } %>
 
-        function handleEditProduct(productId) {
-            Swal.fire({
-                title: 'Loading...',
-                text: 'Loading edit form',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-            setTimeout(() => {
-                window.location.href = `/admin/products/edit/${productId}`;
-            }, 500);
-        }
+                        </div>
+                    </div>
+                </div>
+
+                <%- include('../partials/admin/footer') %>
+
+                    <script src="/js/admin/common.js"></script>
+                    <script src="/js/admin/products.js"></script>
+                    <script>
+                        const searchInput = document.getElementById("searchInput");
+
+                        if (searchInput) {
+                            let timer;
+                            searchInput.addEventListener("input", function () {
+                            clearTimeout(timer);
+                            timer = setTimeout(() => {
+                                const value = this.value.trim();
+                                const params = new URLSearchParams(window.location.search);
+
+                                if (value) {
+                                params.set("search", value);
+                                params.set("page", 1);
+                                } else {
+                                params.delete("search");
+                                params.set("page", 1);
+                                }
+
+                                window.location.href = `/admin/products?${params.toString()}`;
+                            }, 300);
+                            });
+                        }
+
+                        function handleAddProduct() {
+                            Swal.fire({
+                                title: 'Loading...',
+                                text: 'Redirecting to add product page',
+                                allowOutsideClick: false,
+                                allowEscapeKey: false,
+                                showConfirmButton: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+                            setTimeout(() => {
+                                window.location.href = '/admin/products/add';
+                            }, 500);
+                        }
+
+                        function handleViewProduct(productId) {
+                            Swal.fire({
+                                title: 'Loading...',
+                                text: 'Loading product details',
+                                allowOutsideClick: false,
+                                allowEscapeKey: false,
+                                showConfirmButton: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+                            setTimeout(() => {
+                                window.location.href = `/admin/products/view/${productId}`;
+                            }, 500);
+                        }
+
+                        function handleEditProduct(productId) {
+                            Swal.fire({
+                                title: 'Loading...',
+                                text: 'Loading edit form',
+                                allowOutsideClick: false,
+                                allowEscapeKey: false,
+                                showConfirmButton: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+                            setTimeout(() => {
+                                window.location.href = `/admin/products/edit/${productId}`;
+                            }, 500);
+                        }
 
         <% if (message) { %>
             <% if (message.success !== undefined) { %>
-                Swal.fire({
-                    icon: '<%= message.success ? "success" : "error" %>',
-                    title: '<%= message.success ? "Success!" : "Error!" %>',
-                    text: '<%= message.text %>',
-                    timer: 3000,
-                    showConfirmButton: false,
-                    toast: true,
-                    position: 'top-end'
-                });
+                                Swal.fire({
+                                    icon: '<%= message.success ? "success" : "error" %>',
+                                    title: '<%= message.success ? "Success!" : "Error!" %>',
+                                    text: '<%= message.text %>',
+                                    timer: 3000,
+                                    showConfirmButton: false,
+                                    toast: true,
+                                    position: 'top-end'
+                                });
             <% } else { %>
-                Swal.fire({
-                    icon: '<%= message.type %>',
-                    title: '<%= message.type === "success" ? "Success!" : message.type === "error" ? "Error!" : "Info" %>',
-                    text: '<%= message.text %>',
-                    timer: 3000,
-                    showConfirmButton: false,
-                    toast: true,
-                    position: 'top-end'
-                });
+                                Swal.fire({
+                                    icon: '<%= message.type %>',
+                                    title: '<%= message.type === "success" ? "Success!" : message.type === "error" ? "Error!" : "Info" %>',
+                                    text: '<%= message.text %>',
+                                    timer: 3000,
+                                    showConfirmButton: false,
+                                    toast: true,
+                                    position: 'top-end'
+                                });
             <% } %>
         <% } %>
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const productsCount = document.querySelectorAll('#productsTable tbody tr').length;
-            if (productsCount > 0) {
-                console.log(`Loaded ${productsCount} products successfully`);
-            }
-        });
-    </script>
+                            document.addEventListener('DOMContentLoaded', function () {
+                                const productsCount = document.querySelectorAll('#productsTable tbody tr').length;
+                                if (productsCount > 0) {
+                                    console.log(`Loaded ${productsCount} products successfully`);
+                                }
+                            });
+                    </script>
 </body>
 
 </html>

@@ -301,16 +301,29 @@ const computeSalesPrice = (price, productOffer, categoryOffer) => {
 
 const productsPage = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
+    const page = parseInt(req.query.page, 10) || 1;
     const limit = 8;
     const skip = (page - 1) * limit;
-    const totalProducts = await Product.countDocuments({ isDeleted: false });
-    const products = await Product.find({ isDeleted: false })
+
+    const search = (req.query.search || "").trim();
+
+    const query = {
+      isDeleted: false,
+      ...(search && {
+        name: { $regex: search, $options: "i" }
+      })
+    };
+
+    const totalProducts = await Product.countDocuments(query);
+
+    const products = await Product.find(query)
       .populate("category")
       .sort({ _id: -1 })
       .skip(skip)
       .limit(limit);
+
     const totalPages = Math.ceil(totalProducts / limit);
+
     let message = req.session.message;
     req.session.message = null;
 
@@ -323,6 +336,7 @@ const productsPage = async (req, res) => {
       prevPage: page - 1,
       nextPage: page + 1,
       message,
+      search
     });
   } catch (err) {
     console.error("Error loading products page:", err);
@@ -336,8 +350,9 @@ const productsPage = async (req, res) => {
       nextPage: 1,
       message: {
         success: false,
-        text: "Error loading products. Please try again.",
+        text: "Error loading products. Please try again."
       },
+      search: ""
     });
   }
 };

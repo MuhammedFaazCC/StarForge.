@@ -2,11 +2,13 @@ const toggleBtn = document.querySelector(".toggle-btn");
 const sidePanel = document.querySelector(".side-panel");
 const mainContent = document.querySelector(".main-content");
 
-toggleBtn.addEventListener("click", () => {
-  sidePanel.classList.toggle("visible");
-  sidePanel.classList.toggle("hidden");
-  mainContent.classList.toggle("expanded");
-});
+if (toggleBtn && sidePanel && mainContent) {
+  toggleBtn.addEventListener("click", () => {
+    sidePanel.classList.toggle("visible");
+    sidePanel.classList.toggle("hidden");
+    mainContent.classList.toggle("expanded");
+  });
+}
 
 document.querySelectorAll(".side-panel a").forEach((link) => {
   link.addEventListener("click", (e) => {
@@ -119,86 +121,31 @@ function filterTable() {
   const input = document.getElementById("searchInput");
   const filter = input.value.toLowerCase();
   const rows = document.querySelectorAll("#productsTable tbody tr");
-  let visibleRows = 0;
 
-  rows.forEach((row) => {
-    const nameCell = row.querySelector("td:nth-child(2)");
-    if (nameCell) {
-      const text = nameCell.textContent.toLowerCase();
-      const isVisible = text.includes(filter);
-      row.style.display = isVisible ? "" : "none";
-      if (isVisible) visibleRows++;
-    }
+  const existingNoResults = document.getElementById("noResultsRow");
+  if (existingNoResults) existingNoResults.remove();
+
+  let visible = 0;
+
+  rows.forEach(row => {
+    const nameCell = row.querySelector("td:nth-child(1)");
+    if (!nameCell) return;
+
+    const match = nameCell.textContent.toLowerCase().includes(filter);
+    row.style.display = match ? "" : "none";
+    if (match) visible++;
   });
 
-  const noResultsRow = document.getElementById("noResultsRow");
-  if (visibleRows === 0 && filter.length > 0) {
-    if (!noResultsRow) {
-      const tbody = document.querySelector("#productsTable tbody");
-      const newRow = document.createElement("tr");
-      newRow.id = "noResultsRow";
-      newRow.innerHTML = '<td colspan="6" style="text-align: center; padding: 20px; color: #6b7280;">No products found matching your search.</td>';
-      tbody.appendChild(newRow);
-    }
-  } else if (noResultsRow) {
-    noResultsRow.remove();
+  if (visible === 0 && filter) {
+    const tr = document.createElement("tr");
+    tr.id = "noResultsRow";
+    tr.innerHTML = `
+      <td colspan="6" style="text-align:center;padding:20px;color:#6b7280;">
+        No products found
+      </td>`;
+    document.querySelector("#productsTable tbody").appendChild(tr);
   }
 }
-
-const rowsPerPage = 10;
-let currentPage = 1;
-
-function paginateTable() {
-  const rows = document.querySelectorAll("#productsTable tbody tr:not(#noResultsRow)");
-  const totalPages = Math.ceil(rows.length / rowsPerPage);
-  const paginationContainer = document.getElementById("pagination");
-
-  rows.forEach((row, index) => {
-    row.style.display =
-      index >= (currentPage - 1) * rowsPerPage &&
-      index < currentPage * rowsPerPage
-        ? ""
-        : "none";
-  });
-
-  if (paginationContainer) {
-    paginationContainer.innerHTML = "";
-    for (let i = 1; i <= totalPages; i++) {
-      const btn = document.createElement("button");
-      btn.innerText = i;
-      btn.classList.add("page-link");
-      btn.classList.toggle("active", i === currentPage);
-      btn.addEventListener("click", () => {
-        currentPage = i;
-        paginateTable();
-      });
-      paginationContainer.appendChild(btn);
-    }
-  }
-}
-
-window.addEventListener("load", () => {
-  try {
-    paginateTable();
-    
-    const searchInput = document.getElementById("searchInput");
-    if (searchInput) {
-      searchInput.addEventListener("input", () => {
-        currentPage = 1;
-        filterTable();
-        paginateTable();
-      });
-    }
-  } catch (error) {
-    console.error("Error initializing page:", error);
-    Swal.fire({
-      icon: 'error',
-      title: 'Initialization Error',
-      text: 'There was an error loading the page. Please refresh and try again.',
-      confirmButtonColor: '#ef4444'
-    });
-  }
-});
 
 window.addEventListener('error', function(event) {
   console.error('Global error:', event.error);

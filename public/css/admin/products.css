@@ -242,6 +242,12 @@ input:checked + .slider:before {
     font-family: 'Roboto', 'Inter', Arial, sans-serif;
 }
 
+.page-link.disabled {
+  pointer-events: none;
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .page-link {
     padding: 8px 12px;
     border: 1px solid #FCA120;
