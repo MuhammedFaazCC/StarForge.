@@ -95,8 +95,8 @@ const getUserOrders = async (req, res) => {
       searchQueryEncoded: encodeURIComponent(q)
     };
 
-    if (req.xhr || req.query.ajax === '1') {
-      return res.render("ordersList", viewData);
+    if (req.query.ajax === '1') {
+      return res.render("user/partials/ordersList", viewData);
     }
 
     res.render("profileOrders", viewData);
