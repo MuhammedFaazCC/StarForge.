@@ -1,6 +1,7 @@
 const Cart = require("../../models/cartSchema");
 const Product = require("../../models/productSchema");
 const Order = require("../../models/orderSchema");
+const Counter = require("../../models/counterSchema");
 const Address = require('../../models/addressSchema');
 const Coupon = require("../../models/couponSchema");
 const User = require("../../models/userSchema");
@@ -64,49 +65,49 @@ async function updateCouponUsage(userId, couponCode) {
   }
 }
 
-function buildOrderObject({ userId, cart, address, paymentMethod, totalAmount, couponData, status, razorpayOrderId = null, failureReason = null }) {
-  return new Order({
-    userId,
-    items: cart.items.map(item => ({
-      productId: item.productId._id,
-      name: item.productId.name,
-      quantity: item.quantity,
-      salesPrice: item.productId.salesPrice,
-    })),
-    address: formatAddress(address),
-    paymentMethod,
-    totalAmount,
-    coupon: couponData,
-    status,
-    createdAt: new Date(),
-    offeredPrice: totalAmount,
-    razorpayOrderId,
-    failureReason
-  });
-}
+// function buildOrderObject({ userId, cart, address, paymentMethod, totalAmount, couponData, status, razorpayOrderId = null, failureReason = null }) {
+//   return new Order({
+//     userId,
+//     items: cart.items.map(item => ({
+//       productId: item.productId._id,
+//       name: item.productId.name,
+//       quantity: item.quantity,
+//       salesPrice: item.productId.salesPrice,
+//     })),
+//     address: formatAddress(address),
+//     paymentMethod,
+//     totalAmount,
+//     coupon: couponData,
+//     status,
+//     createdAt: new Date(),
+//     offeredPrice: totalAmount,
+//     razorpayOrderId,
+//     failureReason
+//   });
+// }
 
-function formatAddress(address) {
-  return `${address.name}, ${address.address}, ${address.city}, ${address.district}, ${address.state} - ${address.pinCode}`;
-}
+// function formatAddress(address) {
+//   return `${address.name}, ${address.address}, ${address.city}, ${address.district}, ${address.state} - ${address.pinCode}`;
+// }
 
-function getPaymentErrorMessage(errorCode) {
-  switch (errorCode) {
-    case 'signature_verification_failed':
-      return "Payment verification failed. Please contact support if this persists.";
-    case 'payment_failed':
-      return "Payment was not completed successfully.";
-    case 'payment_cancelled':
-      return "Payment was cancelled. You can retry the payment or choose a different method.";
-    case 'order_mismatch':
-      return "Order verification failed. Please try again.";
-    case 'insufficient_stock':
-      return "Some items in your cart are out of stock. Please update your cart.";
-    case 'network_error':
-      return "Network error occurred during payment. Please check your connection and try again.";
-    default:
-      return "Oops! Something went wrong with your payment. Please try again.";
-  }
-}
+// function getPaymentErrorMessage(errorCode) {
+//   switch (errorCode) {
+//     case 'signature_verification_failed':
+//       return "Payment verification failed. Please contact support if this persists.";
+//     case 'payment_failed':
+//       return "Payment was not completed successfully.";
+//     case 'payment_cancelled':
+//       return "Payment was cancelled. You can retry the payment or choose a different method.";
+//     case 'order_mismatch':
+//       return "Order verification failed. Please try again.";
+//     case 'insufficient_stock':
+//       return "Some items in your cart are out of stock. Please update your cart.";
+//     case 'network_error':
+//       return "Network error occurred during payment. Please check your connection and try again.";
+//     default:
+//       return "Oops! Something went wrong with your payment. Please try again.";
+//   }
+// }
 
 
 const getCheckoutPage = async (req, res) => {
@@ -233,7 +234,16 @@ const postCheckoutPage = async (req, res) => {
       }
     }
 
+    const counter = await Counter.findOneAndUpdate(
+      { name: "order" },
+      { $inc: { value: 1 } },
+      { new: true, upsert: true }
+    );
+
+    const orderId = `ORD-${new Date().getFullYear()}-${String(counter.value).padStart(6, "0")}`;
+
     const order = new Order({
+      orderId,
       userId,
       items: cart.items.map(i => ({
         productId: i.productId._id,
@@ -276,7 +286,7 @@ const postCheckoutPage = async (req, res) => {
     req.session.coupon = null;
     req.session.selectedAddressId = null;
     req.session.lastOrder = {
-      orderId: order._id,
+      orderId: orderId,
       paymentMethod,
       totalAmount
     };
@@ -293,7 +303,6 @@ const codSuccess = (req, res) => {
     if (!req.session.user) {
       return res.redirect('/login?redirect=/order/placed');
     }
-    console.log("here")
     const lastOrder = req.session.lastOrder;
     
     if (!lastOrder) {
@@ -365,6 +374,7 @@ const postRazorpay = async (req, res) => {
     }
 
     const pendingOrder = new Order({
+      orderId,
       userId,
       items: cart.items.map(item => ({
         productId: item.productId._id,
@@ -494,6 +504,7 @@ const paymentFailure = async (req, res) => {
             }
 
             const failedOrder = new Order({
+              orderId,
               userId,
               items: cart.items.map(item => ({
                 productId: item.productId._id,

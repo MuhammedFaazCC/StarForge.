@@ -2,6 +2,7 @@
   <table class="table table-bordered">
     <thead>
       <tr>
+        <th>Order Id</th>
         <th>Products</th>
         <th>Placed On</th>
         <th>Payment Method</th>
@@ -13,6 +14,8 @@
     <% orders.forEach(order => { %>
       <tbody class="order-box">
         <tr>
+          <% console.log(orders.orderId) %>
+          <td><%= order.orderId %></td>
           <td>
             <ul class="product-list">
               <% order.items.forEach(item => { %>

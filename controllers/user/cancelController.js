@@ -1,5 +1,4 @@
 const Order = require("../../models/orderSchema");
-const Product = require("../../models/productSchema");
 const { handleItemCancellationWithCoupon } = require("../../util/couponRefundHandler");
 
 const cancelSingleItem = async (req, res) => {

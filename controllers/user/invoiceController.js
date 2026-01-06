@@ -217,7 +217,7 @@ const downloadInvoice = async (req, res) => {
             <h3>Invoice Details</h3>
             <div class="detail-row">
               <span class="detail-label">Invoice No:</span>
-              <span class="detail-value">${order._id}</span>
+              <span class="detail-value">${order.orderId}</span>
             </div>
             <div class="detail-row">
               <span class="detail-label">Date:</span>

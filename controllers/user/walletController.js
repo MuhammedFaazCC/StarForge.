@@ -70,8 +70,6 @@ const updateWallet = async (userId, amount, description, type) => {
     });
     
     await user.save();
-    
-    console.log(`Wallet updated for user ${userId}: ${type} ₹${amount} - ${description}`);
   } catch (error) {
     console.error("Error updating wallet:", error);
     throw error;

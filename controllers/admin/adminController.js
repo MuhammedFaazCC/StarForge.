@@ -205,7 +205,7 @@ const getOrderDetails = async (req, res) => {
       .populate('userId')
       .populate('items.productId');
 
-      if (status === 'Cancelled') {
+      if (order.status === 'Cancelled') {
         const hasBlockedItem = order.items.some(item =>
           ['Delivered', 'Returned', 'Return Requested'].includes(item.status)
         );

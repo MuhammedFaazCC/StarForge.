@@ -262,6 +262,7 @@ h1 {
     <% } %>
 
     <div class="order-summary">
+      <p><span class="label">Order ID:</span> <span class="value"><%= order.orderId %></span></p>
       <p><span class="label">Status:</span> <span class="value"><%= order.status %></span></p>
       <p><span class="label">Placed On:</span> <span class="value"><%= order.createdAt.toLocaleDateString('en-GB') %></span></p>
       <p><span class="label">Payment Method:</span> <span class="value">
