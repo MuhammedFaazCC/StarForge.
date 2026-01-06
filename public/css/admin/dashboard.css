@@ -102,6 +102,30 @@ body {
     height: 100% !important;
 }
 
+.secondary-charts {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.secondary-chart {
+  height: 280px;
+  padding: 12px;
+}
+
+.secondary-chart canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.chart-subtitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
 /* Dashboard filters */
 .filters select,
 .filters input[type="number"],
@@ -139,6 +163,16 @@ body {
 
 @media (max-width: 1100px) {
   .toplists { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .secondary-charts {
+    grid-template-columns: 1fr;
+  }
+
+  .secondary-chart {
+    height: 260px;
+  }
 }
 @media (max-width: 700px) {
   .toplists { grid-template-columns: 1fr; }

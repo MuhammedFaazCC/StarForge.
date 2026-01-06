@@ -875,7 +875,32 @@ const getSalesChartData = async (req, res) => {
     const labels = salesData.map(d => d._id);
     const datasets = { revenue: salesData.map(d => d.totalSales), orders: salesData.map(d => d.totalOrders) };
 
-    res.json({ success: true, labels, datasets, data: salesData, range: mode, dateFormat: labelFormat });
+    const aov = datasets.revenue.map((rev, i) => {
+      const count = datasets.orders[i] || 0;
+      return count === 0 ? 0 : Math.round(rev / count);
+    });
+    
+    const paymentSplitAgg = await Order.aggregate([
+      {
+        $match: {
+          orderDate: { $gte: from, $lt: to },
+          status: { $nin: ['Cancelled', 'Payment Failed', 'Returned'] }
+        }
+      },
+      {
+        $group: {
+          _id: "$paymentMethod",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const paymentSplit = {
+      labels: paymentSplitAgg.map(p => p._id),
+      values: paymentSplitAgg.map(p => p.count)
+    };
+
+    res.json({ success: true, labels, datasets: {...datasets,aov}, paymentSplit, range: mode, dateFormat: labelFormat });
   } catch (error) {
     console.error('Error getting sales chart data:', error);
     res.status(500).json({ success: false, message: 'Internal Server Error' });

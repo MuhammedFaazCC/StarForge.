@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function initDashboard() {
     setupHoverEffects();
     setupFilters();
-    loadChartData();
+    loadChartData(true);
     loadTopLists();
 }
 
@@ -31,6 +31,10 @@ function setupFilters() {
     const endDate = document.getElementById('endDate');
     const applyBtn = document.getElementById('applyFilterBtn');
 
+    const now = new Date();
+    yearInput.value = now.getFullYear();
+    monthInput.value = now.getMonth() + 1;
+
     function updateVisibility() {
         const v = rangeFilter.value;
         yearInput.style.display = v === 'year' || v === 'month' ? 'block' : 'none';
@@ -42,7 +46,7 @@ function setupFilters() {
     rangeFilter.addEventListener('change', updateVisibility);
     applyBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        loadChartData();
+        loadChartData(false);
     });
 
     updateVisibility();
@@ -71,17 +75,68 @@ function getFilterParams() {
     return params;
 }
 
-async function loadChartData() {
-    try {
-        const params = getFilterParams();
-        const res = await fetch(`/admin/dashboard/chart-data?${params.toString()}`);
-        const data = await res.json();
-        if (!data.success) throw new Error(data.message || 'Failed to fetch chart');
-        renderSalesChart(data.labels, data.datasets);
-    } catch (err) {
-        console.error('Chart load error:', err);
-        if (window.Swal) Swal.fire('Error', 'Failed to load chart data', 'error');
+async function loadChartData(skipValidation = false) {
+  try {
+    if (!skipValidation) {
+      const validationError = validateFilters();
+      if (validationError) {
+        Swal.fire('Invalid Date', validationError, 'warning');
+        return;
+      }
     }
+
+    const params = getFilterParams();
+    const res = await fetch(`/admin/dashboard/chart-data?${params.toString()}`);
+    const data = await res.json();
+
+    if (!data.success) {
+      throw new Error(data.message || 'Failed to fetch chart');
+    }
+
+    renderSalesChart(data.labels, data.datasets);
+    renderAOVChart(data.labels, data.datasets.aov);
+    renderPaymentSplitChart(data.paymentSplit);
+  } catch (err) {
+    console.error('Chart load error:', err);
+    Swal.fire('Error', 'Failed to load chart data', 'error');
+  }
+}
+
+
+function validateFilters() {
+    const range = document.getElementById('rangeFilter').value;
+    const year = document.getElementById('yearInput').value;
+    const month = document.getElementById('monthInput').value;
+    const start = document.getElementById('startDate').value;
+    const end = document.getElementById('endDate').value;
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+
+    if (range === 'year' || range === 'month') {
+        if (!year) return 'Year is required.';
+        if (year < 2000 || year > currentYear) return 'Invalid year selected.';
+    }
+
+    if (range === 'month') {
+        if (!month) return 'Month is required.';
+        if (month < 1 || month > 12) return 'Invalid month selected.';
+    }
+
+    if (range === 'custom') {
+        if (!start || !end) return 'Both start and end dates are required.';
+
+        const s = new Date(start);
+        const e = new Date(end);
+
+        if (s > e) return 'Start date cannot be after end date.';
+        if (e > now) return 'Future dates are not allowed.';
+
+        const diffDays = (e - s) / (1000 * 60 * 60 * 24);
+        if (diffDays > 365) return 'Custom range cannot exceed 1 year.';
+    }
+
+    return null;
 }
 
 function renderSalesChart(labels, datasets) {
@@ -157,6 +212,53 @@ function renderSalesChart(labels, datasets) {
             }
         }
     });
+}
+
+let aovChartInstance = null;
+
+function renderAOVChart(labels, values) {
+  const ctx = document.getElementById('aovChart').getContext('2d');
+  if (aovChartInstance) aovChartInstance.destroy();
+
+  aovChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Average Order Value (₹)',
+        data: values,
+        borderColor: '#8B5CF6',
+        backgroundColor: 'rgba(139,92,246,0.15)',
+        tension: 0.35,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'top' } }
+    }
+  });
+}
+
+let paymentChartInstance = null;
+
+function renderPaymentSplitChart(split) {
+  const ctx = document.getElementById('paymentSplitChart').getContext('2d');
+  if (paymentChartInstance) paymentChartInstance.destroy();
+
+  paymentChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: split.labels,
+      datasets: [{
+        data: split.values,
+        backgroundColor: ['#22C55E', '#F97316', '#3B82F6']
+      }]
+    },
+    options: {
+      plugins: { legend: { position: 'bottom' } }
+    }
+  });
 }
 
 async function loadTopLists() {

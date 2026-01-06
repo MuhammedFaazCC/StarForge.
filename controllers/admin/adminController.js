@@ -17,6 +17,77 @@ async function getBrowser() {
   return browser;
 }
 
+function buildDateRange(query) {
+  const { range, year, month, startDate, endDate } = query;
+  const now = new Date();
+
+  let start, end, groupBy;
+
+  switch (range) {
+    case 'year':
+      start = new Date(year, 0, 1);
+      end = new Date(year, 11, 31, 23, 59, 59);
+      groupBy = { $month: '$createdAt' };
+      break;
+
+    case 'month':
+      start = new Date(year, month, 1);
+      end = new Date(year, Number(month) + 1, 0, 23, 59, 59);
+      groupBy = { $dayOfMonth: '$createdAt' };
+      break;
+
+    case 'custom':
+      start = new Date(startDate);
+      end = new Date(endDate);
+      groupBy = { $dayOfMonth: '$createdAt' };
+      break;
+
+    default:
+      start = new Date(now.setDate(now.getDate() - 30));
+      end = new Date();
+      groupBy = { $dayOfMonth: '$createdAt' };
+  }
+
+  return { start, end, groupBy };
+}
+
+function validateChartQuery(query) {
+    const { range, year, month, startDate, endDate } = query;
+    const now = new Date();
+    const currentYear = now.getFullYear();
+
+    if (!['day', 'week', 'month', 'year', 'custom'].includes(range)) {
+        throw new Error('Invalid range');
+    }
+
+    if (range === 'year' || range === 'month') {
+        if (!year || year < 2000 || year > currentYear) {
+            throw new Error('Invalid year');
+        }
+    }
+
+    if (range === 'month') {
+        if (month === undefined || month < 0 || month > 11) {
+            throw new Error('Invalid month');
+        }
+    }
+
+    if (range === 'custom') {
+        if (!startDate || !endDate) {
+            throw new Error('Start and end date required');
+        }
+
+        const s = new Date(startDate);
+        const e = new Date(endDate);
+
+        if (s > e) throw new Error('Start date after end date');
+        if (e > now) throw new Error('Future dates not allowed');
+
+        const diffDays = (e - s) / (1000 * 60 * 60 * 24);
+        if (diffDays > 365) throw new Error('Date range too large');
+    }
+}
+
 const loginPage = async (req, res) => {
   try {
     if (req.session.admin && req.session.admin._id) {
