@@ -165,14 +165,16 @@
                           <% } else if (canCancelItem && item.productId) { %>
                           <button
                             class="btn btn-sm btn-outline-danger cancel-item-btn"
-                            onclick="cancelItem('<%= order._id %>', '<%= item.productId._id %>')"
+                            data-order-id="<%= order._id %>"
+                            data-product-id="<%= item.productId._id %>"
                           >
                             Cancel
                           </button>
                           <% } %> <% if (canReturnItem && item.productId) { %>
                           <button
                             class="btn btn-sm btn-outline-warning return-item-btn"
-                            onclick="returnItem('<%= order._id %>', '<%= item.productId._id %>')"
+                            data-order-id="<%= order._id %>"
+                            data-product-id="<%= item.productId._id %>"
                           >
                             Return
                           </button>

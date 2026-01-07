@@ -8,118 +8,158 @@ const requestReturnItem = async (req, res) => {
     const userId = req.session.user?._id;
 
     if (!userId) {
-      return res.status(401).json({ 
-        success: false, 
-        message: "Unauthorized: user session not found" 
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: user session not found",
       });
     }
 
     if (!reason || reason.trim().length < 10) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Please provide a detailed reason for return (minimum 10 characters)" 
+      return res.status(400).json({
+        success: false,
+        message:
+          "Please provide a detailed reason for return (minimum 10 characters)",
       });
     }
 
-    const order = await Order.findOne({ _id: orderId, userId: userId }).populate('items.productId');
+    const order = await Order.findOne({
+      _id: orderId,
+      userId: userId,
+    }).populate("items.productId");
     if (!order) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Order not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
       });
     }
 
-    const item = order.items.find(i => i.productId._id.toString() === productId);
-    if (!item || item.status !== 'Delivered') {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Item not eligible for return" 
+    const item = order.items.find(
+      (i) => i.productId._id.toString() === productId
+    );
+    if (!item || item.status !== "Delivered") {
+      return res.status(400).json({
+        success: false,
+        message: "Item not eligible for return",
       });
     }
 
     const RETURN_DAYS_LIMIT = 7;
     const deliveryDate = item.deliveredAt || order.deliveredAt;
     if (!deliveryDate) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Delivery date not found for this item" 
+      return res.status(400).json({
+        success: false,
+        message: "Delivery date not found for this item",
       });
     }
 
-    const daysSinceDelivery = Math.floor((new Date() - new Date(deliveryDate)) / (1000 * 60 * 60 * 24));
+    const daysSinceDelivery = Math.floor(
+      (new Date() - new Date(deliveryDate)) / (1000 * 60 * 60 * 24)
+    );
     if (daysSinceDelivery > RETURN_DAYS_LIMIT) {
-      return res.status(400).json({ 
-        success: false, 
-        message: `Return period has expired. Items can only be returned within ${RETURN_DAYS_LIMIT} days of delivery.` 
+      return res.status(400).json({
+        success: false,
+        message: `Return period has expired. Items can only be returned within ${RETURN_DAYS_LIMIT} days of delivery.`,
       });
     }
 
-    if (item.status === 'Return Requested') {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Return request already submitted for this item" 
+    if (item.status === "Return Requested") {
+      return res.status(400).json({
+        success: false,
+        message: "Return request already submitted for this item",
       });
     }
 
-    item.status = 'Return Requested';
+    item.status = "Return Requested";
     item.returnReason = reason.trim();
     item.returnRequestedAt = new Date();
 
     await order.save();
-    
-    res.json({ 
-      success: true, 
-      message: "Return request submitted for item successfully. We will review your request and get back to you soon." 
-    });
 
+    res.json({
+      success: true,
+      message:
+        "Return request submitted for item successfully. We will review your request and get back to you soon.",
+    });
   } catch (error) {
     console.error("Error processing item return request:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Internal server error. Please try again later." 
+    res.status(500).json({
+      success: false,
+      message: "Internal server error. Please try again later.",
     });
   }
 };
 
 const requestReturn = async (req, res) => {
   try {
-    const userId = req.session.user._id;
+    const userId = req.session.user?._id;
     const orderId = req.params.id;
     const { reason } = req.body;
 
-    const order = await Order.findOne({ _id: orderId, userId: userId });
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Login required" });
+    }
+
+    if (!reason || reason.trim().length < 10) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a detailed reason (minimum 10 characters)",
+      });
+    }
+
+    const order = await Order.findOne({ _id: orderId, userId });
     if (!order) {
-      return res.status(404).json({ error: "Order not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
     }
 
     if (order.status !== "Delivered") {
-      return res.status(400).json({ error: "Only delivered orders can be returned" });
-    }
-
-    if (order.totalAmount == null || isNaN(order.totalAmount)) {
-      return res.status(400).json({ error: "Order total is invalid" });
+      return res.status(400).json({
+        success: false,
+        message: "Only fully delivered orders can be returned",
+      });
     }
 
     const existingReturn = await Return.findOne({ orderId });
     if (existingReturn) {
-      return res.status(400).json({ error: "Return request already submitted" });
+      return res.status(400).json({
+        success: false,
+        message: "Return request already submitted",
+      });
     }
 
     await Return.create({
       orderId,
       userId,
-      reason,
+      reason: reason.trim(),
       status: "Pending",
       requestedAt: new Date(),
     });
 
     order.status = "Return Requested";
+    order.items.forEach((item) => {
+      if (item.status !== "Cancelled") {
+        item.status = "Return Requested";
+      }
+    });
+
+    // REQUIRED to bypass schema crash
+    order.orderId = order.orderId || order._id.toString();
+
     await order.save();
 
-    res.json({ message: "Return request submitted successfully" });
+    return res.json({
+      success: true,
+      message: "Return request submitted successfully",
+    });
   } catch (error) {
-    console.error("Error requesting return:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Return full order error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
   }
 };
 
@@ -151,13 +191,14 @@ const approveReturn = async (req, res) => {
       await order.save();
 
       await refundToWallet(order, "Refund for returned order");
-
     } else if (status === "Rejected") {
       order.status = "Delivered";
       await order.save();
     }
 
-    res.json({ message: `Return request ${status.toLowerCase()} successfully` });
+    res.json({
+      message: `Return request ${status.toLowerCase()} successfully`,
+    });
   } catch (error) {
     console.error("Error processing return:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -165,7 +206,7 @@ const approveReturn = async (req, res) => {
 };
 
 module.exports = {
-    requestReturnItem,
-    requestReturn,
-    approveReturn
-}
+  requestReturnItem,
+  requestReturn,
+  approveReturn,
+};

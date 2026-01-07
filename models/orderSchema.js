@@ -9,7 +9,10 @@ const orderSchema = new mongoose.Schema({
     orderId: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        default: function () {
+            return this._id.toString();
+        }
     },
     orderDate: {
         type: Date,

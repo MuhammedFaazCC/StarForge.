@@ -21,7 +21,7 @@ const cancelSingleItem = async (req, res) => {
       return res.status(404).json({ success: false, error: "Order not found" });
     }
 
-    console.log(`Order found: ${order._id}, Status: ${order.status}, Items count: ${order.items.length}`);
+    console.log(`Order found: ${order.orderId}, Status: ${order.status}, Items count: ${order.items.length}`);
 
     const itemIndex = order.items.findIndex(i => {
       if (!i.productId) {
@@ -59,7 +59,7 @@ const cancelSingleItem = async (req, res) => {
     }];
 
     const couponResult = await handleItemCancellationWithCoupon(order, itemsToCancel, userId, {
-      refundReason: `Refund for cancelled item: ${item.productId.name} from order #${order._id}`,
+      refundReason: `Refund for cancelled item: ${item.productId.name} from order #${order.orderId}`,
       cancellationReason: 'User requested cancellation'
     });
 
@@ -140,7 +140,7 @@ const cancelOrderNew = async (req, res) => {
       });
     }
 
-    console.log(`Order found: ${order._id}, Status: ${order.status}, Items count: ${order.items.length}`);
+    console.log(`Order found: ${order.orderId}, Status: ${order.status}, Items count: ${order.items.length}`);
 
     // Get items that can be cancelled
     const itemsToCancel = order.items.filter(item => (item.status || 'Ordered') !== 'Cancelled').map(i => ({
@@ -162,7 +162,7 @@ const cancelOrderNew = async (req, res) => {
 
     // Coupon-aware full cancellation
     const couponResult = await handleItemCancellationWithCoupon(order, itemsToCancel, userId, {
-      refundReason: `Refund for cancelled order #${order._id}`,
+      refundReason: `Refund for cancelled order #${order.orderId}`,
       cancellationReason: 'Full order cancellation'
     });
 
