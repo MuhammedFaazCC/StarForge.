@@ -2,7 +2,6 @@ const User = require("../models/userSchema");
 
 const userAuth = async (req, res, next) => {
   try {
-    // No session or no user
     if (!req.session || !req.session.user || !req.session.user._id) {
       if (
         req.headers.accept?.includes('application/json') ||
@@ -14,13 +13,14 @@ const userAuth = async (req, res, next) => {
         });
       }
 
-      req.session.error = 'Please log in to access this page';
+      if (req.session) {
+        req.session.error = 'Please log in to access this page';
+      }
       return res.redirect('/login');
     }
 
     const user = await User.findById(req.session.user._id);
 
-    // User missing or blocked
     if (!user || user.isBlocked) {
       if (
         req.headers.accept?.includes('application/json') ||
@@ -32,18 +32,19 @@ const userAuth = async (req, res, next) => {
         });
       }
 
-      req.session.error = user
+      const msg = user
         ? 'Your account has been blocked by an admin'
         : 'User not found';
 
-      req.session.destroy(() => {
+      return req.session.regenerate(err => {
+        if (err) return res.redirect('/login');
+        req.session.error = msg;
         return res.redirect('/login');
       });
     }
 
-    // Auth success
     res.locals.userData = user;
-    next();
+    return next();
 
   } catch (error) {
     console.error('Error in userAuth middleware:', error);
@@ -58,10 +59,9 @@ const userAuth = async (req, res, next) => {
       });
     }
 
-    res.status(500).send('Internal server error');
+    return res.status(500).send('Internal server error');
   }
 };
-
 
 const adminAuth = (req, res, next) => {
   if (req.session.admin && req.session.admin._id) {
@@ -90,7 +90,37 @@ const adminAuth = (req, res, next) => {
   }
 };
 
+const softUserCheck = async (req, res, next) => {
+  try {
+    if (!req.session || !req.session.user || !req.session.user._id) {
+      return next();
+    }
+
+    const user = await User.findById(req.session.user._id);
+
+    if (!user || user.isBlocked) {
+      const msg = user
+        ? 'Your account has been blocked by an admin'
+        : 'User not found';
+
+      return req.session.regenerate(err => {
+        if (err) return res.redirect('/login');
+        req.session.error = msg;
+        return res.redirect('/login');
+      });
+    }
+
+    res.locals.userData = user;
+    return next();
+
+  } catch (err) {
+    console.error("Error in softUserCheck:", err);
+    return next();
+  }
+};
+
 module.exports = {
   userAuth,
-  adminAuth
+  adminAuth,
+  softUserCheck
 };

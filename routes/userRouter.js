@@ -20,7 +20,7 @@ const couponController = require("../controllers/user/couponController");
 
 const noCache = require("../middlewares/noCache");
 const passport = require("passport");
-const { userAuth } = require("../middlewares/auth");
+const { userAuth, softUserCheck } = require("../middlewares/auth");
 
 router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 router.get("/auth/google/callback", passport.authenticate("google", { failureRedirect: "/login" }), userController.googleCallback);
@@ -28,13 +28,13 @@ router.get("/auth/google/callback", passport.authenticate("google", { failureRed
 router.get("/login", noCache, userController.loginPage);
 router.post("/login", userController.login);
 router.get("/pageNotFound", userAuth, userController.pageNotFound);
-router.get("/", userController.loadHomepage);
+router.get("/", softUserCheck, userController.loadHomepage);
 router.get("/logout", userAuth, userController.logout);
 router.get("/LoadProfile", userAuth, userController.userDetails);
 router.get('/profile', userAuth, profileController.getProfilePage);
 
-router.get("/products", productController.getAllProduct);
-router.get("/product/:id", productController.getProductDetails);
+router.get("/products", softUserCheck, productController.getAllProduct);
+router.get("/product/:id",softUserCheck, productController.getProductDetails);
 router.post('/product/:id/review', productController.postReview);
 
 router.get("/cart", userAuth, cartController.viewCart);
@@ -46,7 +46,7 @@ router.get('/wallet', userAuth, walletController.getWallet)
 router.post("/wallet/create-order", walletController.createWalletOrder);
 router.post("/wallet/verify", walletController.verifyAndCreditWallet);
 
-router.get('/checkout', checkoutController.getCheckoutPage);
+router.get('/checkout', userAuth, checkoutController.getCheckoutPage);
 router.post('/checkout', checkoutController.postCheckoutPage);
 router.get('/order/placed', checkoutController.codSuccess);
 router.post('/create-order', checkoutController.postRazorpay);
@@ -80,7 +80,7 @@ router.get("/order/:orderId/invoice", userAuth, invoiceController.downloadInvoic
 router.get('/orders', userAuth, orderController.getUserOrders);
 router.post('/order/return/:id', userAuth, orderController.returnOrder);
 router.get("/orders/:id", userAuth, orderController.viewOrderDetails);
-router.get('/order/success', orderController.orderSuccess);
+router.get('/order/success', userAuth, orderController.orderSuccess);
 router.get('/order/failure', orderController.orderFailure);
 router.get('/order/view/:id', orderController.viewFailedOrder);
 

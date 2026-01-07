@@ -93,7 +93,6 @@ const loadHomepage = async (req, res) => {
   }
 };
 
-
 const loginPage = async (req, res) => {
   try {
     if (req.session.user) {
@@ -205,7 +204,6 @@ const logout = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
-
 
 const googleCallback = async (req, res) => {
   try {
