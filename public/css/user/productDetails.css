@@ -1,145 +1,241 @@
 :root {
-  --primary-color: #fca120;
-  --dark-color: #222;
-  --light-color: #f8f9fa;
-  --secondary-color: #ffffff;
-  --accent-color: #007bff;
-  --shadow-color: rgba(0, 0, 0, 0.1);
+  --primary: #fca120;
+  --primary-dark: #e68e18;
+  --dark: #111;
+  --gray: #6d6d6d;
+  --light: #f9f9fb;
+  --radius: 12px;
+  --shadow-sm: 0 3px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 6px 18px rgba(0,0,0,0.12);
   --transition: all 0.3s ease;
+  --glass-bg: rgba(255,255,255,0.65);
+  --blur: saturate(180%) blur(10px);
 }
 
-.profile-dropdown {
-  display: none;
-  position: absolute;
-  top: 40px;
-  right: 0;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  width: 150px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  flex-direction: column;
-  z-index: 1003;
+/* =========================
+   PAGE & TYPOGRAPHY
+========================= */
+body {
+  background: #f4f4f7;
 }
 
-.sidebar-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1001;
-  display: none;
+.container {
+  max-width: 1240px;
 }
 
-.sidebar-overlay.active {
-  display: block;
+h2, h4, h5 {
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--dark);
 }
 
-.profile-dropdown {
-  display: none;
-  position: absolute;
-  top: 40px;
-  right: 0;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  width: 150px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  flex-direction: column;
-  z-index: 1003;
+.text-muted {
+  color: var(--gray);
+  font-size: 0.94rem;
 }
 
-.sidebar-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1001;
-  display: none;
+/* =========================
+   PRODUCT IMAGE SECTION
+========================= */
+.zoom-wrap {
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 10px;
+  transition: var(--transition);
 }
 
-.sidebar-overlay.active {
-  display: block;
+.zoom-wrap:hover {
+  transform: translateY(-3px);
 }
 
-.rating-stars i { color: gold; }
-.tab-content { padding-top: 20px; }
-.review-card { border: 1px solid #ddd; padding: 15px; border-radius: 6px; margin-bottom: 10px; }
-.review-user { font-weight: 600; }
-.review-date { font-size: 0.85rem; color: #888; }
-
-/* Simple toast (small gray rectangle) */
-.toast {
-  visibility: hidden;
-  min-width: 200px;
-  margin-left: -100px;
-  background-color: #333;
-  color: #fff;
-  text-align: center;
-  border-radius: 8px;
-  padding: 12px;
-  position: fixed;
-  z-index: 9999;
-  left: 50%;
-  bottom: 30px;
-  font-size: 14px;
-  opacity: 0;
-  transition: opacity 0.3s ease, bottom 0.3s ease;
+img.zoomable {
+  border-radius: var(--radius);
+  cursor: zoom-in;
+  transition: transform 0.25s ease;
 }
 
-.toast.show {
-  visibility: visible;
-  opacity: 1;
-  bottom: 50px;
-}
-/* === Responsive: productDetails additions === */
-/* Add horizontal gutter between columns on the main product row */
-.container > .row.mb-4 { 
-  --bs-gutter-x: 1rem;
+img.zoomable.zoomed {
+  transform: scale(2);
+  cursor: zoom-out;
 }
 
-/* Allow action controls to wrap and add spacing */
-.d-flex.align-items-center.mb-3 {
+#thumbStrip {
+  gap: 10px;
+  margin-top: 12px;
+  display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
 }
 
-/* Improve thumbnails behavior */
-#thumbStrip { 
-  overflow-x: auto; 
-  -webkit-overflow-scrolling: touch; 
-}
-#thumbStrip .p-thumb { 
-  flex: 0 0 auto; 
+#thumbStrip .p-thumb {
+  width: 74px;
+  height: 74px;
+  border-radius: var(--radius);
+  object-fit: cover;
+  cursor: pointer;
+  transition: var(--transition);
+  opacity: 0.85;
+  border: 2px solid transparent;
 }
 
+#thumbStrip .p-thumb:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+#thumbStrip .p-thumb.border-primary {
+  opacity: 1;
+  border-color: var(--primary);
+}
+
+/* =========================
+   RIGHT PANEL
+========================= */
+.rating-stars i {
+  color: #ffbb00;
+  font-size: 1.1rem;
+}
+
+select, input {
+  border-radius: var(--radius);
+  padding: 8px 10px;
+}
+
+/* Add to cart + wishlist */
+.btn-warning {
+  background: var(--primary);
+  border: none;
+  font-weight: 700;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.btn-warning:hover {
+  background: var(--primary-dark);
+  box-shadow: var(--shadow-md);
+}
+
+#wishlistBtn {
+  font-size: 24px;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  transition: var(--transition);
+}
+
+#wishlistBtn:hover {
+  transform: scale(1.15);
+  color: var(--primary);
+}
+
+/* Discount badge glow */
+.badge.bg-success {
+  background: #0ba95b !important;
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.15), 0 0 10px rgba(11,169,91,0.5);
+}
+
+/* =========================
+   REVIEWS
+========================= */
+.review-card {
+  background: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.review-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.rating-input {
+  display: flex;
+  gap: 4px;
+  cursor: pointer;
+  margin-bottom: 0.6rem;
+}
+
+.rating-input i {
+  font-size: 1.5rem;
+  color: #ffb300;
+  transition: transform .15s ease;
+}
+
+.rating-input i:hover {
+  transform: scale(1.2);
+}
+
+/* =========================
+   RELATED PRODUCTS
+========================= */
+.card {
+  border: none;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.card-img-top {
+  height: 160px;
+  object-fit: cover;
+}
+
+.card-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* =========================
+   STICKY MOBILE FOOTER
+========================= */
+@media (max-width: 768px) {
+  .sticky-cart-bar {
+    display: flex;
+  }
+}
+
+.sticky-cart-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur);
+  border-top: 1px solid rgba(255,255,255,0.5);
+  box-shadow: var(--shadow-md);
+  justify-content: space-between;
+  align-items: center;
+  z-index: 999;
+}
+
+.sticky-cart-bar button {
+  flex: 1;
+  margin-left: 12px;
+  border-radius: var(--radius);
+}
+
+/* =========================
+   MOBILE OPTIMIZATION
+========================= */
 @media (max-width: 576px) {
-  /* Make quantity input usable on narrow widths */
-  #quantity { width: 120px !important; }
-
-  /* Let buttons share space nicely next to input */
-  .d-flex.align-items-center.mb-3 .btn { flex: 1 1 auto; }
-
-  /* Keep thumbnail strip single-line scroll on mobile */
-  #thumbStrip { flex-wrap: nowrap; gap: 8px; }
+  #thumbStrip .p-thumb {
+    width: 58px;
+    height: 58px;
+  }
+  
+  .zoom-wrap {
+    padding: 6px;
+  }
 }
-
-/* === Responsive: productDetails image tweaks === */
-@media (max-width: 576px) {
-  .zoom-wrap { max-height: 60vw; }
-  img.zoomable { object-fit: contain; }
-  /* Ensure columns have breathing room */
-  .container > .row.mb-4 { --bs-gutter-x: 1rem; }
-}
-
-/* === Sticky footer for product details page === */
-html, body { height: 100%; }
-body { min-height: 100vh; display: flex; flex-direction: column; }
-/* Main page container should expand to fill available space */
-.container.py-4 { flex: 1 0 auto; margin-bottom: 0; }
-/* Footer sits at the very bottom without external gap */
-footer.footer { margin-top: auto !important; }

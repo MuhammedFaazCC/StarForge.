@@ -8,7 +8,6 @@
     <%= product.name %> | StarForge
   </title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <link rel="stylesheet" href="/css/user/productDetails.css">
   <link rel="stylesheet" href="/css/user/navbar-badges.css">
@@ -63,6 +62,20 @@
         </ol>
       </nav>
 
+      <%
+        function starRating(number) {
+          const full = Math.floor(number);
+          const half = number % 1 >= 0.5;
+          const empty = 5 - full - (half ? 1 : 0);
+
+          let html = '';
+          for (let i = 0; i < full; i++) html += '<i class="fas fa-star"></i>';
+          if (half) html += '<i class="fas fa-star-half-alt"></i>';
+          for (let i = 0; i < empty; i++) html += '<i class="far fa-star"></i>';
+          return html;
+        }
+      %>
+
       <div class="row mb-4">
         <div class="col-md-3">
           <div class="position-relative mb-2 zoom-wrap">
@@ -95,7 +108,7 @@
                         data-src="<%= image %>">
                       <% }) %>
                         <% } else { %>
-                          <span class="text-muted" style="font-size: 0.9rem;">No additional images</span>
+                          <span class="text-muted" style="font-size: 0.9rem;">No additional images</span> 
                           <% } %>
           </div>
         </div>
@@ -105,10 +118,25 @@
             <%= product.name %>
           </h2>
           <div class="rating-stars mb-2">
-            <% for (let i=1; i <=5; i++) { %>
-              <i class="bi <%= i <= product.avgRating ? 'bi-star-fill' : 'bi-star' %>"></i>
-              <% } %>
-                <span class="text-muted">(<%= product.totalRatings %> reviews)</span>
+            <% 
+              const full = Math.floor(product.avgRating || 0);
+              const half = (product.avgRating % 1) >= 0.5;
+              const empty = 5 - full - (half ? 1 : 0);
+            %>
+
+            <% for (let i=0; i<full; i++) { %>
+              <i class="fas fa-star"></i>
+            <% } %>
+
+            <% if (half) { %>
+              <i class="fas fa-star-half-alt"></i>
+            <% } %>
+
+            <% for (let i=0; i<empty; i++) { %>
+              <i class="far fa-star"></i>
+            <% } %>
+
+            <span class="text-muted">(<%= product.totalRatings %> reviews)</span>
           </div>
           <p class="text-muted">Brand: <%= product.brand %>
           </p>
@@ -124,8 +152,8 @@
                   <label for="quantity" class="form-label">Quantity</label>
                   <div class="d-flex align-items-center mb-3">
                     <input type="number" name="quantity" id="quantity" value="1" min="1" class="form-control w-25 me-3">
-                    <button type="submit" class="btn btn-warning me-2" <%= product.stock <= 0 ? 'disabled' : '' %>>
-                      <%= product.stock <= 0 ? 'Out of Stock' : 'Add to Cart' %>
+                    <button type="submit" class="btn btn-warning me-2" <%=product.stock <=0 ? 'disabled' : '' %>>
+                      <%= product.stock <=0 ? 'Out of Stock' : 'Add to Cart' %>
                     </button>
                     <button type="button" id="wishlistBtn" class="wishlist-btn <%= isInWishlist ? 'active' : '' %>"
                       data-product="<%= product._id %>">
@@ -137,69 +165,60 @@
                 <p>
                   <%= product.description %>
                 </p>
-                <h5>Specifications</h5>
-                <ul class="mb-2">
-                  <% for (let key in product.specifications) { %>
-                    <% if (product.specifications[key]) { %>
-                      <li><strong>
-                          <%= key.replace(/([A-Z])/g, ' $1' ).toUpperCase() %>
-                        </strong>: <%= product.specifications[key] %>
-                      </li>
-                      <% } %>
-                        <% } %>
-                </ul>
 
-                <div id="reviews">
-                  <% if (user) { %>
-                    <form action="/product/<%= product._id %>/review" method="POST" class="my-3">
-                      <div class="mb-2">
-                        <label for="rating" class="form-label">Rating</label>
-                        <select name="rating" class="form-select w-25" required>
-                          <option value="">Select</option>
-                          <% for (let i=1; i <=5; i++) { %>
-                            <option value="<%= i %>">
-                              <%= i %> Star<%= i> 1 ? 's' : '' %>
-                            </option>
-                            <% } %>
-                        </select>
-                      </div>
-                      <div class="mb-3">
-                        <label for="comment" class="form-label">Comment</label>
-                        <textarea name="comment" class="form-control" rows="3" required></textarea>
-                      </div>
-                      <button type="submit" class="btn btn-dark">Submit Review</button>
-                    </form>
-                    <% } else { %>
-                      <p class="text-muted">Please <a href="/login">login</a> to write a review.</p>
-                      <% } %>
+        </div>
 
-                        <% if (reviews.length===0) { %>
-                          <p>No reviews yet.</p>
-                          <% } else { %>
-                            <div class="row">
-                              <% reviews.forEach(review=> { %>
-                                <div class="col-md-6">
-                                  <div class="review-card">
-                                    <div class="review-user">
-                                      <%= review.user.fullName %>
-                                    </div>
-                                    <div class="rating-stars mb-1">
-                                      <% for (let i=1; i <=5; i++) { %>
-                                        <i class="bi <%= i <= review.rating ? 'bi-star-fill' : 'bi-star' %>"></i>
-                                        <% } %>
-                                    </div>
-                                    <p>
-                                      <%= review.comment %>
-                                    </p>
-                                    <div class="review-date">
-                                      <%= new Date(review.createdAt).toDateString() %>
-                                    </div>
-                                  </div>
-                                </div>
-                                <% }) %>
-                            </div>
-                            <% } %>
+        <div id="reviews">
+          <% if (user) { %>
+            <form action="/product/<%= product._id %>/review" method="POST" class="my-3">
+              <div class="mb-2">
+                <label for="rating" class="form-label">
+                  <h5>Rating</h5>
+                </label>
+                <div class="rating-input" id="ratingInput">
+                  <% for (let i = 1; i <= 5; i++) { %>
+                    <i class="far fa-star" data-value="<%= i %>"></i>
+                  <% } %>
                 </div>
+
+                <input type="hidden" name="rating" id="ratingValue" value="0">
+              </div>
+              <div class="mb-3">
+                <label for="comment" class="form-label">Comment</label>
+                <textarea name="comment" class="form-control" rows="3" required></textarea>
+              </div>
+              <button type="submit" class="btn btn-dark">Submit Review</button>
+            </form>
+            <% } else { %>
+              <p class="text-muted">Please <a href="/login">login</a> to write a review.</p>
+              <% } %>
+
+                <% if (reviews.length===0) { %>
+                  <p>No reviews yet.</p>
+                  <% } else { %>
+                    <div class="row">
+                      <% reviews.forEach(review=> { %>
+                        <div class="col-md-6">
+                          <div class="review-card">
+                            <div class="review-user">
+                              <%= review.user.fullName %>
+                            </div>
+                            <div class="rating-stars mb-1">
+                              <% for (let i=1; i <=5; i++) { %>
+                                <i class="<%= i <= review.rating ? 'fas fa-star' : 'far fa-star' %>"></i>
+                                <% } %>
+                            </div>
+                            <p>
+                              <%= review.comment %>
+                            </p>
+                            <div class="review-date">
+                              <%= new Date(review.createdAt).toDateString() %>
+                            </div>
+                          </div>
+                        </div>
+                        <% }) %>
+                    </div>
+                    <% } %>
         </div>
 
         <div class="mt-5">
@@ -229,10 +248,14 @@
               <% }) %>
           </div>
         </div>
+        <div class="sticky-cart-bar">
+          <span style="font-weight:600;">₹<%= product.salePrice || product.price %></span>
+          <button id="mobileAddToCart" class="btn btn-warning">Add to Cart</button>
+        </div>
       </div>
 
       <%- include('../partials/user/footer') %>
-      
+
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -304,6 +327,40 @@
               if (nextBtn) nextBtn.addEventListener('click', () => show(current + 1));
             });
           })();
+
+          document.addEventListener("DOMContentLoaded", function () {
+          const stars = document.querySelectorAll("#ratingInput i");
+          const ratingInput = document.getElementById("ratingValue");
+
+          stars.forEach(star => {
+            star.addEventListener("mouseenter", () => {
+              const value = star.getAttribute("data-value");
+              highlightStars(value);
+            });
+
+            star.addEventListener("click", () => {
+              const value = star.getAttribute("data-value");
+              ratingInput.value = value;
+              lockStars(value);
+            });
+
+            star.addEventListener("mouseleave", () => {
+              lockStars(ratingInput.value);
+            });
+          });
+
+          function highlightStars(num) {
+            stars.forEach(s => {
+              s.className = (s.getAttribute("data-value") <= num) ? "fas fa-star" : "far fa-star";
+            });
+          }
+
+          function lockStars(num) {
+            stars.forEach(s => {
+              s.className = (s.getAttribute("data-value") <= num) ? "fas fa-star" : "far fa-star";
+            });
+          }
+        });
 
           document.addEventListener('DOMContentLoaded', function () {
             const addToCartForm = document.querySelector('form[action*="/cart/add/"]');
@@ -535,9 +592,17 @@
               }
             });
           })();
+          document.addEventListener("scroll", () => {
+            const bar = document.querySelector(".sticky-cart-bar");
+            if (!bar) return;
+            const target = document.querySelector("#addToCartBtn");
+            if (!target) return;
+            const rect = target.getBoundingClientRect();
+            bar.style.display = rect.top < 0 ? "flex" : "none";
+          });
         </script>
 
-        
+
 
 </body>
 
