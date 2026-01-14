@@ -62,25 +62,6 @@ function exportReport(format) {
     }, 1000);
 }
 
-function viewOrderDetails(orderId) {
-  window.location.href = `/admin/orders/${orderId}`;
-}
-
-function toggleOrderItems(index) {
-    const itemsRow = document.getElementById(`items-${index}`);
-    const chevron = document.getElementById(`chevron-${index}`);
-    
-    if (itemsRow.style.display === 'none') {
-        itemsRow.style.display = 'table-row';
-        chevron.classList.remove('fa-chevron-right');
-        chevron.classList.add('fa-chevron-down');
-    } else {
-        itemsRow.style.display = 'none';
-        chevron.classList.remove('fa-chevron-down');
-        chevron.classList.add('fa-chevron-right');
-    }
-}
-
 let salesChart;
 
 async function updateChart() {
@@ -377,18 +358,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.querySelectorAll('.status-badge').forEach(badge => {
         badge.title = `Order Status: ${badge.textContent}`;
-    });
-
-    document.querySelectorAll('.sales-table tbody tr').forEach(row => {
-        if (!row.querySelector('.no-data')) {
-            row.style.cursor = 'pointer';
-            row.addEventListener('click', function(e) {
-                if (!e.target.closest('button')) {
-                    const orderId = this.cells[0].textContent;
-                    viewOrderDetails(orderId);
-                }
-            });
-        }
     });
 });
 

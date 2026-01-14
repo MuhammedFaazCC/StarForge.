@@ -554,7 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
         submitButton.textContent = 'Processing...';
 
         // For online payments, create Razorpay order first
-        const response = await fetch('/create-order', {
+        const response = await fetch('/checkout/create-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({addressId: selectedAddressId, paymentMethod: paymentMethod})

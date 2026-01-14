@@ -155,51 +155,15 @@
                         }
 
                         function handleAddProduct() {
-                            Swal.fire({
-                                title: 'Loading...',
-                                text: 'Redirecting to add product page',
-                                allowOutsideClick: false,
-                                allowEscapeKey: false,
-                                showConfirmButton: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            });
-                            setTimeout(() => {
                                 window.location.href = '/admin/products/add';
-                            }, 500);
                         }
 
                         function handleViewProduct(productId) {
-                            Swal.fire({
-                                title: 'Loading...',
-                                text: 'Loading product details',
-                                allowOutsideClick: false,
-                                allowEscapeKey: false,
-                                showConfirmButton: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            });
-                            setTimeout(() => {
                                 window.location.href = `/admin/products/view/${productId}`;
-                            }, 500);
                         }
 
                         function handleEditProduct(productId) {
-                            Swal.fire({
-                                title: 'Loading...',
-                                text: 'Loading edit form',
-                                allowOutsideClick: false,
-                                allowEscapeKey: false,
-                                showConfirmButton: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            });
-                            setTimeout(() => {
                                 window.location.href = `/admin/products/edit/${productId}`;
-                            }, 500);
                         }
 
         <% if (message) { %>

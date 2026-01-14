@@ -154,7 +154,7 @@ const salesPage = async (req, res) => {
       .limit(limit);
 
     const sales = orders.map(order => ({
-      id: order._id.toString(),
+      id: order.orderId.toString(),
       orderDate: order.orderDate.toISOString().split('T')[0],
       customerName: order.userId?.fullName || 'Unknown',
       paymentMethod: order.paymentMethod,
@@ -315,7 +315,7 @@ const getSalesData = async (req, res) => {
       .limit(limit);
 
     const sales = orders.map(order => ({
-      id: order._id.toString(),
+      id: orders.orderId.toString(),
       orderDate: order.orderDate.toISOString().split('T')[0],
       customerName: order.userId?.fullName || 'Unknown',
       paymentMethod: order.paymentMethod,
@@ -446,7 +446,7 @@ const exportSalesReportPDF = async (req, res) => {
     };
 
     const sales = orders.map(order => ({
-      id: order._id.toString(),
+      id: order.orderId.toString(),
       date: order.orderDate.toISOString().split('T')[0],
       customer: order.userId?.fullName || 'Unknown',
       paymentMethod: order.paymentMethod,

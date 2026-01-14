@@ -115,15 +115,20 @@ function addInputValidation() {
 
 document.addEventListener('DOMContentLoaded', function() {
   const form = document.querySelector('form');
-  
-  if (form) {
-    form.addEventListener('submit', validateForm);
-  }
-  
+  if (form) form.addEventListener('submit', validateForm);
+
   addInputValidation();
-  
+
   const serverError = document.querySelector('.error-message:not(.js-error-message)');
+
   if (serverError) {
+    const text = serverError.textContent.trim();
+
+    if (!text) {
+      serverError.remove();
+      return;
+    }
+
     setTimeout(() => {
       serverError.style.opacity = '0';
       setTimeout(() => {

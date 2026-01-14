@@ -41,6 +41,11 @@ class CategoryFormValidator {
             this.showFieldError('name', 'Category name must be at least 2 characters');
             return false;
         }
+
+        if (/^[\-\s]+$/.test(name)) {
+            this.showFieldError('name', 'Category name cannot contain only hyphens or spaces');
+            return false;
+        }
         
         if (name.length > 50) {
             this.showFieldError('name', 'Category name cannot exceed 50 characters');
@@ -75,8 +80,8 @@ class CategoryFormValidator {
         
         this.clearFieldError('offer');
         
-        if (isNaN(offer) || offer < 0 || offer > 100) {
-            this.showFieldError('offer', 'Offer percentage must be between 0 and 100');
+        if (isNaN(offer) || offer < 0 || offer > 50) {
+            this.showFieldError('offer', 'Offer percentage must be between 0 and 50');
             return false;
         }
         

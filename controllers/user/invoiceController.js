@@ -4,10 +4,11 @@ const Order = require("../../models/orderSchema");
 const downloadInvoice = async (req, res) => {
   try {
     const { orderId } = req.params;
+    console.log(orderId);
     const userId = req.session.user._id;
 
     // Fetch the order with populated product details
-    const order = await Order.findOne({ _id: orderId, userId })
+    const order = await Order.findOne({ orderId, userId })
       .populate('items.productId')
       .populate('userId');
 
@@ -368,6 +369,9 @@ const downloadInvoice = async (req, res) => {
       `attachment; filename="Invoice-${order._id}.pdf"`
     );
 
+    if (!buffer) {
+      return res.status(500).send("Failed to generate invoice PDF");
+    }
     return res.send(buffer);
 
   } catch (error) {

@@ -202,14 +202,9 @@
                         </thead>
                         <tbody>
                             <% sales.forEach((sale, index) => { %>
-                            <tr class="order-row" data-order-id="<%= sale.id %>">
+                            <tr class="order-row">
                                 <td>
-                                    <div class="order-id-container">
-                                        <button class="expand-btn" onclick="toggleOrderItems('<%= index %>')">
-                                            <i class="fas fa-chevron-right" id="chevron-<%= index %>"></i>
-                                        </button>
-                                        <span class="order-id"><%= sale.id %></span>
-                                    </div>
+                                    <span class="order-id"><%= sale.id %></span>
                                 </td>
                                 <td><%= sale.orderDate %></td>
                                 <td><%= sale.customerName %></td>
@@ -237,28 +232,7 @@
                                     </span>
                                 </td>
                             </tr>
-                            <tr class="items-row" id="items-<%= index %>" style="display: none;">
-                                <td colspan="11">
-                                    <div class="items-container">
-                                        <h4><i class="fas fa-list"></i> Order Items:</h4>
-                                        <div class="items-grid">
-                                            <% sale.productsList.forEach(item => { %>
-                                            <div class="item-card">
-                                                <div class="item-info">
-                                                    <strong><%= item.name %></strong>
-                                                    <span class="item-details">
-                                                        Qty: <%= item.quantity %> × ₹<%= item.price.toLocaleString('en-IN') %>
-                                                    </span>
-                                                    <span class="item-total">
-                                                        Total: ₹<%= (item.quantity * item.price).toLocaleString('en-IN') %>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <% }) %>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
+                            
                             <% }) %>
                             <% if (sales.length === 0) { %>
                             <tr>
@@ -318,25 +292,6 @@
         function clearFilters() {
             document.getElementById('filterForm').reset();
             window.location.href = '/admin/sales';
-        }
-
-        function viewOrderDetails(orderId) {
-            window.open(`/admin/orders/${orderId}`, '_blank');
-        }
-
-        function toggleOrderItems(index) {
-            const itemsRow = document.getElementById(`items-${index}`);
-            const chevron = document.getElementById(`chevron-${index}`);
-            
-            if (itemsRow.style.display === 'none') {
-                itemsRow.style.display = 'table-row';
-                chevron.classList.remove('fa-chevron-right');
-                chevron.classList.add('fa-chevron-down');
-            } else {
-                itemsRow.style.display = 'none';
-                chevron.classList.remove('fa-chevron-down');
-                chevron.classList.add('fa-chevron-right');
-            }
         }
 
         function exportReport(format) {

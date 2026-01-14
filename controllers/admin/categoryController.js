@@ -85,6 +85,13 @@ const renderAddCategory = async (req, res) => {
 const addCategory = async (req, res) => {
     try {
         const { name, description, isActive, offer } = req.body;
+        if (!name) {
+            return res.status(400).json({
+                success: false,
+                errors: { name: "Category name is required" },
+                formData: { name: "", description: description || "", offer: offer || 0 }
+            });
+        }
         const image = req.file ? req.file.path : null;
         
         // Validate category name
@@ -111,10 +118,10 @@ const addCategory = async (req, res) => {
         
         // Validate offer
         const parsedOffer = offer ? parseFloat(offer) : 0;
-        if (isNaN(parsedOffer) || parsedOffer < 0 || parsedOffer > 100) {
+        if (isNaN(parsedOffer) || parsedOffer < 0 || parsedOffer > 50) {
             return res.status(400).json({
                 success: false,
-                errors: { offer: "Offer percentage must be a number between 0 and 100" },
+                errors: { offer: "Offer percentage must be a number between 0 and 50" },
                 formData: { name: trimmedName, description: description || '', offer: offer || 0 }
             });
         }
@@ -192,6 +199,14 @@ const updateCategory = async (req, res) => {
     try {
         const { id } = req.params;
         const { name, description, isActive, offer } = req.body;
+
+    if (!name) {
+        return res.status(400).json({
+            success: false,
+            errors: { name: "Category name is required" },
+            formData: { name: "", description: description || "", offer: offer || 0 }
+        });
+    }
         const image = req.file ? req.file.path : null;
         
         // Check if category exists
@@ -216,21 +231,23 @@ const updateCategory = async (req, res) => {
         const trimmedName = name.trim();
         
         // Check for duplicate category
-        const isDuplicate = await checkDuplicateCategory(trimmedName, id);
-        if (isDuplicate) {
-            return res.status(400).json({
-                success: false,
-                errors: { name: "Category name already exists" },
-                formData: { name: trimmedName, description: description || '', offer: offer || 0 }
-            });
+        if (trimmedName.toLowerCase() !== existingCategory.name.toLowerCase()) {
+            const isDuplicate = await checkDuplicateCategory(trimmedName, id);
+            if (isDuplicate) {
+                return res.status(400).json({
+                    success: false,
+                    errors: { name: "Category name already exists" },
+                    formData: { name: trimmedName, description: description || '', offer: offer || 0 }
+                });
+            }
         }
         
         // Validate offer
         const parsedOffer = offer ? parseFloat(offer) : 0;
-        if (isNaN(parsedOffer) || parsedOffer < 0 || parsedOffer > 100) {
+        if (isNaN(parsedOffer) || parsedOffer < 0 || parsedOffer > 50) {
             return res.status(400).json({
                 success: false,
-                errors: { offer: "Offer percentage must be a number between 0 and 100" },
+                errors: { offer: "Offer percentage must be a number between 0 and 50" },
                 formData: { name: trimmedName, description: description || '', offer: offer || 0 }
             });
         }
@@ -359,8 +376,8 @@ try {
 const { id } = req.params;
 const { offer } = req.body;
 const parsedOffer = offer ? parseFloat(offer) : 0;
-if (isNaN(parsedOffer) || parsedOffer < 0 || parsedOffer > 100) {
-return res.status(400).send("Offer percentage must be a number between 0 and 100");
+if (isNaN(parsedOffer) || parsedOffer < 0 || parsedOffer > 50) {
+return res.status(400).send("Offer percentage must be a number between 0 and 50");
 }
 const category = await Category.findById(id);
 if (!category) return res.status(404).send("Category not found");

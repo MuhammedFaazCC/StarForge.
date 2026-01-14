@@ -49,7 +49,7 @@ router.post("/wallet/verify", walletController.verifyAndCreditWallet);
 router.get('/checkout', userAuth, checkoutController.getCheckoutPage);
 router.post('/checkout', checkoutController.postCheckoutPage);
 router.get('/order/placed', checkoutController.codSuccess);
-router.post('/create-order', checkoutController.postRazorpay);
+router.post('/checkout/create-order', checkoutController.postRazorpay);
 router.get('/payment/failure', checkoutController.paymentFailure);
 router.post('/order/retry/:orderId', checkoutController.retryPayment);
 
@@ -75,7 +75,7 @@ router.post('/order/cancel/:id', userAuth, cancelController.cancelOrderNew);
 router.post('/returnItem/:orderId/:productId', userAuth, returnController.requestReturnItem)
 router.post("/return/:id", userAuth, returnController.requestReturn);
 
-router.get("/order/:orderId/invoice", userAuth, invoiceController.downloadInvoice);
+router.get("/order/invoice/:orderId", userAuth, invoiceController.downloadInvoice);
 
 router.get('/orders', userAuth, orderController.getUserOrders);
 router.post('/order/return/:id', userAuth, orderController.returnOrder);

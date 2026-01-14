@@ -110,7 +110,6 @@ body {
 }
 
 .secondary-chart {
-  height: 280px;
   padding: 12px;
 }
 
@@ -126,7 +125,6 @@ body {
   margin-bottom: 6px;
 }
 
-/* Dashboard filters */
 .filters select,
 .filters input[type="number"],
 .filters input[type="date"] {

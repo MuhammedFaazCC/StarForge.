@@ -65,51 +65,6 @@ async function updateCouponUsage(userId, couponCode) {
   }
 }
 
-// function buildOrderObject({ userId, cart, address, paymentMethod, totalAmount, couponData, status, razorpayOrderId = null, failureReason = null }) {
-//   return new Order({
-//     userId,
-//     items: cart.items.map(item => ({
-//       productId: item.productId._id,
-//       name: item.productId.name,
-//       quantity: item.quantity,
-//       salesPrice: item.productId.salesPrice,
-//     })),
-//     address: formatAddress(address),
-//     paymentMethod,
-//     totalAmount,
-//     coupon: couponData,
-//     status,
-//     createdAt: new Date(),
-//     offeredPrice: totalAmount,
-//     razorpayOrderId,
-//     failureReason
-//   });
-// }
-
-// function formatAddress(address) {
-//   return `${address.name}, ${address.address}, ${address.city}, ${address.district}, ${address.state} - ${address.pinCode}`;
-// }
-
-// function getPaymentErrorMessage(errorCode) {
-//   switch (errorCode) {
-//     case 'signature_verification_failed':
-//       return "Payment verification failed. Please contact support if this persists.";
-//     case 'payment_failed':
-//       return "Payment was not completed successfully.";
-//     case 'payment_cancelled':
-//       return "Payment was cancelled. You can retry the payment or choose a different method.";
-//     case 'order_mismatch':
-//       return "Order verification failed. Please try again.";
-//     case 'insufficient_stock':
-//       return "Some items in your cart are out of stock. Please update your cart.";
-//     case 'network_error':
-//       return "Network error occurred during payment. Please check your connection and try again.";
-//     default:
-//       return "Oops! Something went wrong with your payment. Please try again.";
-//   }
-// }
-
-
 const getCheckoutPage = async (req, res) => {
   try {
     if (!req.session.user) return res.redirect('/login?redirect=/checkout');
@@ -372,6 +327,14 @@ const postRazorpay = async (req, res) => {
         };
       }
     }
+
+    const counter = await Counter.findOneAndUpdate(
+      { name: "order" },
+      { $inc: { value: 1 } },
+      { new: true, upsert: true }
+    );
+
+    const orderId = `ORD-${new Date().getFullYear()}-${String(counter.value).padStart(6, "0")}`;
 
     const pendingOrder = new Order({
       orderId,
