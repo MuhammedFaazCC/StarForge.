@@ -1,5 +1,6 @@
 const puppeteer = require("puppeteer");
 const Order = require("../../models/orderSchema");
+const chromiumPath = puppeteer.executablePath();
 
 const downloadInvoice = async (req, res) => {
   let browser; // must be declared outside
@@ -338,7 +339,8 @@ const downloadInvoice = async (req, res) => {
     // Generate PDF
     browser = await puppeteer.launch({
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"]
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
+      executablePath: puppeteer.executablePath()
     });
 
     const page = await browser.newPage();
