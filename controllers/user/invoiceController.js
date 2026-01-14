@@ -2,45 +2,42 @@ const puppeteer = require("puppeteer");
 const Order = require("../../models/orderSchema");
 
 const downloadInvoice = async (req, res) => {
+  let browser; // must be declared outside
+
   try {
-    const { orderId } = req.params;
-    console.log(orderId);
+    const { _id } = req.params;
     const userId = req.session.user._id;
 
-    // Fetch the order with populated product details
-    const order = await Order.findOne({ orderId, userId })
+    // Fetch the order
+    let order = await Order.findOne({ _id, userId })
       .populate('items.productId')
       .populate('userId');
 
     if (!order) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Order not found" 
-      });
+      order = await Order.findOne({ orderId: _id, userId })
+        .populate('items.productId')
+        .populate('userId');
     }
 
-    // Calculate totals
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
     const discountAmount = order?.coupon?.discountAmount || 0;
-    const totalSales = order.items.reduce((sum, item) => {
-      return sum + (item.salesPrice || 0) * (item.quantity || 0);
-    }, 0);
+    const totalSales = order.items.reduce(
+      (sum, item) => sum + (item.salesPrice || 0) * (item.quantity || 0),
+      0
+    );
 
-    // Calculate adjusted prices for items (considering coupon discount)
     const itemsWithAdjustedPrice = order.items.map(item => {
-
       const itemTotal = (item.salesPrice || 0) * (item.quantity || 0);
-      const shareOfDiscount = totalSales > 0 ? (itemTotal / totalSales) * discountAmount : 0;
-      const adjustedTotal = itemTotal - shareOfDiscount;
-      const adjustedUnitPrice = item.quantity > 0 ? adjustedTotal / item.quantity : 0;
-
+      const share = totalSales > 0 ? (itemTotal / totalSales) * discountAmount : 0;
+      const adjustedTotal = itemTotal - share;
       return {
         name: item.name,
         quantity: item.quantity,
-        salesPrice: item.salesPrice,
-        productId: item.productId,
-        status: item.status,
-        adjustedUnitPrice: adjustedUnitPrice,
-        adjustedTotal: adjustedTotal
+        adjustedUnitPrice: item.quantity ? adjustedTotal / item.quantity : 0,
+        adjustedTotal
       };
     });
 
@@ -339,47 +336,40 @@ const downloadInvoice = async (req, res) => {
     };
 
     // Generate PDF
-    const browser = await puppeteer.launch({
+    browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: ["--no-sandbox", "--disable-setuid-sandbox"]
     });
 
     const page = await browser.newPage();
 
-    await page.setContent(invoiceHTML, {
-      waitUntil: 'networkidle0'
+    await page.setContent(invoiceHTML, { waitUntil: "networkidle0" });
+
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      printBackground: true
     });
 
-    const buffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '0.5in',
-        right: '0.5in',
-        bottom: '0.5in',
-        left: '0.5in'
-      }
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename="invoice_${order.orderId}.pdf"`
     });
 
-    await browser.close();
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="Invoice-${order._id}.pdf"`
-    );
-
-    if (!buffer) {
-      return res.status(500).send("Failed to generate invoice PDF");
-    }
-    return res.send(buffer);
+    return res.send(pdfBuffer);
 
   } catch (error) {
-    console.error('Error generating invoice:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Internal server error while generating invoice' 
+    console.error("Invoice generation error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to generate invoice"
     });
+
+  } finally {
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (e) {}
+    }
   }
 };
 

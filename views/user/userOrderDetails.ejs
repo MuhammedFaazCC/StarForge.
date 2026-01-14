@@ -422,7 +422,7 @@ h1 {
         </button>
       <% } %>
       
-      <a href="/order/invoice/<%= order.orderId %>" class="action-btn btn-download" target="_blank">
+      <a href="/order/invoice/<%= order._id %>" class="action-btn btn-download" target="_blank">
         Download Invoice
       </a>
       
@@ -431,7 +431,7 @@ h1 {
       </a>
     </div>
   </main>
-
+  
   <script>
     // Global variable to track if any cancellation is in progress
     let cancellationInProgress = false;

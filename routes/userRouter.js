@@ -75,7 +75,7 @@ router.post('/order/cancel/:id', userAuth, cancelController.cancelOrderNew);
 router.post('/returnItem/:orderId/:productId', userAuth, returnController.requestReturnItem)
 router.post("/return/:id", userAuth, returnController.requestReturn);
 
-router.get("/order/invoice/:orderId", userAuth, invoiceController.downloadInvoice);
+router.get("/order/invoice/:_id", userAuth, invoiceController.downloadInvoice);
 
 router.get('/orders', userAuth, orderController.getUserOrders);
 router.post('/order/return/:id', userAuth, orderController.returnOrder);
