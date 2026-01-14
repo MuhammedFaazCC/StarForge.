@@ -149,9 +149,12 @@
               <div class="col">
                 <div class="card product-card h-100">
                   <a href="#" class="wishlist-btn" data-product-id="<%= product._id %>">
-                    <% const inWishlist = userWishlistItems?.some(item => 
+                    <% const inWishlist = if(userWishlistItems){
+                      userWishlistItems.some(item => 
                         (item.productId._id ? item.productId._id.toString() : item.productId.toString()) === product._id.toString()
-                    ); %>
+                    );}else{
+                      <span class="out-of-stock"><i class="bi bi-x-circle"></i>your wishlist item was deleted by admin</span>
+                    } %>
                     <i class="bi <%= inWishlist ? 'bi-heart-fill text-danger' : 'bi-heart' %>"></i>
                   </a>
 
