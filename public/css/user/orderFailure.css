@@ -1,0 +1,206 @@
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .failure-container {
+      text-align: center;
+      padding: 40px;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      background-color: #fff;
+      max-width: 600px;
+      width: 90%;
+      margin: 20px;
+    }
+
+    .failure-icon {
+      font-size: 80px;
+      color: #dc3545;
+      margin-bottom: 20px;
+      animation: shake 0.5s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    .failure-title {
+      font-size: 28px;
+      color: #dc3545;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    .failure-message {
+      font-size: 16px;
+      color: #6c757d;
+      margin-bottom: 30px;
+      line-height: 1.5;
+    }
+
+    .order-info {
+      background-color: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      border-left: 4px solid #dc3545;
+    }
+
+    .order-info p {
+      margin: 8px 0;
+      font-size: 14px;
+      color: #495057;
+    }
+
+    .order-info strong {
+      color: #212529;
+    }
+
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 30px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      min-width: 140px;
+      justify-content: center;
+    }
+
+    .btn-retry {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .btn-retry:hover {
+      background-color: #218838;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    }
+
+    .btn-retry:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-view {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .btn-view:hover {
+      background-color: #0056b3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    }
+
+    .btn-home {
+      background-color: #6c757d;
+      color: white;
+    }
+
+    .btn-home:hover {
+      background-color: #545b62;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+    }
+
+    .btn-cart {
+      background-color: #ffc107;
+      color: #212529;
+    }
+
+    .btn-cart:hover {
+      background-color: #e0a800;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+    }
+
+    .loading {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #28a745;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .help-text {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e9ecef;
+      font-size: 14px;
+      color: #6c757d;
+    }
+
+    .help-text a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .help-text a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .failure-container {
+        padding: 30px 20px;
+        margin: 10px;
+      }
+
+      .failure-icon {
+        font-size: 60px;
+      }
+
+      .failure-title {
+        font-size: 24px;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .btn {
+        width: 100%;
+        max-width: 280px;
+      }
+    }
+  

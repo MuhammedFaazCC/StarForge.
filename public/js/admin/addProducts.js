@@ -13,169 +13,168 @@ document.addEventListener("DOMContentLoaded", () => {
   const color = document.getElementById("color").value.trim();
 
   const allowedSizes = ["16","17","18","19","20","21","22"]; // same as server
-  const nameRegex = /^[A-Za-z0-9\s\-']+$/;
 
-  if (!name) return "Product name is required";
-  if (name.length < 2 || name.length > 100) return "Name must be 2–100 characters";
+  if (!name) {return "Product name is required";}
+  if (name.length < 2 || name.length > 100) {return "Name must be 2–100 characters";}
 
   if (!/^[A-Za-z0-9\s\-']+$/.test(name))
-    return "Invalid characters in product name";
+    {return "Invalid characters in product name";}
 
   if (!/[A-Za-z0-9]/.test(name))
-    return "Name must contain at least one alphanumeric character";
+    {return "Name must contain at least one alphanumeric character";}
 
   if (/---+/.test(name))
-    return "Name cannot contain repeated hyphens";
+    {return "Name cannot contain repeated hyphens";}
 
   if (/^[-']|[-']$/.test(name))
-    return "Name cannot start or end with hyphens or apostrophes";
+    {return "Name cannot start or end with hyphens or apostrophes";}
 
-  if (!brand) return "Brand is required";
+  if (!brand) {return "Brand is required";}
 
   if (brand.length < 2 || brand.length > 50)
-    return "Brand must be 2–50 characters";
+    {return "Brand must be 2–50 characters";}
 
   if (!/^[A-Za-z0-9\s\-']+$/.test(brand))
-    return "Brand contains invalid characters";
+    {return "Brand contains invalid characters";}
 
   if (!/[A-Za-z0-9]/.test(brand))
-    return "Brand must contain at least one alphanumeric character";
+    {return "Brand must contain at least one alphanumeric character";}
 
   if (/^[^A-Za-z0-9]+$/.test(brand))
-    return "Brand cannot be only symbols";
+    {return "Brand cannot be only symbols";}
 
   if (/---+/.test(brand))
-    return "Brand cannot contain repeated hyphens";
+    {return "Brand cannot contain repeated hyphens";}
 
   if (/^[-']|[-']$/.test(brand))
-    return "Brand cannot start or end with hyphens or apostrophes";
+    {return "Brand cannot start or end with hyphens or apostrophes";}
 
   if (/[<>]/.test(brand))
-    return "Brand cannot contain < or >";
+    {return "Brand cannot contain < or >";}
 
 
-  if (!price) return "Price is required";
+  if (!price) {return "Price is required";}
 
   if (!/^\d+(\.\d{1,2})?$/.test(price))
-    return "Price must be a valid number with up to 2 decimals";
+    {return "Price must be a valid number with up to 2 decimals";}
 
   if (price.startsWith("."))
-    return "Price cannot start with a dot";
+    {return "Price cannot start with a dot";}
 
   if (/^0\d+/.test(price))
-    return "Invalid leading zeros in price";
+    {return "Invalid leading zeros in price";}
 
   if (!(Number(price) > 0))
-    return "Price must be greater than 0";
+    {return "Price must be greater than 0";}
 
   if (price.length > 15)
-    return "Price value is too large";
+    {return "Price value is too large";}
 
   let off = offer.trim();
 
-  if (off === "") off = "0";
+  if (off === "") {off = "0";}
 
   if (!/^\d+$/.test(off))
-    return "Offer must be an integer";
+    {return "Offer must be an integer";}
 
   if (off.length > 1 && off.startsWith("0"))
-    return "Offer cannot contain leading zeros";
+    {return "Offer cannot contain leading zeros";}
 
   const offerNum = Number(off);
 
   if (offerNum < 0 || offerNum > 90)
-    return "Offer must be between 0 and 90%";
+    {return "Offer must be between 0 and 90%";}
 
   if (off.length > 2)
-    return "Invalid offer value";
+    {return "Invalid offer value";}
 
   if (description.length > 2000)
-    return "Description must be ≤ 2000 characters";
+    {return "Description must be ≤ 2000 characters";}
 
   if (description && !/[A-Za-z0-9]/.test(description))
-    return "Description must contain at least one alphanumeric character";
+    {return "Description must contain at least one alphanumeric character";}
 
   if (/^[^A-Za-z0-9]+$/.test(description))
-    return "Description cannot be only special characters";
+    {return "Description cannot be only special characters";}
 
   if (/([^\w\s])\1\1+/.test(description))
-    return "Description contains invalid repeated symbols";
+    {return "Description contains invalid repeated symbols";}
 
   if (/[<>]/.test(description))
-    return "Description cannot contain < or >";
+    {return "Description cannot contain < or >";}
 
   if (/\n{4,}/.test(description))
-    return "Too many blank lines in description";
+    {return "Too many blank lines in description";}
 
-  if (!category) return "Category required";
+  if (!category) {return "Category required";}
 
   if (!stock || !/^\d+$/.test(stock) || Number(stock) < 0)
-    return "Stock must be integer ≥ 0";
+    {return "Stock must be integer ≥ 0";}
 
-  if (!sizes) return "Size required";
+  if (!sizes) {return "Size required";}
   const splitSizes = sizes.split(",").map(s => s.trim()).filter(Boolean);
   for (const s of splitSizes) {
-    if (!allowedSizes.includes(s)) return `Invalid size: ${s}`;
+    if (!allowedSizes.includes(s)) {return `Invalid size: ${s}`;}
   }
 
   if (rimMaterial.length > 100)
-    return "Rim material must be ≤ 100 characters";
+    {return "Rim material must be ≤ 100 characters";}
 
   if (rimMaterial) {
     if (!/^[A-Za-z0-9\s\-']+$/.test(rimMaterial))
-      return "Rim material contains invalid characters";
+      {return "Rim material contains invalid characters";}
 
     if (!/[A-Za-z0-9]/.test(rimMaterial))
-      return "Rim material must contain at least one alphanumeric character";
+      {return "Rim material must contain at least one alphanumeric character";}
 
     if (/^[^A-Za-z0-9]+$/.test(rimMaterial))
-      return "Rim material cannot be only symbols";
+      {return "Rim material cannot be only symbols";}
 
     if (/---+/.test(rimMaterial))
-      return "Rim material cannot contain repeated hyphens";
+      {return "Rim material cannot contain repeated hyphens";}
 
     if (/^[-']|[-']$/.test(rimMaterial))
-      return "Rim material cannot start or end with hyphens or apostrophes";
+      {return "Rim material cannot start or end with hyphens or apostrophes";}
 
     if (/[<>]/.test(rimMaterial))
-      return "Rim material cannot contain < or >";
+      {return "Rim material cannot contain < or >";}
 
     if (/([^\w\s])\1\1+/.test(rimMaterial))
-      return "Rim material contains repeated symbols";
+      {return "Rim material contains repeated symbols";}
   }
 
   if (color.length > 50)
-    return "Color must be ≤ 50 characters";
+    {return "Color must be ≤ 50 characters";}
 
   if (color) {
     if (!/^[A-Za-z0-9\s\-']+$/.test(color))
-      return "Color contains invalid characters";
+      {return "Color contains invalid characters";}
 
     if (!/[A-Za-z0-9]/.test(color))
-      return "Color must contain at least one alphanumeric character";
+      {return "Color must contain at least one alphanumeric character";}
 
     if (/^[^A-Za-z0-9]+$/.test(color))
-      return "Color cannot be only symbols";
+      {return "Color cannot be only symbols";}
 
     if (/---+/.test(color))
-      return "Color cannot contain repeated hyphens";
+      {return "Color cannot contain repeated hyphens";}
 
     if (/^[-']|[-']$/.test(color))
-      return "Color cannot start or end with hyphens or apostrophes";
+      {return "Color cannot start or end with hyphens or apostrophes";}
 
     if (/[<>]/.test(color))
-      return "Color cannot contain < or >";
+      {return "Color cannot contain < or >";}
 
     if (/([^\w\s])\1\1+/.test(color))
-      return "Color contains repeated symbols";
+      {return "Color contains repeated symbols";}
   }
 
   // image validation
-  if (!croppedFiles.mainImage) return "Main image required";
-  if (croppedFiles.mainImage.size > 2 * 1024 * 1024) return "Main image > 2MB";
-  if (croppedFiles.additionalImages.length > 5) return "Max 5 additional images";
+  if (!croppedFiles.mainImage) {return "Main image required";}
+  if (croppedFiles.mainImage.size > 2 * 1024 * 1024) {return "Main image > 2MB";}
+  if (croppedFiles.additionalImages.length > 5) {return "Max 5 additional images";}
   for (const f of croppedFiles.additionalImages) {
-    if (f.size > 2 * 1024 * 1024) return "One of the additional images > 2MB";
+    if (f.size > 2 * 1024 * 1024) {return "One of the additional images > 2MB";}
   }
 
   return null;
@@ -195,7 +194,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let cropper = null;
   let currentInput = null;
-  let croppedFiles = { mainImage: null, additionalImages: [] };
+  const croppedFiles = { mainImage: null, additionalImages: [] };
 
   console.log("Script loaded at:", new Date().toISOString());
   console.log("mainImageInput:", mainImageInput);
@@ -228,7 +227,7 @@ document.addEventListener("DOMContentLoaded", () => {
     currentInput = input;
     cropImage.src = URL.createObjectURL(file);
     cropModal.style.display = "block";
-    if (cropper) cropper.destroy();
+    if (cropper) {cropper.destroy();}
     cropper = new Cropper(cropImage, {
       aspectRatio: 1,
       viewMode: 1,
@@ -238,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   cropButton.addEventListener("click", () => {
-    if (!cropper) return;
+    if (!cropper) {return;}
     const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
     canvas.toBlob(blob => {
       const file = new File([blob], `cropped-${Date.now()}.jpg`, { type: "image/jpeg" });

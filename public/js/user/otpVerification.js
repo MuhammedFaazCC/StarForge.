@@ -26,12 +26,12 @@ document.addEventListener('DOMContentLoaded', () => {
         resendBtn.style.opacity = '0.6';
         resendBtn.style.cursor = 'not-allowed';
       }
-      if (resendStatus) resendStatus.textContent = `You can resend in ${remaining}s`;
+      if (resendStatus) {resendStatus.textContent = `You can resend in ${remaining}s`;}
 
       clearInterval(cooldownTimer);
       cooldownTimer = setInterval(() => {
         remaining -= 1;
-        if (resendStatus) resendStatus.textContent = `You can resend in ${remaining}s`;
+        if (resendStatus) {resendStatus.textContent = `You can resend in ${remaining}s`;}
         if (remaining <= 0) {
           clearInterval(cooldownTimer);
           if (resendBtn) {
@@ -39,51 +39,73 @@ document.addEventListener('DOMContentLoaded', () => {
             resendBtn.style.opacity = '';
             resendBtn.style.cursor = '';
           }
-          if (resendStatus) resendStatus.textContent = '';
+          if (resendStatus) {resendStatus.textContent = '';}
         }
       }, 1000);
     }
 
-    async function resendOtp() {
-      try {
-        if (resendBtn) {
-          resendBtn.disabled = true;
-          resendBtn.style.opacity = '0.6';
-          resendBtn.style.cursor = 'not-allowed';
-        }
-        if (resendStatus) resendStatus.textContent = 'Sending...';
-        const res = await fetch('/resend-otp', {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({})
-        });
-        let data = null;
-        try { data = await res.json(); } catch (_) { data = null; }
-        if (res.ok && data && data.success) {
-          if (resendStatus) resendStatus.textContent = 'OTP resent successfully!';
-          // start cooldown only on success
-          setTimeout(() => setCooldown(COOLDOWN_SECONDS), 300);
-        } else {
-          const msg = (data && data.message) ? data.message : 'Failed to resend OTP';
-          if (resendStatus) resendStatus.textContent = msg;
-          if (resendBtn) {
-            resendBtn.disabled = false;
-            resendBtn.style.opacity = '';
-            resendBtn.style.cursor = '';
-          }
-        }
-      } catch (err) {
-        if (resendStatus) resendStatus.textContent = 'Network error. Please try again.';
-        if (resendBtn) {
-          resendBtn.disabled = false;
-          resendBtn.style.opacity = '';
-          resendBtn.style.cursor = '';
-        }
+async function resendOtp() {
+  try {
+    if (resendBtn) {
+      resendBtn.disabled = true;
+      resendBtn.style.opacity = "0.6";
+      resendBtn.style.cursor = "not-allowed";
+    }
+
+    if (resendStatus) {
+      resendStatus.textContent = "Sending...";
+    }
+
+    const res = await fetch("/resend-otp", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({}),
+    });
+
+    let data = null;
+
+    try {
+      data = await res.json();
+    } catch (err) {
+      console.error("OTP JSON parse error:", err);
+    }
+
+    if (res.ok && data && data.success) {
+      if (resendStatus) {
+        resendStatus.textContent = "OTP resent successfully!";
+      }
+
+      setTimeout(() => setCooldown(COOLDOWN_SECONDS), 300);
+    } else {
+      const msg = data?.message || "Failed to resend OTP";
+
+      if (resendStatus) {
+        resendStatus.textContent = msg;
+      }
+
+      if (resendBtn) {
+        resendBtn.disabled = false;
+        resendBtn.style.opacity = "";
+        resendBtn.style.cursor = "";
       }
     }
+  } catch (err) {
+    console.error("Resend OTP network error:", err);
+
+    if (resendStatus) {
+      resendStatus.textContent = "Network error. Please try again.";
+    }
+
+    if (resendBtn) {
+      resendBtn.disabled = false;
+      resendBtn.style.opacity = "";
+      resendBtn.style.cursor = "";
+    }
+  }
+}
 
     if (resendBtn) {
       resendBtn.addEventListener('click', (e) => {

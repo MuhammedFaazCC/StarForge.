@@ -40,7 +40,7 @@ const getActiveOffersForProduct = async (productId) => {
         const now = new Date();
         
         const product = await Product.findById(productId).populate('category');
-        if (!product) return [];
+        if (!product) {return [];}
         
         const productOffers = await Offer.find({
             type: 'product',
@@ -81,7 +81,7 @@ const getBestOfferForProduct = async (productId, orderAmount = 0) => {
             orderAmount >= (offer.minimumAmount || 0)
         );
         
-        if (applicableOffers.length === 0) return null;
+        if (applicableOffers.length === 0) {return null;}
         
         return applicableOffers.reduce((best, current) => 
             current.discountPercentage > best.discountPercentage ? current : best
@@ -93,7 +93,7 @@ const getBestOfferForProduct = async (productId, orderAmount = 0) => {
 };
 
 const applyOfferToPrice = (originalPrice, offerPercentage) => {
-    if (!offerPercentage || offerPercentage <= 0) return originalPrice;
+    if (!offerPercentage || offerPercentage <= 0) {return originalPrice;}
     
     const discount = (originalPrice * offerPercentage) / 100;
     return Math.round((originalPrice - discount) * 100) / 100;

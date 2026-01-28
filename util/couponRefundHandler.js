@@ -4,12 +4,12 @@ const { updateWallet } = require("../controllers/user/walletController");
 
 // Normalize a productId that may be an ObjectId or a populated document
 const normalizeProductId = (pid) => {
-  if (!pid) return null;
-  if (pid._id) return pid._id.toString();
+  if (!pid) {return null;}
+  if (pid._id) {return pid._id.toString();}
   try { return pid.toString(); } catch { return null; }
 };
 
-const handleCouponInvalidationAndRefund = async (order, itemsToCancel, userId) => {
+const handleCouponInvalidationAndRefund = async (order, itemsToCancel) => {
   try {
     const result = {
       totalRefundAmount: 0,
@@ -58,7 +58,7 @@ const handleCouponInvalidationAndRefund = async (order, itemsToCancel, userId) =
           const remainingItemsExtraDiscount = Math.max(0, originalDiscount - returnedShareOfDiscount);
 
           // Total refund should be sum(returned totals) - originalDiscount
-          let totalRefund = Math.max(0, returnedTotal - originalDiscount);
+          const totalRefund = Math.max(0, returnedTotal - originalDiscount);
 
           // Distribute refund per item proportionally by itemTotal
           let distributedRefund = 0;

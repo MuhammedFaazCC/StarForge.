@@ -46,7 +46,7 @@ if (process.env.NODE_ENV === "development") {
 }
 
 const deleteImage = async (filename) => {
-  if (!filename) return;
+  if (!filename) {return;}
   const filePath = path.join(
     __dirname,
     "../../public/uploads/profiles",
@@ -55,7 +55,7 @@ const deleteImage = async (filename) => {
   try {
     await fs.promises.unlink(filePath);
   } catch (err) {
-    if (err.code !== "ENOENT") console.error("Error deleting image:", err);
+    if (err.code !== "ENOENT") {console.error("Error deleting image:", err);}
   }
 };
 

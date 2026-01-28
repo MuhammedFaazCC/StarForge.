@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  if (window.__NAV_INITED__) return;
+  if (window.__NAV_INITED__) {return;}
   window.__NAV_INITED__ = true;
   console.log("JS Loaded");
 

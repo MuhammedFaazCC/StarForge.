@@ -1,17 +1,3 @@
-function togglePassword(fieldId) {
-    const input = document.getElementById(fieldId);
-    const icon = document.querySelector(`#${fieldId}-toggle i`);
-    if (input.type === 'password') {
-        input.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-    } else {
-        input.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
-    }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('signupForm');
     const formError = document.getElementById('formError');
@@ -26,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function clearErrors() {
         if (formError) { formError.style.display = 'none'; formError.textContent = ''; }
-        Object.values(fieldErrors).forEach(el => { if (el) el.textContent = ''; });
+        Object.values(fieldErrors).forEach(el => { if (el) {el.textContent = '';} });
     }
 
     if (form) {
@@ -54,12 +40,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.field && fieldErrors[data.field]) {
                     fieldErrors[data.field].textContent = data.message || 'Invalid input';
                     const field = document.querySelector(`[name="${data.field}"]`);
-                    if (field) field.focus();
+                    if (field) {field.focus();}
                 } else if (formError) {
                     formError.textContent = data.message || 'Registration failed';
                     formError.style.display = 'block';
                 }
-            } catch (err) {
+            } catch {
                 if (formError) {
                     formError.textContent = 'Server error, try again later';
                     formError.style.display = 'block';

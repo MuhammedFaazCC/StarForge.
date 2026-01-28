@@ -63,7 +63,7 @@ const userSession = session({
 // Apply sessions per namespace
 app.use('/admin', adminSession);
 app.use((req, res, next) => {
-  if (req.path.startsWith('/admin')) return next();
+  if (req.path.startsWith('/admin')) {return next();}
   return userSession(req, res, next);
 });
 
@@ -71,7 +71,7 @@ app.use((req, res, next) => {
 app.use(passport.initialize());
 const passportSession = passport.session();
 app.use((req, res, next) => {
-  if (req.path.startsWith('/admin')) return next();
+  if (req.path.startsWith('/admin')) {return next();}
   return passportSession(req, res, next);
 });
 

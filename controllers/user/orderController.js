@@ -3,13 +3,18 @@ const Return = require("../../models/returnSchema");
 const Cart = require("../../models/cartSchema");
 const Product = require("../../models/productSchema");
 const Coupon = require("../../models/couponSchema");
+const Address = require("../../models/addressSchema")
 const mongoose = require('mongoose');
 
 const getCartCount = async (userId) => {
   try {
-    if (!userId) return 0;
-    const cart = await Cart.findOne({ userId });
-    return cart ? cart.items.length : 0;
+    if (!userId) {return 0;}
+    const cart = await Cart.findOne({ userId }).populate("items.productId");
+    if (!cart) {return 0;}
+    cart.items = cart.items.filter(item => item.productId);
+    await cart.save();
+    return cart.items.length;
+
   } catch (error) {
     console.error("Error getting cart count:", error);
     return 0;
@@ -409,7 +414,7 @@ const orderFailure = async (req, res) => {
     const userId = req.session.user._id;
 
     if (order_id) {
-      let existingOrder = await Order.findOne({ 
+      const existingOrder = await Order.findOne({ 
         razorpayOrderId: order_id,
         userId: userId
       });

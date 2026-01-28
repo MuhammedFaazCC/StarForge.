@@ -5,7 +5,34 @@
         </button>
         <div class="logo">StarForge</div>
     </div>
-    <div class="user-info">
-        <span>Admin User</span>
+    <div class="profile-container1">
+            <a id="logout-btn">Logout</a>
     </div>
 </div>
+<script>
+    const logoutBtn = document.getElementById("logout-btn");
+    if (logoutBtn) {
+    logoutBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          title: "Are you sure you want to logout?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#fca120",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Yes, logout",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            window.location.replace("/admin/logout");
+          }
+        });
+      } else {
+        if (confirm("Are you sure you want to logout?")) {
+          window.location.href = "/admin";
+        }
+      }
+    });
+  }
+</script>

@@ -26,7 +26,6 @@ class CategoryFormValidator {
     
     validateName() {
         const nameInput = document.getElementById('name');
-        const nameError = document.getElementById('nameError');
         const name = nameInput.value.trim();
         
         // Clear previous errors
@@ -42,7 +41,7 @@ class CategoryFormValidator {
             return false;
         }
 
-        if (/^[\-\s]+$/.test(name)) {
+        if (/^[-\s]+$/.test(name)) {
             this.showFieldError('name', 'Category name cannot contain only hyphens or spaces');
             return false;
         }
@@ -52,7 +51,7 @@ class CategoryFormValidator {
             return false;
         }
         
-        if (!/^[a-zA-Z0-9\s\-]+$/.test(name)) {
+        if (!/^[a-zA-Z0-9\s-]+$/.test(name)) {
             this.showFieldError('name', 'Category name can only contain letters, numbers, spaces, and hyphens');
             return false;
         }
@@ -200,7 +199,7 @@ class CategoryFormValidator {
     async handleSubmit(e) {
         e.preventDefault();
         
-        if (this.isSubmitting) return;
+        if (this.isSubmitting) {return;}
         
         // Clear previous errors
         this.clearAllErrors();
@@ -244,9 +243,9 @@ class CategoryFormValidator {
                     
                     // Restore form data if provided
                     if (result.formData) {
-                        if (result.formData.name) document.getElementById('name').value = result.formData.name;
-                        if (result.formData.description) document.getElementById('description').value = result.formData.description;
-                        if (result.formData.offer) document.getElementById('offer').value = result.formData.offer;
+                        if (result.formData.name) {document.getElementById('name').value = result.formData.name;}
+                        if (result.formData.description) {document.getElementById('description').value = result.formData.description;}
+                        if (result.formData.offer) {document.getElementById('offer').value = result.formData.offer;}
                         this.updateDescriptionCount();
                     }
                 }

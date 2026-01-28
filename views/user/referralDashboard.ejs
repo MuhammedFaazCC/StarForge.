@@ -6,73 +6,10 @@
     <title>Referral Dashboard - StarForge</title>
     <link rel="stylesheet" href="/css/user/profileDashboard.css">
     <link rel="stylesheet" href="/css/user/navbar-badges.css">
+    <link rel="stylesheet" href="/css/user/referralDashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .referral-card {
-            background: #fca120;
-            color: white;
-            border-radius: 15px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-        .stats-card {
-            background: white;
-            border-radius: 15px;
-            padding: 1.5rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            text-align: center;
-            margin-bottom: 1rem;
-        }
-        .stats-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-        .referral-link-box {
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            padding: 1rem;
-            margin-top: 1rem;
-        }
-        .copy-btn {
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            border-radius: 5px;
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .copy-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-        .reward-card {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-left: 4px solid #28a745;
-        }
-        .social-share-btn {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            margin: 0.25rem;
-            border-radius: 25px;
-            text-decoration: none;
-            color: white;
-            transition: all 0.3s ease;
-        }
-        .social-share-btn:hover {
-            transform: translateY(-2px);
-            color: white;
-        }
-        .whatsapp { background-color: #25D366; }
-        .facebook { background-color: #1877F2; }
-        .twitter { background-color: #1DA1F2; }
-        .telegram { background-color: #0088CC; }
-        .email { background-color: #EA4335; }
-    </style>
 </head>
 <body>
     <%- include('../partials/user/navbar', { minimalNavbar: false }) %>
@@ -270,36 +207,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/user/landingPage.js"></script>
-    <script>
-        function copyReferralLink() {
-            const linkInput = document.getElementById('referralLink');
-            linkInput.select();
-            linkInput.setSelectionRange(0, 99999);
-            navigator.clipboard.writeText(linkInput.value).then(() => {
-                showToast('Referral link copied to clipboard!');
-            });
-        }
-
-        function copyReferralCode() {
-            const codeInput = document.getElementById('referralCode');
-            codeInput.select();
-            codeInput.setSelectionRange(0, 99999);
-            navigator.clipboard.writeText(codeInput.value).then(() => {
-                showToast('Referral code copied to clipboard!');
-            });
-        }
-
-        function showToast(message) {
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'success',
-                title: message,
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true
-            });
-        }
-    </script>
+    <script src="/js/user/referralDashboard.js"></script>
 </body>
 </html>

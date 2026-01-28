@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 function toggleCustomDates() {
     const dateFilter = document.getElementById('dateFilter').value;
     const customDates = document.getElementById('customDates');
@@ -102,7 +103,7 @@ async function updateChart() {
 
 function renderChart(data, dateFormat) {
     const ctx = document.getElementById('salesChart');
-    if (!ctx) return;
+    if (!ctx) {return;}
     
     const context = ctx.getContext('2d');
     
@@ -373,10 +374,6 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-function printReport() {
-    window.print();
-}
-
 const printStyles = `
     @media print {
         .export-buttons, .filters-section, .chart-section, .pagination {
@@ -400,3 +397,4 @@ const printStyles = `
 const styleSheet = document.createElement('style');
 styleSheet.textContent = printStyles;
 document.head.appendChild(styleSheet);
+

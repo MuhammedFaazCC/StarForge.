@@ -19,14 +19,14 @@ function initializeSidebarToggle() {
                 if (sidebarToggled) {
                     sidePanel.classList.remove('hidden');
                     sidePanel.classList.add('visible');
-                    if (backdrop) backdrop.classList.add('visible');
+                    if (backdrop) {backdrop.classList.add('visible');}
                     toggleBtn.innerHTML = '<i class="fas fa-times"></i>';
                     toggleBtn.setAttribute('aria-label', 'Close Sidebar');
                     toggleBtn.setAttribute('aria-expanded', 'true');
                 } else {
                     sidePanel.classList.add('hidden');
                     sidePanel.classList.remove('visible');
-                    if (backdrop) backdrop.classList.remove('visible');
+                    if (backdrop) {backdrop.classList.remove('visible');}
                     toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
                     toggleBtn.setAttribute('aria-label', 'Open Sidebar');
                     toggleBtn.setAttribute('aria-expanded', 'false');
@@ -73,7 +73,7 @@ function initializeSidebarNavigation() {
     const toggleBtn = document.getElementById('sidebarToggle');
     
     sidebarLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
+        link.addEventListener('click', function() {
             
             sidebarLinks.forEach(l => l.classList.remove('active'));
             this.classList.add('active');
@@ -118,7 +118,7 @@ function handleResponsiveLayout() {
                     sidePanel.classList.add('hidden');
                 }
             }
-            if (backdrop && !sidebarToggled) backdrop.classList.remove('visible');
+            if (backdrop && !sidebarToggled) {backdrop.classList.remove('visible');}
             if (mainContent) {
                 mainContent.classList.add('mobile');
             }
@@ -129,7 +129,7 @@ function handleResponsiveLayout() {
             if (sidePanel) {
                 sidePanel.classList.remove('mobile', 'hidden');
             }
-            if (backdrop) backdrop.classList.remove('visible');
+            if (backdrop) {backdrop.classList.remove('visible');}
             if (mainContent) {
                 mainContent.classList.remove('mobile');
             }
@@ -145,7 +145,7 @@ function handleResponsiveLayout() {
 }
 
 function showButtonLoading(button, loadingText = 'Loading...') {
-    if (!button) return;
+    if (!button) {return;}
     
     button.disabled = true;
     button.dataset.originalText = button.innerHTML;
@@ -153,7 +153,7 @@ function showButtonLoading(button, loadingText = 'Loading...') {
 }
 
 function hideButtonLoading(button) {
-    if (!button) return;
+    if (!button) {return;}
     
     button.disabled = false;
     if (button.dataset.originalText) {
@@ -266,11 +266,6 @@ function handleAjaxError(error, defaultMessage = 'An error occurred') {
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeAdminCommon();
-});
-
-document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState === 'visible') {
-    }
 });
 
 window.AdminCommon = {

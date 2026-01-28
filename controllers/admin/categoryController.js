@@ -4,12 +4,12 @@ const Product = require("../../models/productSchema");
 const getAllCategories = async (req, res) => {
     try {
         const { search = '', sort = 'desc', page = 1 } = req.query;
-        let sortOption = sort;
-        let query = { isDeleted: false };
+        const sortOption = sort;
+        const query = { isDeleted: false };
         if (search) {
             query.name = { $regex: search, $options: 'i' };
         }
-        let sortQuery = { createdAt: -1 };
+        const sortQuery = { createdAt: -1 };
 
         const limit = 6;
         const categories = await Category.find(query)
@@ -57,7 +57,7 @@ const validateCategoryName = (name) => {
         errors.push("Category name cannot exceed 50 characters");
     }
     
-    if (!/^[a-zA-Z0-9\s\-]+$/.test(trimmedName)) {
+    if (!/^[a-zA-Z0-9\s-]+$/.test(trimmedName)) {
         errors.push("Category name can only contain letters, numbers, spaces, and hyphens");
     }
     
@@ -326,7 +326,7 @@ const toggleCategoryStatus = async (req, res) => {
     try {
         const { id } = req.body;
         const category = await Category.findById(id);
-        if (!category) return res.status(404).json({ status: "error", message: "Category not found" });
+        if (!category) {return res.status(404).json({ status: "error", message: "Category not found" });}
 
         const newStatus = !category.isActive;
         category.isActive = newStatus;
@@ -362,7 +362,7 @@ const renderAddOfferForm = async (req, res) => {
     try {
         const { id } = req.params;
         const category = await Category.findById(id);
-        if (!category) return res.redirect("/admin/categories");
+        if (!category) {return res.redirect("/admin/categories");}
 
         res.render("addOffer", { category });
     } catch (err) {
@@ -380,7 +380,7 @@ if (isNaN(parsedOffer) || parsedOffer < 0 || parsedOffer > 50) {
 return res.status(400).send("Offer percentage must be a number between 0 and 50");
 }
 const category = await Category.findById(id);
-if (!category) return res.status(404).send("Category not found");
+if (!category) {return res.status(404).send("Category not found");}
 
 
 category.offer = parsedOffer;
@@ -388,7 +388,7 @@ await category.save();
 
 
 const products = await Product.find({ category: id, isDeleted: false });
-for (let product of products) {
+for (const product of products) {
 const effectiveOffer = Math.max(product.offer || 0, parsedOffer);
 product.categoryOffer = parsedOffer;
 product.salesPrice = effectiveOffer > 0

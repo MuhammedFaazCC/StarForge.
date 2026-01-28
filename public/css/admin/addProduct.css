@@ -366,6 +366,10 @@ button[type="submit"]:active {
   transform: translateY(0);
 }
 
+.mobile-back {
+      display: block;
+    }
+
 footer p {
   width: 100%;
   padding: 10px;

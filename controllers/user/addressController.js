@@ -13,6 +13,7 @@ const getAddressList = async (req, res) => {
   try {
     const addresses = await Address.find({ userId: user._id }).sort({ createdAt: -1 });
 
+    // eslint-disable-next-line no-undef
     const cartCount = typeof getCartCount === "function" ? await getCartCount(user._id) : 0;
 
     res.render("profileAddressList", { user, addresses, error, success, cartCount });
@@ -290,7 +291,6 @@ const selectAddress = async (req, res) => {
     }
 
     const { addressId } = req.body;
-    const userId = req.session.user._id;
 
       if (!addressId) {
       return res.status(400).json({ success: false, message: "Address ID is required" });

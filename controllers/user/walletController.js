@@ -5,9 +5,13 @@ const crypto = require("crypto");
 
 const getCartCount = async (userId) => {
   try {
-    if (!userId) return 0;
-    const cart = await Cart.findOne({ userId });
-    return cart ? cart.items.length : 0;
+    if (!userId) {return 0;}
+    const cart = await Cart.findOne({ userId }).populate("items.productId");
+    if (!cart) {return 0;}
+    cart.items = cart.items.filter(item => item.productId);
+    await cart.save();
+    return cart.items.length;
+
   } catch (error) {
     console.error("Error getting cart count:", error);
     return 0;
@@ -52,7 +56,7 @@ const getWallet = async (req, res) => {
 const updateWallet = async (userId, amount, description, type) => {
   try {
     const user = await User.findById(userId);
-    if (!user) throw new Error("User not found");
+    if (!user) {throw new Error("User not found");}
     
     if (!user.wallet) {
       user.wallet = { balance: 0, transactions: [] };
@@ -141,10 +145,10 @@ const refundToWallet = async (order, reason = "Refund") => {
       order.paymentMethod === "Online" ||
       (order.paymentMethod === "COD" && order.status === "Returned");
 
-    if (!eligibleForRefund) return;
+    if (!eligibleForRefund) {return;}
 
     const refundAmount = order.totalAmount;
-    if (!refundAmount || refundAmount <= 0) return;
+    if (!refundAmount || refundAmount <= 0) {return;}
 
     await updateWallet(
       order.userId,

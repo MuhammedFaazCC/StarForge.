@@ -1,9 +1,25 @@
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
 const User = require("../../models/userSchema");
+const Cart = require("../../models/cartSchema");
 
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+const getCartCount = async (userId) => {
+  try {
+    if (!userId) {return 0;}
+    const cart = await Cart.findOne({ userId }).populate("items.productId");
+    if (!cart) {return 0;}
+    cart.items = cart.items.filter(item => item.productId);
+    await cart.save();
+    return cart.items.length;
+
+  } catch (error) {
+    console.error("Error getting cart count:", error);
+    return 0;
+  }
 };
 
 const sendOTP = async (email, otp) => {
@@ -46,7 +62,7 @@ const forgotPasswordPage = async (req, res) => {
     const error = req.session.error || null;
     req.session.error = null;
     return res.render("forgotPassword", { error, success: null });
-  } catch (error) {
+  } catch {
     console.log("Page not found");
     res.status(500).send("Server error");
   }
@@ -176,7 +192,7 @@ const resetPasswordGet = async (req, res) => {
     const error = req.session.error || null;
     req.session.error = null;
     res.render("resetPassword", { error });
-  } catch (error) {
+  } catch {
     console.log("Page not found");
     res.status(500).send("Server error");
   }

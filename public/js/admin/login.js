@@ -1,15 +1,3 @@
-function togglePassword() {
-  const passwordInput = document.getElementById("password");
-  const toggleText = document.querySelector(".toggle-password");
-  if (passwordInput.type === "password") {
-    passwordInput.type = "text";
-    toggleText.textContent = "Hide";
-  } else {
-    passwordInput.type = "password";
-    toggleText.textContent = "Show";
-  }
-}
-
 function validateEmail(email) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
@@ -115,7 +103,7 @@ function addInputValidation() {
 
 document.addEventListener('DOMContentLoaded', function() {
   const form = document.querySelector('form');
-  if (form) form.addEventListener('submit', validateForm);
+  if (form) {form.addEventListener('submit', validateForm);}
 
   addInputValidation();
 

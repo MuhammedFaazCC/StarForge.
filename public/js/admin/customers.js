@@ -5,9 +5,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const paginationContainer = document.getElementById("pagination");
 
     let customers = [];
-    const rowsPerPage = 8;
     let currentPage = 1;
-    let currentSort = {
+    const currentSort = {
         field: 'createdAt',
         order: 'desc'
     };
@@ -86,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     confirmButtonText: `Yes, ${action}!`
                 });
 
-                if (!result.isConfirmed) return;
+                if (!result.isConfirmed) {return;}
 
                 try {
                     const res = await fetch(`/admin/customers/${customerId}/${action}`, {
@@ -189,7 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
     function highlightSearchTerm(text, searchTerm) {
-        if (!searchTerm || !text) return text;
+        if (!searchTerm || !text) {return text;}
         
         const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
         return text.replace(regex, '<mark>$1</mark>');
@@ -310,7 +309,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderPagination(paginationData) {
         paginationContainer.innerHTML = '';
         
-        if (!paginationData || paginationData.totalPages <= 1) return;
+        if (!paginationData || paginationData.totalPages <= 1) {return;}
         
         const { currentPage: page, totalPages } = paginationData;
         currentPage = page;
@@ -320,7 +319,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         
         let startPage = Math.max(1, currentPage - 2);
-        let endPage = Math.min(totalPages, startPage + 4);
+        const endPage = Math.min(totalPages, startPage + 4);
         
         if (endPage - startPage < 4) {
             startPage = Math.max(1, endPage - 4);

@@ -17,81 +17,14 @@ async function getBrowser() {
   return browser;
 }
 
-function buildDateRange(query) {
-  const { range, year, month, startDate, endDate } = query;
-  const now = new Date();
-
-  let start, end, groupBy;
-
-  switch (range) {
-    case 'year':
-      start = new Date(year, 0, 1);
-      end = new Date(year, 11, 31, 23, 59, 59);
-      groupBy = { $month: '$createdAt' };
-      break;
-
-    case 'month':
-      start = new Date(year, month, 1);
-      end = new Date(year, Number(month) + 1, 0, 23, 59, 59);
-      groupBy = { $dayOfMonth: '$createdAt' };
-      break;
-
-    case 'custom':
-      start = new Date(startDate);
-      end = new Date(endDate);
-      groupBy = { $dayOfMonth: '$createdAt' };
-      break;
-
-    default:
-      start = new Date(now.setDate(now.getDate() - 30));
-      end = new Date();
-      groupBy = { $dayOfMonth: '$createdAt' };
-  }
-
-  return { start, end, groupBy };
-}
-
-function validateChartQuery(query) {
-    const { range, year, month, startDate, endDate } = query;
-    const now = new Date();
-    const currentYear = now.getFullYear();
-
-    if (!['day', 'week', 'month', 'year', 'custom'].includes(range)) {
-        throw new Error('Invalid range');
-    }
-
-    if (range === 'year' || range === 'month') {
-        if (!year || year < 2000 || year > currentYear) {
-            throw new Error('Invalid year');
-        }
-    }
-
-    if (range === 'month') {
-        if (month === undefined || month < 0 || month > 11) {
-            throw new Error('Invalid month');
-        }
-    }
-
-    if (range === 'custom') {
-        if (!startDate || !endDate) {
-            throw new Error('Start and end date required');
-        }
-
-        const s = new Date(startDate);
-        const e = new Date(endDate);
-
-        if (s > e) throw new Error('Start date after end date');
-        if (e > now) throw new Error('Future dates not allowed');
-
-        const diffDays = (e - s) / (1000 * 60 * 60 * 24);
-        if (diffDays > 365) throw new Error('Date range too large');
-    }
-}
-
 const loginPage = async (req, res) => {
   try {
+
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+
     if (req.session.admin && req.session.admin._id) {
-      console.log("Admin already logged in, redirecting to dashboard");
       return res.redirect("/admin/dashboard");
     }
     
@@ -159,19 +92,28 @@ const login = async (req, res) => {
   }
 };
 
-const logout = async (req, res) => {
+const logout = (req, res) => {
   try {
+
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+
     delete req.session.admin;
+
     req.session.destroy((err) => {
       if (err) {
         console.error("Error destroying admin session during logout:", err);
+        return res.redirect("/admin/dashboard");
       }
-      res.clearCookie("admin_session");
-      return res.redirect("/admin");
+
+      res.clearCookie("connect.sid");
+      return res.status(302).redirect("/admin");
     });
+
   } catch (error) {
     console.error("Error during logout:", error);
-    res.status(500).send("Server error");
+    return res.status(500).send("Server error");
   }
 };
 
@@ -211,7 +153,9 @@ const getAdminOrdersPage = async (req, res) => {
         try {
           const { Types } = require('mongoose');
           orConditions.push({ _id: new Types.ObjectId(trimmed) });
-        } catch {}
+        } catch (err) {
+          console.error("Invalid ObjectId in admin search:", err);
+        }
       }
 
       // Search by status or payment method text
@@ -290,7 +234,7 @@ const getOrderDetails = async (req, res) => {
         }
       }
 
-    if (!order) return res.status(404).send('Order not found');
+    if (!order) {return res.status(404).send('Order not found');}
 
     res.render('adminOrderDetails', { order });
   } catch (error) {
@@ -310,7 +254,7 @@ const getInvoicePDF = async (req, res) => {
         select: 'name brand mainImage price salePrice offer',
         options: { strictPopulate: false }
       });
-    if (!order) return res.status(404).send("Order not found");
+    if (!order) {return res.status(404).send("Order not found");}
 
     const filePath = path.join(__dirname, '../../views/admin/invoicePdf.ejs');
 

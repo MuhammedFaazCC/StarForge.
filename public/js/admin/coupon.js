@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const toggleBtn = document.querySelector(".toggle-btn");
 const sidePanel = document.querySelector(".side-panel");
 const mainContent = document.querySelector(".main-content");
@@ -115,194 +116,12 @@ style.textContent = `
   }
 `;
 document.head.appendChild(style);
-
-// Confirmation Modal Functions
-let currentCouponId = null;
-let currentCouponCode = null;
-
-function showConfirmationModal(couponId, couponCode) {
-  currentCouponId = couponId;
-  currentCouponCode = couponCode;
-  
-  const modal = document.getElementById('confirmation-modal');
-  const message = document.getElementById('confirmation-message');
-  
-  message.textContent = `Are you sure you want to delete the coupon "${couponCode}"? This action cannot be undone.`;
-  modal.classList.add('show');
-  
-  // Add event listener to confirm button
-  const confirmBtn = document.getElementById('confirm-delete-btn');
-  confirmBtn.onclick = () => confirmDelete();
-}
-
 function hideConfirmationModal() {
   const modal = document.getElementById('confirmation-modal');
   modal.classList.remove('show');
   currentCouponId = null;
   currentCouponCode = null;
 }
-
-function confirmDelete() {
-  if (!currentCouponId) return;
-  
-  const confirmBtn = document.getElementById('confirm-delete-btn');
-  const originalText = confirmBtn.textContent;
-  
-  // Show loading state
-  confirmBtn.disabled = true;
-  confirmBtn.textContent = 'Deleting...';
-  
-  // Perform the actual deletion
-  performCouponDeletion(currentCouponId, currentCouponCode)
-    .finally(() => {
-      // Reset button state
-      confirmBtn.disabled = false;
-      confirmBtn.textContent = originalText;
-      hideConfirmationModal();
-    });
-}
-
-async function performCouponDeletion(couponId, couponCode) {
-  try {
-    console.log(`Attempting to delete coupon: ${couponCode} (ID: ${couponId})`);
-    
-    const response = await fetch(`/admin/coupons/delete/${couponId}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    console.log(`Response status: ${response.status}`);
-    
-    // Parse the response data regardless of status
-    let data;
-    try {
-      data = await response.json();
-      console.log('Response data:', data);
-    } catch (parseError) {
-      console.error('Failed to parse response JSON:', parseError);
-      throw new Error('Invalid server response');
-    }
-
-    if (response.ok && data.success) {
-      // Success case - show notification and remove row from table
-      notificationManager.success(data.message || `Coupon "${couponCode}" deleted successfully!`);
-      
-      // Remove the coupon row from the table
-      const deleteButton = document.querySelector(`button[onclick="deleteCoupon('${couponId}')"]`);
-      if (deleteButton) {
-        const row = deleteButton.closest('tr');
-        if (row) {
-          row.remove();
-        }
-      }
-    } else if (data.canSoftDelete) {
-      // Show options for soft delete or force delete
-      showDeleteOptionsModal(couponId, couponCode, data.message, data.usageCount);
-    } else {
-      // Error case - show the specific error message from server
-      const errorMessage = data.message || getDefaultErrorMessage(response.status);
-      notificationManager.error(errorMessage);
-    }
-  } catch (error) {
-    console.error("Error deleting coupon:", error);
-    
-    // Handle network errors or other exceptions
-    let errorMessage = "Failed to delete coupon. Please check your connection and try again.";
-    
-    if (error.message === 'Invalid server response') {
-      errorMessage = "Server returned an invalid response. Please try again.";
-    } else if (error.message.includes('fetch')) {
-      errorMessage = "Network error. Please check your connection and try again.";
-    }
-    
-    notificationManager.error(errorMessage);
-  }
-}
-
-async function performSoftDelete(couponId, couponCode) {
-  try {
-    console.log(`Attempting to soft delete coupon: ${couponCode} (ID: ${couponId})`);
-    
-    const response = await fetch(`/admin/coupons/soft-delete/${couponId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    console.log(`Soft delete response status: ${response.status}`);
-    
-    let data;
-    try {
-      data = await response.json();
-      console.log('Soft delete response data:', data);
-    } catch (parseError) {
-      console.error('Failed to parse soft delete response JSON:', parseError);
-      throw new Error('Invalid server response');
-    }
-
-    if (response.ok && data.success) {
-      // Success case - show notification and update UI
-      notificationManager.success(data.message || `Coupon "${couponCode}" deactivated successfully!`);
-      
-      // Update the coupon row in the table
-      updateCouponRowStatus(couponId, 'Inactive');
-    } else {
-      const errorMessage = data.message || getDefaultErrorMessage(response.status);
-      notificationManager.error(errorMessage);
-    }
-  } catch (error) {
-    console.error("Error soft deleting coupon:", error);
-    notificationManager.error("Failed to deactivate coupon. Please try again.");
-  }
-}
-
-async function performForceDelete(couponId, couponCode) {
-  try {
-    console.log(`Attempting to force delete coupon: ${couponCode} (ID: ${couponId})`);
-    
-    const response = await fetch(`/admin/coupons/delete/${couponId}?force=true`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    console.log(`Force delete response status: ${response.status}`);
-    
-    let data;
-    try {
-      data = await response.json();
-      console.log('Force delete response data:', data);
-    } catch (parseError) {
-      console.error('Failed to parse force delete response JSON:', parseError);
-      throw new Error('Invalid server response');
-    }
-
-    if (response.ok && data.success) {
-      // Success case - show notification and remove row from table
-      notificationManager.success(data.message || `Coupon "${couponCode}" permanently deleted!`);
-      
-      // Remove the coupon row from the table
-      const deleteButton = document.querySelector(`button[onclick="deleteCoupon('${couponId}')"]`);
-      if (deleteButton) {
-        const row = deleteButton.closest('tr');
-        if (row) {
-          row.remove();
-        }
-      }
-    } else {
-      const errorMessage = data.message || getDefaultErrorMessage(response.status);
-      notificationManager.error(errorMessage);
-    }
-  } catch (error) {
-    console.error("Error force deleting coupon:", error);
-    notificationManager.error("Failed to permanently delete coupon. Please try again.");
-  }
-}
-
 function getDefaultErrorMessage(status) {
   switch (status) {
     case 400:
@@ -314,19 +133,6 @@ function getDefaultErrorMessage(status) {
     default:
       return "Failed to delete coupon. Please try again.";
   }
-}
-
-// Main delete function called by the delete buttons
-function deleteCoupon(couponId) {
-  // Get the coupon code from the table row
-  const deleteButton = document.querySelector(`button[onclick="deleteCoupon('${couponId}')"]`);
-  const row = deleteButton.closest('tr');
-  const couponCode = row.cells[0].textContent.trim(); // First cell contains the coupon code
-  
-  console.log(`Delete requested for coupon: ${couponCode} (ID: ${couponId})`);
-  
-  // Show confirmation modal instead of browser confirm
-  showConfirmationModal(couponId, couponCode);
 }
 
 // Create Coupon Form Handler
@@ -393,30 +199,6 @@ if (createCouponForm) {
   });
 }
 
-// Delete Options Modal Functions
-let deleteOptionsCouponId = null;
-let deleteOptionsCouponCode = null;
-
-function showDeleteOptionsModal(couponId, couponCode, message, usageCount) {
-  deleteOptionsCouponId = couponId;
-  deleteOptionsCouponCode = couponCode;
-  
-  // Create the modal if it doesn't exist
-  let modal = document.getElementById('delete-options-modal');
-  if (!modal) {
-    modal = createDeleteOptionsModal();
-    document.body.appendChild(modal);
-  }
-  
-  const messageElement = document.getElementById('delete-options-message');
-  const usageInfo = document.getElementById('delete-options-usage');
-  
-  messageElement.textContent = message;
-  usageInfo.textContent = `This coupon has been used ${usageCount} time(s). Choose an option:`;
-  
-  modal.classList.add('show');
-}
-
 function hideDeleteOptionsModal() {
   const modal = document.getElementById('delete-options-modal');
   if (modal) {
@@ -424,74 +206,6 @@ function hideDeleteOptionsModal() {
   }
   deleteOptionsCouponId = null;
   deleteOptionsCouponCode = null;
-}
-
-function createDeleteOptionsModal() {
-  const modal = document.createElement('div');
-  modal.id = 'delete-options-modal';
-  modal.className = 'confirmation-modal';
-  
-  modal.innerHTML = `
-    <div class="confirmation-content" style="max-width: 500px;">
-      <h3>Coupon Deletion Options</h3>
-      <p id="delete-options-message"></p>
-      <p id="delete-options-usage" style="font-weight: 500; color: #374151; margin-bottom: 20px;"></p>
-      
-      <div class="delete-options">
-        <div class="delete-option">
-          <h4>Deactivate (Recommended)</h4>
-          <p>Sets coupon status to "Inactive". Preserves usage history and order data. Coupon cannot be used by customers.</p>
-          <button type="button" class="confirmation-btn soft-delete" onclick="confirmSoftDelete()">Deactivate Coupon</button>
-        </div>
-        
-        <div class="delete-option">
-          <h4>Permanently Delete</h4>
-          <p>Completely removes the coupon and all usage history. This action cannot be undone.</p>
-          <button type="button" class="confirmation-btn force-delete" onclick="confirmForceDelete()">Permanently Delete</button>
-        </div>
-      </div>
-      
-      <div class="confirmation-actions" style="margin-top: 25px;">
-        <button type="button" class="confirmation-btn cancel" onclick="hideDeleteOptionsModal()">Cancel</button>
-      </div>
-    </div>
-  `;
-  
-  return modal;
-}
-
-function confirmSoftDelete() {
-  if (!deleteOptionsCouponId) return;
-  
-  const softDeleteBtn = document.querySelector('.soft-delete');
-  const originalText = softDeleteBtn.textContent;
-  
-  softDeleteBtn.disabled = true;
-  softDeleteBtn.textContent = 'Deactivating...';
-  
-  performSoftDelete(deleteOptionsCouponId, deleteOptionsCouponCode)
-    .finally(() => {
-      softDeleteBtn.disabled = false;
-      softDeleteBtn.textContent = originalText;
-      hideDeleteOptionsModal();
-    });
-}
-
-function confirmForceDelete() {
-  if (!deleteOptionsCouponId) return;
-  
-  const forceDeleteBtn = document.querySelector('.force-delete');
-  const originalText = forceDeleteBtn.textContent;
-  
-  forceDeleteBtn.disabled = true;
-  forceDeleteBtn.textContent = 'Deleting...';
-  
-  performForceDelete(deleteOptionsCouponId, deleteOptionsCouponCode)
-    .finally(() => {
-      forceDeleteBtn.disabled = false;
-      forceDeleteBtn.textContent = originalText;
-      hideDeleteOptionsModal();
-    });
 }
 
 // Close modal when clicking outside
@@ -527,7 +241,7 @@ async function reactivateCoupon(couponId) {
   
   // Show confirmation for reactivation
   const confirmed = confirm(`Are you sure you want to reactivate the coupon "${couponCode}"?`);
-  if (!confirmed) return;
+  if (!confirmed) {return;}
   
   const originalText = reactivateButton.textContent;
   
@@ -587,14 +301,14 @@ async function reactivateCoupon(couponId) {
 function updateCouponRowStatus(couponId, newStatus) {
   // Find the button that corresponds to this coupon
   const button = document.querySelector(`button[onclick*="'${couponId}'"]`);
-  if (!button) return;
+  if (!button) {return;}
   
   const row = button.closest('tr');
-  if (!row) return;
+  if (!row) {return;}
   
   // Find the status cell (assuming it's the 4th column based on typical table structure)
   const statusCell = row.cells[3]; // Adjust index if needed
-  if (!statusCell) return;
+  if (!statusCell) {return;}
   
   // Update the status badge
   const statusBadge = statusCell.querySelector('.status');
@@ -609,7 +323,7 @@ function updateCouponRowStatus(couponId, newStatus) {
   
   // Update the action buttons based on new status
   const actionsCell = row.cells[4]; // Assuming actions are in the 5th column
-  if (!actionsCell) return;
+  if (!actionsCell) {return;}
   
   if (newStatus === 'Inactive') {
     // Show reactivate button, hide delete button temporarily
@@ -645,24 +359,11 @@ function updateCouponRowStatus(couponId, newStatus) {
   }
 }
 
-// Add Coupon Modal Functions
-function openAddCouponModal() {
-  const modal = document.getElementById('add-coupon-modal');
-  if (modal) {
-    modal.style.display = 'flex';
-    // Clear form and errors
-    clearModalForm();
-    // Set minimum date to today
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('modal-expiryDate').setAttribute('min', today);
-  }
-}
-
 const addMaxAmountInput = document.getElementById("modal-maxAmount");
 const addOrderMaxAmountInput = document.getElementById("modal-orderMaxAmount");
 
 function enforceExclusiveAddFields() {
-  if (!addMaxAmountInput || !addOrderMaxAmountInput) return;
+  if (!addMaxAmountInput || !addOrderMaxAmountInput) {return;}
 
   const info = document.getElementById("maxRuleInfo");
 
@@ -918,140 +619,6 @@ document.addEventListener('click', (e) => {
     closeEditCouponModal();
   }
 });
-
-// Edit Coupon Modal Functions
-async function openEditCouponModal(couponId) {
-  try {
-    // Fetch coupon data
-    const response = await fetch(`/admin/coupons/${couponId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch coupon data');
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      notificationManager.error(data.message || 'Failed to fetch coupon data');
-      return;
-    }
-
-    const coupon = data.coupon;
-    
-    // Pre-fill the form with coupon data
-    document.getElementById('edit-coupon-id').value = coupon._id;
-    document.getElementById('edit-modal-code').value = coupon.code;
-    document.getElementById('edit-modal-discount').value = coupon.discount;
-    
-    // Format date for input field (YYYY-MM-DD)
-    const expiryDate = new Date(coupon.expiryDate);
-    const formattedDate = expiryDate.toISOString().split('T')[0];
-    document.getElementById('edit-modal-expiryDate').value = formattedDate;
-    
-    document.getElementById('edit-modal-usageLimit').value = coupon.usageLimit;
-    document.getElementById('edit-modal-minimumAmount').value = coupon.minimumAmount || '';
-
-    document.getElementById('edit-modal-orderMaxAmount').value = coupon.orderMaxAmount || '';
-
-    document.getElementById('edit-modal-maxAmount').value = coupon.maxAmount || '';
-
-    /* ======= EXCLUSIVE MAX FIELDS (Edit Coupon Modal) ======= */
-    const editMaxAmountInput = document.getElementById("edit-modal-maxAmount");
-    const editOrderMaxAmountInput = document.getElementById("edit-modal-orderMaxAmount");
-
-    function enforceExclusiveEditFields() {
-  if (!editMaxAmountInput || !editOrderMaxAmountInput) return;
-
-  const info = document.getElementById("edit-maxRuleInfo"); // Separate message for Edit modal
-
-  function updateMessage() {
-    if (editMaxAmountInput.value.trim() !== "") {
-      info.textContent =
-        "Maximum Discount Amount is active. Maximum Order Amount has been disabled.";
-    } else if (editOrderMaxAmountInput.value.trim() !== "") {
-      info.textContent =
-        "Maximum Order Amount is active. Maximum Discount Amount has been disabled.";
-    } else {
-      info.textContent =
-        "You can set either “Maximum Discount Amount” or “Maximum Order Amount”, but not both.";
-    }
-  }
-
-  // Initial cleanup of classes + tooltips
-  editMaxAmountInput.classList.remove("exclusive-disabled");
-  editOrderMaxAmountInput.classList.remove("exclusive-disabled");
-  editMaxAmountInput.removeAttribute("title");
-  editOrderMaxAmountInput.removeAttribute("title");
-
-  // Apply pre-filled state logic
-  if (editMaxAmountInput.value.trim() !== "") {
-    editOrderMaxAmountInput.disabled = true;
-    editOrderMaxAmountInput.classList.add("exclusive-disabled");
-    editOrderMaxAmountInput.title =
-      "Disabled because Maximum Discount Amount is set.";
-  } else if (editOrderMaxAmountInput.value.trim() !== "") {
-    editMaxAmountInput.disabled = true;
-    editMaxAmountInput.classList.add("exclusive-disabled");
-    editMaxAmountInput.title =
-      "Disabled because Maximum Order Amount is set.";
-  } else {
-    editMaxAmountInput.disabled = false;
-    editOrderMaxAmountInput.disabled = false;
-  }
-
-  // When editing maxAmount
-  editMaxAmountInput.addEventListener("input", () => {
-    if (editMaxAmountInput.value.trim() !== "") {
-      editOrderMaxAmountInput.value = "";
-      editOrderMaxAmountInput.disabled = true;
-      editOrderMaxAmountInput.classList.add("exclusive-disabled");
-      editOrderMaxAmountInput.title =
-        "Disabled because Maximum Discount Amount is set.";
-    } else {
-      editOrderMaxAmountInput.disabled = false;
-      editOrderMaxAmountInput.classList.remove("exclusive-disabled");
-      editOrderMaxAmountInput.removeAttribute("title");
-    }
-    updateMessage();
-  });
-
-  // When editing orderMaxAmount
-  editOrderMaxAmountInput.addEventListener("input", () => {
-    if (editOrderMaxAmountInput.value.trim() !== "") {
-      editMaxAmountInput.value = "";
-      editMaxAmountInput.disabled = true;
-      editMaxAmountInput.classList.add("exclusive-disabled");
-      editMaxAmountInput.title =
-        "Disabled because Maximum Order Amount is set.";
-    } else {
-      editMaxAmountInput.disabled = false;
-      editMaxAmountInput.classList.remove("exclusive-disabled");
-      editMaxAmountInput.removeAttribute("title");
-    }
-    updateMessage();
-  });
-
-  updateMessage(); // Set initial message
-}
-
-enforceExclusiveEditFields();
-
-
-
-    // Clear any previous errors
-    clearEditModalErrors();
-    
-    // Show the modal
-    document.getElementById('edit-coupon-modal').style.display = 'flex';
-  } catch (error) {
-    console.error('Error opening edit modal:', error);
-    notificationManager.error('Failed to open edit modal');
-  }
-}
 
 function closeEditCouponModal() {
   document.getElementById('edit-coupon-modal').style.display = 'none';

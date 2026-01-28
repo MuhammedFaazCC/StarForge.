@@ -256,8 +256,8 @@ async function handleWishlistIconClick(e) {
           checkEmptyWishlist();
         }, 300);
       }
-      if (window.updateNavbarCounts && typeof data.wishlistCount !== 'undefined') {
-        window.updateNavbarCounts({ wishlistCount: data.wishlistCount });
+      if (window.updateNavbarCounts && typeof e.wishlistCount !== 'undefined') {
+        window.updateNavbarCounts({ wishlistCount: e.wishlistCount });
       }
     } else {
       throw new Error('Failed to remove from wishlist');
@@ -314,8 +314,3 @@ function checkEmptyWishlist() {
     }, 400);
   }
 }
-
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) {
-  }
-});

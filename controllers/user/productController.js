@@ -59,8 +59,8 @@ const getAllProduct = async (req, res) => {
     const maxPrice = parseInt(req.query.maxPrice);
     if (!isNaN(minPrice) || !isNaN(maxPrice)) {
       const salePriceFilter = {};
-      if (!isNaN(minPrice)) salePriceFilter.$gte = minPrice;
-      if (!isNaN(maxPrice)) salePriceFilter.$lte = maxPrice;
+      if (!isNaN(minPrice)) {salePriceFilter.$gte = minPrice;}
+      if (!isNaN(maxPrice)) {salePriceFilter.$lte = maxPrice;}
       if (!isNaN(minPrice) && !isNaN(maxPrice) && minPrice > maxPrice) {
         salePriceFilter.$gte = maxPrice;
         salePriceFilter.$lte = minPrice;
@@ -256,16 +256,16 @@ const getAllProduct = async (req, res) => {
       const queryParts = [];
 
       if (finalParams.category !== "all")
-        queryParts.push(`category=${encodeURIComponent(finalParams.category)}`);
+        {queryParts.push(`category=${encodeURIComponent(finalParams.category)}`);}
       if (parseInt(finalParams.minPrice) > priceRange.min)
-        queryParts.push(`minPrice=${finalParams.minPrice}`);
+        {queryParts.push(`minPrice=${finalParams.minPrice}`);}
       if (parseInt(finalParams.maxPrice) < priceRange.max)
-        queryParts.push(`maxPrice=${finalParams.maxPrice}`);
+        {queryParts.push(`maxPrice=${finalParams.maxPrice}`);}
       if (finalParams.sort !== "latest")
-        queryParts.push(`sort=${finalParams.sort}`);
+        {queryParts.push(`sort=${finalParams.sort}`);}
       if (finalParams.search)
-        queryParts.push(`search=${encodeURIComponent(finalParams.search)}`);
-      if (finalParams.page !== "1") queryParts.push(`page=${finalParams.page}`);
+        {queryParts.push(`search=${encodeURIComponent(finalParams.search)}`);}
+      if (finalParams.page !== "1") {queryParts.push(`page=${finalParams.page}`);}
 
       return queryParts.length > 0
         ? `/products?${queryParts.join("&")}`
@@ -325,7 +325,7 @@ const getProductDetails = async (req, res) => {
       product.offer || 0,
       product.categoryOffer || 0
     );
-    let salePrice =
+    const salePrice =
       effectiveOffer > 0
         ? product.price * (1 - effectiveOffer / 100)
         : product.price;

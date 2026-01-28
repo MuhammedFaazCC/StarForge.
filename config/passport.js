@@ -29,7 +29,7 @@ passport.use(new GoogleStrategy({
       if (user && !user.googleId) {
         // Link existing account with Google
         user.googleId = googleId;
-        if (!user.profileImage && avatar) user.profileImage = avatar;
+        if (!user.profileImage && avatar) {user.profileImage = avatar;}
         await user.save();
       }
     }

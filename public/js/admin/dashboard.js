@@ -58,11 +58,11 @@ function getFilterParams() {
     params.set('range', range);
     if (range === 'year' || range === 'month') {
         const y = document.getElementById('yearInput').value;
-        if (y) params.set('year', y);
+        if (y) {params.set('year', y);}
     }
     if (range === 'month') {
         const m = document.getElementById('monthInput').value;
-        if (m) params.set('month', String(parseInt(m) - 1)); // 0-indexed month on server
+        if (m) {params.set('month', String(parseInt(m) - 1));} // 0-indexed month on server
     }
     if (range === 'custom') {
         const s = document.getElementById('startDate').value;
@@ -114,26 +114,26 @@ function validateFilters() {
     const currentYear = now.getFullYear();
 
     if (range === 'year' || range === 'month') {
-        if (!year) return 'Year is required.';
-        if (year < 2000 || year > currentYear) return 'Invalid year selected.';
+        if (!year) {return 'Year is required.';}
+        if (year < 2000 || year > currentYear) {return 'Invalid year selected.';}
     }
 
     if (range === 'month') {
-        if (!month) return 'Month is required.';
-        if (month < 1 || month > 12) return 'Invalid month selected.';
+        if (!month) {return 'Month is required.';}
+        if (month < 1 || month > 12) {return 'Invalid month selected.';}
     }
 
     if (range === 'custom') {
-        if (!start || !end) return 'Both start and end dates are required.';
+        if (!start || !end) {return 'Both start and end dates are required.';}
 
         const s = new Date(start);
         const e = new Date(end);
 
-        if (s > e) return 'Start date cannot be after end date.';
-        if (e > now) return 'Future dates are not allowed.';
+        if (s > e) {return 'Start date cannot be after end date.';}
+        if (e > now) {return 'Future dates are not allowed.';}
 
         const diffDays = (e - s) / (1000 * 60 * 60 * 24);
-        if (diffDays > 365) return 'Custom range cannot exceed 1 year.';
+        if (diffDays > 365) {return 'Custom range cannot exceed 1 year.';}
     }
 
     return null;
@@ -218,7 +218,7 @@ let aovChartInstance = null;
 
 function renderAOVChart(labels, values) {
   const ctx = document.getElementById('aovChart').getContext('2d');
-  if (aovChartInstance) aovChartInstance.destroy();
+  if (aovChartInstance) {aovChartInstance.destroy();}
 
   aovChartInstance = new Chart(ctx, {
     type: 'line',
@@ -244,7 +244,7 @@ let paymentChartInstance = null;
 
 function renderPaymentSplitChart(split) {
   const ctx = document.getElementById('paymentSplitChart').getContext('2d');
-  if (paymentChartInstance) paymentChartInstance.destroy();
+  if (paymentChartInstance) {paymentChartInstance.destroy();}
 
   paymentChartInstance = new Chart(ctx, {
     type: 'doughnut',
@@ -269,7 +269,7 @@ async function loadTopLists() {
             fetch('/admin/dashboard/top-brands')
         ]);
         const [pData, cData, bData] = await Promise.all([pRes.json(), cRes.json(), bRes.json()]);
-        if (!pData.success || !cData.success || !bData.success) throw new Error('Fetch failed');
+        if (!pData.success || !cData.success || !bData.success) {throw new Error('Fetch failed');}
         fillTable('topProductsTable', pData.items, 'Product');
         fillTable('topCategoriesTable', cData.items, 'Category');
         fillTable('topBrandsTable', bData.items, 'Brand');
@@ -280,7 +280,7 @@ async function loadTopLists() {
 
 function fillTable(tableId, items, labelKeyFallback) {
     const tbody = document.querySelector(`#${tableId} tbody`);
-    if (!tbody) return;
+    if (!tbody) {return;}
     tbody.innerHTML = '';
     items.forEach((it, idx) => {
         const tr = document.createElement('tr');

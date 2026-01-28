@@ -10,7 +10,7 @@ const categorySchema = new mongoose.Schema({
       validate: {
         validator: function(v) {
           // Allow only letters, numbers, spaces, and hyphens
-          return /^[a-zA-Z0-9\s\-]+$/.test(v);
+          return /^[a-zA-Z0-9\s-]+$/.test(v);
         },
         message: "Category name can only contain letters, numbers, spaces, and hyphens"
       }

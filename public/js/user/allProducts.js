@@ -15,12 +15,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const finalParams = { ...currentParams, ...params };  
 
     const newUrl = new URL(window.location.pathname, window.location.origin);
-    if (finalParams.category !== 'all') newUrl.searchParams.set('category', finalParams.category);
-    if (parseInt(finalParams.minPrice) > minLimit) newUrl.searchParams.set('minPrice', finalParams.minPrice);
-    if (parseInt(finalParams.maxPrice) < maxLimit) newUrl.searchParams.set('maxPrice', finalParams.maxPrice);
-    if (finalParams.sort !== 'latest') newUrl.searchParams.set('sort', finalParams.sort);
-    if (finalParams.search) newUrl.searchParams.set('search', finalParams.search);
-    if (finalParams.page !== '1') newUrl.searchParams.set('page', finalParams.page);
+    if (finalParams.category !== 'all') {newUrl.searchParams.set('category', finalParams.category);}
+    if (parseInt(finalParams.minPrice) > minLimit) {newUrl.searchParams.set('minPrice', finalParams.minPrice);}
+    if (parseInt(finalParams.maxPrice) < maxLimit) {newUrl.searchParams.set('maxPrice', finalParams.maxPrice);}
+    if (finalParams.sort !== 'latest') {newUrl.searchParams.set('sort', finalParams.sort);}
+    if (finalParams.search) {newUrl.searchParams.set('search', finalParams.search);}
+    if (finalParams.page !== '1') {newUrl.searchParams.set('page', finalParams.page);}
 
     return newUrl.toString();
   }
@@ -325,7 +325,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (searchClear) {
     searchClear.addEventListener('click', function () {
       const input = document.getElementById('searchInput');
-      if (input) input.value = '';
+      if (input) {input.value = '';}
       window.location.href = buildUrl({ search: '', page: 1 });
     });
   }

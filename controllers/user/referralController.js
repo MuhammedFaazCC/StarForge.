@@ -1,5 +1,4 @@
 const User = require('../../models/userSchema');
-const Coupon = require('../../models/couponSchema');
 const Config = require('../../models/configSchema');
 const crypto = require('crypto');
 

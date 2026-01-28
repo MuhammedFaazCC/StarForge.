@@ -15,8 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Function to validate status transition
   function isValidTransition(currentStatus, newStatus) {
-    if (currentStatus === newStatus) return false; // No change
-    if (newStatus === 'Cancelled') return true; // Can always cancel (except final states)
+    if (currentStatus === newStatus) {return false;} // No change
+    if (newStatus === 'Cancelled') {return true;} // Can always cancel (except final states)
     return statusTransitions[currentStatus]?.includes(newStatus) || false;
   }
 
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cancelButtonText: 'Cancel'
       });
 
-      if (!result.isConfirmed) return;
+      if (!result.isConfirmed) {return;}
 
       // Disable button during request
       this.disabled = true;

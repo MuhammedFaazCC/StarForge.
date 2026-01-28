@@ -5,9 +5,13 @@ const Cart = require("../../models/cartSchema");
 
 const getCartCount = async (userId) => {
   try {
-    if (!userId) return 0;
-    const cart = await Cart.findOne({ userId });
-    return cart ? cart.items.length : 0;
+    if (!userId) {return 0;}
+    const cart = await Cart.findOne({ userId }).populate("items.productId");
+    if (!cart) {return 0;}
+    cart.items = cart.items.filter(item => item.productId);
+    await cart.save();
+    return cart.items.length;
+
   } catch (error) {
     console.error("Error getting cart count:", error);
     return 0;
@@ -32,8 +36,8 @@ const wishlistPage = async (req, res) => {
           const categoryOffer = product.category?.offer || 0;
           const bestOffer = Math.max(productOffer, categoryOffer);
           let finalPrice = product.price;
-          if (bestOffer > 0) finalPrice = product.price - (product.price * bestOffer / 100);
-          if (product.salesPrice && product.salesPrice < finalPrice) finalPrice = product.salesPrice;
+          if (bestOffer > 0) {finalPrice = product.price - (product.price * bestOffer / 100);}
+          if (product.salesPrice && product.salesPrice < finalPrice) {finalPrice = product.salesPrice;}
           return {
             ...product.toObject(),
             offer: productOffer,

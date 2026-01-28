@@ -12,11 +12,6 @@ async function handleQuantityChange(event) {
   const itemId = button.dataset.itemId;
   const change = parseInt(button.dataset.change);
   const cartItem = button.closest('.cart-item');
-  const quantityInput = cartItem.querySelector('.quantity-input');
-  const loadingSpinner = cartItem.querySelector('.loading-spinner');
-  const increaseBtn = cartItem.querySelector('.increase-btn');
-  const decreaseBtn = cartItem.querySelector('.decrease-btn');
-  const itemSubtotalElement = cartItem.querySelector('.item-subtotal');
 
   // Show loading state
   showLoadingState(cartItem, true);
@@ -67,8 +62,6 @@ async function handleQuantityChange(event) {
 function updateCartUI(cartItem, data) {
   const quantityInput = cartItem.querySelector('.quantity-input');
   const itemSubtotalElement = cartItem.querySelector('.item-subtotal');
-  const increaseBtn = cartItem.querySelector('.increase-btn');
-  const decreaseBtn = cartItem.querySelector('.decrease-btn');
   
   // Update quantity display
   quantityInput.value = data.newQuantity;
@@ -114,14 +107,14 @@ function showLoadingState(cartItem, isLoading) {
   
   if (isLoading) {
     // Show spinner and disable buttons
-    if (loadingSpinner) loadingSpinner.style.display = 'inline-block';
+    if (loadingSpinner) {loadingSpinner.style.display = 'inline-block';}
     qtyButtons.forEach(btn => {
       btn.disabled = true;
       btn.style.opacity = '0.6';
     });
   } else {
     // Hide spinner and re-enable buttons based on their state
-    if (loadingSpinner) loadingSpinner.style.display = 'none';
+    if (loadingSpinner) {loadingSpinner.style.display = 'none';}
     qtyButtons.forEach(btn => {
       btn.style.opacity = '1';
       // Don't automatically enable - let updateButtonStates handle this
@@ -165,54 +158,4 @@ function showToast(message, type = 'success') {
       }
     }, 300);
   }, 3000);
-}
-
-// Legacy function for remove functionality (keeping existing implementation)
-function removeFromCart(cartItemId) {
-  Swal.fire({
-    title: 'Are you sure?',
-    text: 'Do you want to remove this item from the cart?',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, remove it!'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      fetch(`/cart/remove/${cartItemId}`, { method: 'DELETE' })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.success) {
-            // Update navbar cart count instantly if helper exists
-            if (window.updateNavbarCounts && typeof data.cartCount !== 'undefined') {
-              window.updateNavbarCounts({ cartCount: data.cartCount });
-            }
-            Swal.fire('Removed!', 'Item has been removed from cart.', 'success')
-              .then(() => window.location.reload());
-          } else {
-            Swal.fire('Error', data.error || 'Remove failed.', 'error');
-          }
-        })
-        .catch((err) => {
-          console.error('Remove error:', err);
-          Swal.fire('Error', 'Something went wrong. Please try again later.', 'error');
-        });
-    }
-  });
-}
-
-// Legacy function for backward compatibility (now using new implementation)
-async function updateCartQuantity(cartItemId, change) {
-  // Find the button that corresponds to this action
-  const cartItem = document.querySelector(`[data-item-id="${cartItemId}"]`);
-  if (!cartItem) {
-    console.error('Cart item not found');
-    return;
-  }
-  
-  const button = cartItem.querySelector(`[data-change="${change}"]`);
-  if (button) {
-    // Trigger the new event handler
-    await handleQuantityChange({ target: button });
-  }
 }

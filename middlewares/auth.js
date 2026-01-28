@@ -37,7 +37,7 @@ const userAuth = async (req, res, next) => {
         : 'User not found';
 
       return req.session.regenerate(err => {
-        if (err) return res.redirect('/login');
+        if (err) {return res.redirect('/login');}
         req.session.error = msg;
         return res.redirect('/login');
       });
@@ -104,7 +104,7 @@ const softUserCheck = async (req, res, next) => {
         : 'User not found';
 
       return req.session.regenerate(err => {
-        if (err) return res.redirect('/login');
+        if (err) {return res.redirect('/login');}
         req.session.error = msg;
         return res.redirect('/login');
       });

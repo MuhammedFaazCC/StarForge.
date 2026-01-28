@@ -1,0 +1,227 @@
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f5f5f5;
+  margin: 0;
+  padding: 0;
+}
+
+/* MAIN CONTAINER */
+.main-content {
+  max-width: 900px;
+  margin: 100px auto 2rem auto;
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* HEADINGS */
+h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+}
+
+/* SUMMARY SECTIONS */
+.order-summary,
+.coupon-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.coupon-summary {
+  padding: 1rem;
+  border-left: 4px solid #28a745;
+  background: #f8f8f8;
+}
+
+.label {
+  font-weight: 600;
+  color: #555;
+}
+
+.value {
+  font-weight: 700;
+  color: #000;
+}
+
+/* ADDRESS SECTION */
+.address-section {
+  background: #eef4ff;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid #007bff;
+}
+
+/* PRODUCT LIST */
+.products-section h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.product-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.product-image {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.product-info {
+  flex: 1;
+}
+
+.product-name {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.item-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* BUTTONS */
+.action-btn {
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn-cancel { background: #dc3545; color: #fff; }
+.btn-return { background: #ffc107; color: #000; }
+.btn-back { background: #6c757d; color: #fff; }
+.btn-download { background: #28a745; color: #fff; }
+
+.order-actions {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+}
+
+@media (max-width: 600px) {
+
+  /* NAVBAR FIX */
+  .top-navbar {
+    height: 70px !important;
+    padding: 0 1rem !important;
+  }
+
+  .navbar-brand {
+    font-size: 1.4rem !important;
+  }
+
+  .navbar-user i {
+    font-size: 1.3rem !important;
+  }
+
+  /* MAIN CONTENT */
+  .main-content {
+    margin: 90px 0.5rem 1rem 0.5rem !important;
+    padding: 1.2rem !important;
+  }
+
+  h1 {
+    font-size: 1.5rem !important;
+  }
+
+  /* SUMMARY SECTIONS */
+  .order-summary,
+  .coupon-summary {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+    padding: 1rem !important;
+  }
+
+  .order-summary p,
+  .coupon-summary p {
+    font-size: 1rem !important;
+  }
+
+  /* ADDRESS BLOCK */
+  .address-section {
+    padding: 1rem !important;
+    font-size: 1rem !important;
+  }
+
+  /* PRODUCTS SECTION */
+  .products-section h3 {
+    font-size: 1.3rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .product-item {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 1rem !important;
+    padding: 1.2rem 0 !important;
+  }
+
+  .product-image {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 240px !important;
+    border-radius: 10px !important;
+  }
+
+  .product-info {
+    width: 100% !important;
+  }
+
+  .product-name {
+    font-size: 1.1rem !important;
+  }
+
+  .product-details {
+    font-size: 1rem !important;
+  }
+
+  .item-status {
+    font-size: 0.95rem !important;
+    padding: 0.3rem 0.6rem !important;
+  }
+
+  /* PRODUCT ACTION BUTTONS */
+  .item-actions {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 0.7rem !important;
+  }
+
+  .item-actions .action-btn {
+    width: 100% !important;
+    padding: 0.8rem !important;
+    font-size: 1rem !important;
+  }
+
+  /* BOTTOM ACTION BUTTONS */
+  .order-actions {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 0.8rem !important;
+    margin-top: 2rem !important;
+  }
+
+  .order-actions .action-btn {
+    width: 100% !important;
+    padding: 1rem !important;
+    font-size: 1.05rem !important;
+    border-radius: 8px !important;
+  }
+}

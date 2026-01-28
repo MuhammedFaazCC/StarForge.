@@ -1,6 +1,7 @@
 const Return = require("../../models/returnSchema");
 const Order = require("../../models/orderSchema");
-const { handleItemReturnWithCoupon, areAllItemsReturned } = require("../../util/couponRefundHandler");
+const User = require("../../models/userSchema");
+const { handleItemReturnWithCoupon } = require("../../util/couponRefundHandler");
 
 const getReturnRequestsPage = async (req, res) => {
   try {

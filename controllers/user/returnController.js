@@ -190,6 +190,7 @@ const approveReturn = async (req, res) => {
       order.status = "Returned";
       await order.save();
 
+      // eslint-disable-next-line no-undef
       await refundToWallet(order, "Refund for returned order");
     } else if (status === "Rejected") {
       order.status = "Delivered";

@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
                       confirmButtonColor: '#d33'
                     });
                 }
-            } catch (err) {
+            } catch {
                 Swal.fire({
                   icon: 'error',
                   title: 'Toggle Error',
@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 cancelButtonColor: '#3085d6'
             });
 
-            if (!result.isConfirmed) return;
+            if (!result.isConfirmed) {return;}
 
             btn.disabled = true;
             try {
@@ -79,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         confirmButtonColor: '#d33'
                     });
                 }
-            } catch (err) {
+            } catch {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
               cancelButtonColor: '#3085d6'
             });
 
-            if (!result.isConfirmed) return;
+            if (!result.isConfirmed) {return;}
 
             const categoryId = btn.dataset.id;
             btn.disabled = true;
@@ -151,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
                       confirmButtonColor: '#d33'
                     });
                 }
-            } catch (err) {
+            } catch {
                 Swal.fire({
                   icon: 'error',
                   title: 'Remove Error',

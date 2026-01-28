@@ -1,6 +1,5 @@
 const puppeteer = require("puppeteer");
 const Order = require("../../models/orderSchema");
-const chromiumPath = puppeteer.executablePath();
 
 const downloadInvoice = async (req, res) => {
   let browser; // must be declared outside
@@ -318,24 +317,6 @@ const downloadInvoice = async (req, res) => {
     </html>
     `;
 
-    // PDF generation options
-    const options = {
-      format: 'A4',
-      orientation: 'portrait',
-      border: {
-        top: '0.5in',
-        right: '0.5in',
-        bottom: '0.5in',
-        left: '0.5in'
-      },
-      header: {
-        height: '0mm'
-      },
-      footer: {
-        height: '0mm'
-      }
-    };
-
     // Generate PDF
     browser = await puppeteer.launch({
       headless: true,
@@ -370,7 +351,9 @@ const downloadInvoice = async (req, res) => {
     if (browser) {
       try {
         await browser.close();
-      } catch (e) {}
+      } catch (err) {
+        console.error("Error closing puppeteer browser:", err);
+      }
     }
   }
 };

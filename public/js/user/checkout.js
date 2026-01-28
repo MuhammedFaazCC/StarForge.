@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 function selectAddress(addressId) {
   const selectedCard = document.querySelector(`[data-address-id="${addressId}"]`);
   const hiddenInput = document.getElementById('selectedAddressId');
@@ -343,7 +344,7 @@ function addRemoveCouponListener() {
 // Enforce COD rule based on current grand total
 function enforceCODRule() {
   const paymentMethodSelect = document.getElementById('paymentMethod');
-  if (!paymentMethodSelect) return;
+  if (!paymentMethodSelect) {return;}
 
   const codOption = paymentMethodSelect.querySelector('option[value="COD"]');
   const grandTotalElement = document.getElementById('grandTotalAmount');
@@ -359,7 +360,6 @@ function enforceCODRule() {
   const shouldDisableCOD = total > 1000;
 
   if (codOption) {
-    const wasDisabled = codOption.disabled;
     codOption.disabled = shouldDisableCOD;
 
     // If COD was selected and becomes invalid, reset selection and warn
@@ -488,7 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
     button.addEventListener('click', closeModal);
   });
 
-  if (!form) return;
+  if (!form) {return;}
 
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
@@ -496,7 +496,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectedAddressId = selectedAddressInput.value;
     const paymentMethod = paymentMethodSelect.value;
 
-    const action = form.action;
     console.log(form.action);
 
     const hasAddresses = document.querySelectorAll('.info-card').length > 0;
@@ -671,6 +670,8 @@ document.addEventListener('DOMContentLoaded', () => {
           submitButton.textContent = 'Place Order';
         }
       } catch (err) {
+        console.error('Checkout submit error:', err);
+        
         Swal.fire({
           icon: 'error',
           title: 'Order Error',
@@ -687,30 +688,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Address Form Validation System
   const addressForm = document.getElementById('addressForm');
   if (addressForm) {
-    const submitButton = addressForm.querySelector('button[type="submit"]');
-
-    function resetAddressForm() {
-        // Reset tracking
-        hasAttemptedSubmit = false;
-        for (const key in fieldTouched) {
-            fieldTouched[key] = false;
-        }
-
-        // Clear errors and classes
-        Object.keys(validationRules).forEach(fieldName => {
-            const field = document.getElementById(fieldName);
-            const errorElement = document.getElementById(fieldName + "Error");
-
-            if (field) {
-                field.classList.remove("error");
-                field.classList.remove("valid");
-            }
-
-            if (errorElement) {
-                errorElement.textContent = "";
-            }
-        });
-    }
 
     let hasAttemptedSubmit = false;
     const fieldTouched = {};
@@ -761,7 +738,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Validate individual field
     function validateField(fieldName, value) {
       const rules = validationRules[fieldName];
-      if (!rules) return { isValid: true, message: '' };
+      if (!rules) {return { isValid: true, message: '' };}
 
       // Check required
       if (rules.required && (!value || value.trim() === '')) {
@@ -823,10 +800,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const shouldShowError = hasAttemptedSubmit || fieldTouched[fieldName];
 
         if (!validation.isValid) {
-          if (shouldShowError) showError(fieldName, validation.message);
+          if (shouldShowError) {showError(fieldName, validation.message);}
           isFormValid = false;
         } else {
-          if (shouldShowError) clearError(fieldName);
+          if (shouldShowError) {clearError(fieldName);}
         }
       }
 
@@ -851,7 +828,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Clear errors on input
         field.addEventListener('input', () => {
-          if (!fieldTouched[fieldName] && !hasAttemptedSubmit) return;
+          if (!fieldTouched[fieldName] && !hasAttemptedSubmit) {return;}
 
           const validation = validateField(fieldName, field.value);
           if (validation.isValid) {
