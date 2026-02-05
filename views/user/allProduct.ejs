@@ -150,11 +150,20 @@
                 <div class="card product-card h-100">
                   <a href="#" class="wishlist-btn" data-product-id="<%= product._id %>">
                     <%
-                    const inWishlist = userWishlistItems.some(item => {
-                        if (!item.productId) return false;
-                        const id = item.productId._id || item.productId;
-                        return id.toString() === product._id.toString();
-                    });
+                    let inWishlist = false;
+
+                    if (userWishlistItems && userWishlistItems.length) {
+                      for (let i = 0; i < userWishlistItems.length; i++) {
+                        if (!userWishlistItems[i].productId) continue;
+
+                        const id = userWishlistItems[i].productId._id || userWishlistItems[i].productId;
+
+                        if (id.toString() === product._id.toString()) {
+                          inWishlist = true;
+                          break;
+                        }
+                      }
+                    }
                     %>
                     <i class="bi <%= inWishlist ? 'bi-heart-fill text-danger' : 'bi-heart' %>"></i>
                   </a>
