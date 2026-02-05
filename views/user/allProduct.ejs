@@ -61,7 +61,13 @@
         <% } %>
         <% if (filters.sort !== 'latest') { %>
           <div class="filter-badge">
-            Sort: <%= filters.sort.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) %>
+          <%
+          let sortLabel = filters.sort.replace(/-/g, ' ');
+          sortLabel = sortLabel.replace(/\b\w/g, function (char) {
+            return char.toUpperCase();
+          });
+          %>
+          Sort: <%= sortLabel %>
             <span class="close" data-filter="sort">×</span>
           </div>
         <% } %>
