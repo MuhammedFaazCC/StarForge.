@@ -162,7 +162,7 @@
                       for (let i = 0; i < userWishlistItems.length; i++) {
                         if (!userWishlistItems[i].productId) continue;
 
-                        const id = userWishlistItems[i].productId._id || userWishlistItems[i].productId;
+                        let id = userWishlistItems[i].productId._id || userWishlistItems[i].productId;
 
                         if (id.toString() === product._id.toString()) {
                           inWishlist = true;
@@ -208,7 +208,6 @@
                         <% } else { %>
                           <span class="product-price">₹<%= product.price %></span>
                         <% } %>
-
                       </p>
                       <div class="d-grid">
                         <a href="/product/<%= product._id %>" class="btn btn-primary">View Details</a>
