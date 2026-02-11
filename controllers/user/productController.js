@@ -272,7 +272,7 @@ const getAllProduct = async (req, res) => {
         : "/products";
     };
 
-    const wishlistItems = wishlist ? wishlist.items : [];
+    let wishlistItems = wishlist ? wishlist.items : [];
 
     const initialFilters = {
       minPrice: priceRange.min,
@@ -346,7 +346,7 @@ const getProductDetails = async (req, res) => {
     // Check wishlist membership
     let isInWishlist = false;
     if (user && user._id) {
-      const wishlist = await Wishlist.findOne({ userId: user._id }, { items: 1 }).lean();
+      let wishlist = await Wishlist.findOne({ userId: user._id }, { items: 1 }).lean();
       if (wishlist && Array.isArray(wishlist.items)) {
         isInWishlist = wishlist.items.some(it => String(it.productId) === String(product._id));
       }
