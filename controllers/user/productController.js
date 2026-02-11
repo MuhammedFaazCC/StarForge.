@@ -203,7 +203,7 @@ const getAllProduct = async (req, res) => {
       $unwind: "$category",
     });
 
-    const [products, totalProducts, categories, wishlist] = await Promise.all([
+    let [products, totalProducts, categories, wishlist] = await Promise.all([
       Product.aggregate(pipeline),
       Product.countDocuments(filterQuery),
       Category.find().lean(),
