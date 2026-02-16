@@ -123,6 +123,7 @@ body {
   font-size: 0.85rem;
   padding: 0.3rem 0.6rem;
   border-radius: 6px;
+  z-index: 9999;
 }
 
 .product-actions {
