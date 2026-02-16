@@ -1,129 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Edit Product - StarForge</title>
-  <link rel="stylesheet" href="/css/admin/common.css">
-  <link rel="stylesheet" href="/css/admin/addProduct.css">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  
-</head>
-<body>
 
+  <link rel="stylesheet" href="/css/admin/common.css" />
+  <link rel="stylesheet" href="/css/admin/addProduct.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
   <%- include('../partials/admin/navbar') %>
 
-  <div class="main-content" id="main-content">
+  <div class="main-content">
     <div class="container">
       <h2>Edit Product</h2>
-      <% if (message) { %>
-        <div class="alert alert-<%= message.type %>">
-          <%= message.text %>
-        </div>
-      <% } %>
-      <form id="editProductForm" action="/admin/products/edit/<%= product._id %>" method="POST" enctype="multipart/form-data">
-        <div class="form-group">
-          <label for="name">Product Name</label>
-          <input type="text" id="name" name="name" value="<%= product.name %>" >
-          <div class="error-message" id="name-error">Product name must be at least 3 characters.</div>
-        </div>
-        <div class="form-group">
-          <label for="brand">Brand</label>
-          <input type="text" id="brand" name="brand" value="<%= product.brand %>" >
-          <div class="error-message" id="brand-error">Brand must be at least 2 characters.</div>
-        </div>
-        <div class="form-group">
-          <label for="price">Price</label>
-          <input type="number" id="price" name="price" step="0.01" value="<%= product.price %>" >
-          <div class="error-message" id="price-error">Price must be a positive number.</div>
-        </div>
-        <div class="form-group">
-          <label for="offer">Offer (%)</label>
-          <input type="number" id="offer" name="offer" step="0.01" value="<%= product.offer %>">
-          <div class="error-message" id="offer-error">Offer must be between 0 and 100.</div>
-        </div>
-        <div class="form-group">
-          <label for="description">Description</label>
-          <textarea id="description" name="description"><%= product.description %></textarea>
-          <div class="error-message" id="description-error">Description cannot be empty.</div>
-        </div>
-        <div class="form-group">
-          <label for="category">Category</label>
-          <select id="category" name="category" >
-            <option value="">Select a category</option>
-            <% categories.forEach(category => { %>
-              <option value="<%= category._id %>" <%= product.category.toString() === category._id.toString() ? 'selected' : '' %>>
-                <%= category.name %>
-              </option>
-            <% }) %>
-          </select>
-          <div class="error-message" id="category-error">Category must be selected.</div>
-        </div>
-        <div class="form-group">
-          <label for="sizes">Sizes (comma-separated)</label>
-          <input type="text" id="sizes" name="sizes" value="<%= product.sizes.join(', ') %>">
-          <div class="error-message" id="sizes-error">Sizes are required.</div>
-        </div>
-        <div class="form-group">
-          <label for="rimMaterial">Rim Material</label>
-          <input type="text" id="rimMaterial" name="rimMaterial" value="<%= product.rimMaterial %>">
-          <div class="error-message" id="rimMaterial-error">Rim Material cannot be empty.</div>
-        </div>
-        <div class="form-group">
-          <label for="stock">Stock</label>
-          <input type="number" id="stock" name="stock" value="<%= product.stock %>" >
-          <div class="error-message" id="stock-error">Stock cannot be negative.</div>
-        </div>
-        <div class="form-group">
-          <label for="mainImage">Main Image (Current: <%= product.mainImage || 'None' %>)</label>
-          <input type="file" id="mainImage" name="mainImage" accept="image/jpeg,image/png,image/jpg,image/webp">
-          <% if (product.mainImage) { %>
-            <div style="margin-top:8px; display:flex; align-items:center; gap:12px;">
-              <img src="<%= product.mainImage %>" alt="Main Image" style="width:100px;height:100px;object-fit:cover;border:1px solid #ddd;border-radius:4px;">
-              <label style="display:flex; align-items:center; gap:6px;">
-                <input type="checkbox" name="removeMainImage">
-                <span>Remove current main image</span>
-              </label>
-            </div>
-          <% } %>
-          <div class="error-message" id="mainImage-error">Main image must be a valid JPEG or PNG file.</div>
-        </div>
-        <div class="form-group">
-          <label for="additionalImages">Additional Images (Current: <%= product.additionalImages.length %>)</label>
-          <input type="file" id="additionalImages" name="additionalImages" accept="image/jpeg,image/png,image/jpg,image/webp" multiple>
-          <% if (product.additionalImages && product.additionalImages.length) { %>
-            <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:12px;">
-              <% product.additionalImages.forEach(function(img){ %>
-                <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
-                  <img src="<%= img %>" alt="Additional Image" style="width:90px;height:90px;object-fit:cover;border:1px solid #ddd;border-radius:4px;">
-                  <label style="display:flex; align-items:center; gap:6px;font-size:12px;">
-                    <input type="checkbox" name="removedAdditional" value="<%= img %>">
-                    <span>Remove</span>
-                  </label>
-                </div>
+
+      <form
+        id="editProductForm"
+        action="/admin/products/edit/<%= product._id %>"
+        method="POST"
+        enctype="multipart/form-data"
+      >
+
+        <!-- PRODUCT DETAILS -->
+        <div class="form-section">
+          <h3>Product Details</h3>
+
+          <div class="form-group">
+            <label>Product Name</label>
+            <input id="name" name="name" value="<%= product.name %>" />
+          </div>
+
+          <div class="form-group">
+            <label>Brand</label>
+            <input id="brand" name="brand" value="<%= product.brand %>" />
+          </div>
+
+          <div class="form-group">
+            <label>Price</label>
+            <input id="price" name="price" value="<%= product.price %>" />
+          </div>
+
+          <div class="form-group">
+            <label>Offer (%)</label>
+            <input id="offer" name="offer" value="<%= product.offer %>" />
+          </div>
+
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="description" name="description"><%= product.description %></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Category</label>
+            <select id="category" name="category">
+              <% categories.forEach(c => { %>
+                <option value="<%= c._id %>" <%= c._id.toString() === product.category.toString() ? 'selected' : '' %>>
+                  <%= c.name %>
+                </option>
               <% }) %>
-            </div>
-          <% } %>
-          <div class="error-message" id="additionalImages-error">Additional images must be valid JPEG or PNG files.</div>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Size</label>
+            <input id="sizes" name="sizes" value="<%= product.sizes.join(', ') %>" />
+          </div>
+
+          <div class="form-group">
+            <label>Rim Material</label>
+            <input id="rimMaterial" name="rimMaterial" value="<%= product.rimMaterial %>" />
+          </div>
+
+          <div class="form-group">
+            <label>Stock</label>
+            <input id="stock" name="stock" value="<%= product.stock %>" />
+          </div>
         </div>
-        <div class="form-actions">
-          <button type="submit" id="updateButton">Update Product</button>
-          <a href="/admin/products" class="btn btn-secondary">Cancel</a>
+
+        <!-- IMAGES -->
+        <div class="form-section">
+          <h3>Images</h3>
+
+          <div class="form-group">
+            <label>Main Image (optional)</label>
+            <input type="file" id="mainImage" name="mainImage" accept="image/*" />
+            <% if (product.mainImage) { %>
+              <img src="<%= product.mainImage %>" width="100" />
+              <label>
+                <input type="checkbox" name="removeMainImage" /> Remove current
+              </label>
+            <% } %>
+            <div id="mainImagePreview"></div>
+          </div>
+
+          <div class="form-group">
+            <label>Additional Images</label>
+            <input type="file" id="additionalImages" name="additionalImages" multiple />
+            <div id="additionalImagesPreview"></div>
+
+            <% product.additionalImages.forEach(img => { %>
+              <div>
+                <img src="<%= img %>" width="80" />
+                <label>
+                  <input type="checkbox" name="removedAdditional" value="<%= img %>" />
+                  Remove
+                </label>
+              </div>
+            <% }) %>
+          </div>
         </div>
+
+        <button type="submit">Update Product</button>
       </form>
     </div>
+  </div>
+
+  <!-- CROP MODAL -->
+  <div id="cropModal" class="crop-modal">
+    <div class="crop-modal-content">
+      <h3>Crop Image</h3>
+      <div class="crop-image-wrapper">
+        <img id="cropImage" />
       </div>
+      <div class="crop-buttons">
+        <button id="cropButton" type="button">Crop</button>
+        <button id="cancelCropButton" type="button">Cancel</button>
+      </div>
+    </div>
   </div>
 
-  <div class="loading-overlay" id="loadingOverlay">
-    <div class="spinner"></div>
-    <div class="loading-text">Updating product...</div>
-  </div>
+  <script>
+    window.__SERVER_MESSAGE__ = <%- JSON.stringify(message || null) %>;
+  </script>
 
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
   <script src="/js/admin/editProduct.js"></script>
-  </div>
 
   <%- include('../partials/admin/footer') %>
 </body>
