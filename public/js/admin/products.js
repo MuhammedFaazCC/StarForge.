@@ -54,6 +54,52 @@ window.deleteProduct = async function (productId) {
   }
 };
 
+window.toggleProductListing = async function (productId, checkbox) {
+  const newState = checkbox.checked;
+
+  try {
+    const res = await fetch(`/admin/products/toggle-listing/${productId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ isListed: newState })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to update listing");
+    }
+
+    checkbox.checked = data.isListed;
+
+    // ✅ SUCCESS ALERT
+    Swal.fire({
+      icon: "success",
+      title: data.isListed ? "Product Listed" : "Product Unlisted",
+      text: data.message || "",
+      timer: 1500,
+      showConfirmButton: false,
+      toast: true,
+      position: "top-end"
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    // revert UI
+    checkbox.checked = !checkbox.checked;
+
+    Swal.fire({
+      icon: "error",
+      title: "Update failed",
+      text: err.message || "Could not update product listing status"
+    });
+  }
+};
+
+
 document.querySelectorAll(".side-panel a").forEach((link) => {
   link.addEventListener("click", (e) => {
     e.preventDefault();

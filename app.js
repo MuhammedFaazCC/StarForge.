@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const multer = require("multer");
 const db = require("./config/db");
 const flash = require('connect-flash');
 const userRouter = require("./routes/userRouter");
@@ -65,6 +66,27 @@ app.use('/admin', adminSession);
 app.use((req, res, next) => {
   if (req.path.startsWith('/admin')) {return next();}
   return userSession(req, res, next);
+});
+
+app.use((err, req, res, next) => {
+  // Multer-specific errors
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({
+      success: false,
+      message: err.message
+    });
+  }
+
+  // File filter errors (custom)
+  if (err && err.message && err.message.toLowerCase().includes("file")) {
+    return res.status(400).json({
+      success: false,
+      message: err.message
+    });
+  }
+
+  // Pass non-multer errors forward
+  next(err);
 });
 
 // Passport should only attach session for user side

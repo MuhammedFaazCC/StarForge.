@@ -101,6 +101,21 @@ function addInputValidation() {
   });
 }
 
+function togglePassword() {
+  const passwordInput = document.getElementById("password");
+  const toggle = document.querySelector(".toggle-password");
+
+  if (!passwordInput || !toggle) return;
+
+  if (passwordInput.type === "password") {
+    passwordInput.type = "text";
+    toggle.textContent = "Hide";
+  } else {
+    passwordInput.type = "password";
+    toggle.textContent = "Show";
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   const form = document.querySelector('form');
   if (form) {form.addEventListener('submit', validateForm);}

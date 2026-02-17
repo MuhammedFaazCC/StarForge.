@@ -290,7 +290,7 @@ const computeSalesPrice = (price, productOffer, categoryOffer) => {
 
 const productsPage = async (req, res) => {
   try {
-    const page = parseInt(req.query.page, 10) || 1;
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
     const limit = 8;
     const skip = (page - 1) * limit;
 
@@ -303,24 +303,26 @@ const productsPage = async (req, res) => {
       })
     };
 
-    const totalProducts = await Product.countDocuments(query);
+    const [totalProducts, products] = await Promise.all([
+      Product.countDocuments(query),
+      Product.find(query)
+        .populate("category")
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+    ]);
 
-    const products = await Product.find(query)
-      .populate("category")
-      .sort({ _id: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const totalPages = Math.ceil(totalProducts / limit);
+    const totalPages = Math.max(Math.ceil(totalProducts / limit), 1);
 
     const message =
-      req.session.message && typeof req.session.message === 'object'
+      req.session.message && typeof req.session.message === "object"
         ? req.session.message
         : null;
 
     delete req.session.message;
 
-    res.render("products", {
+    return res.render("products", {
       products,
       currentPage: page,
       totalPages,
@@ -331,9 +333,11 @@ const productsPage = async (req, res) => {
       message,
       search
     });
+
   } catch (err) {
     console.error("Error loading products page:", err);
-    res.render("products", {
+
+    return res.render("products", {
       products: [],
       currentPage: 1,
       totalPages: 1,
@@ -368,69 +372,84 @@ const addProduct = async (req, res) => {
 
 const productAdd = async (req, res) => {
   try {
-    const categories = await Category.find({ isActive: true });
-
-    // Validate and normalize core fields
+    // 1. Validate & normalize payload
     const v = await validateAndNormalizePayload(req.body, { isEdit: false });
     if (!v.ok) {
-      return res.render("addProducts", {
-        categories,
-        message: { success: false, text: v.error }
+      return res.status(400).json({
+        success: false,
+        message: v.error
       });
     }
 
-    // Validate images
+    // 2. Validate images
     const img = validateImages(req.files, { requireMainImage: true });
     if (!img.ok) {
-      return res.render("addProducts", {
-        categories,
-        message: { success: false, text: img.error }
+      return res.status(400).json({
+        success: false,
+        message: img.error
       });
     }
 
     const core = v.data;
 
-    // Compute pricing
-    const { salesPrice } = computeSalesPrice(
+    // 3. Compute sales price
+    const { salesPrice, effectiveOffer } = computeSalesPrice(
       core.price,
       core.offer,
       core.categoryOffer
     );
 
+    // 4. Create product (ONLY validated data)
     const newProduct = new Product({
-      ...core,
+      name: core.name,
+      brand: core.brand,
+      description: core.description,
+      price: core.price,
+      offer: core.offer,
+      category: core.category,
+      categoryOffer: core.categoryOffer,
+      stock: core.stock,
+      sizes: core.sizes,
+      rimMaterial: core.rimMaterial,
+      color: core.color,
+
       salesPrice,
+      effectiveOffer,
+
       mainImage: img.mainImage,
       additionalImages: img.additionalImages,
+
       isDeleted: false,
       isListed: true
     });
 
     await newProduct.save();
 
-    req.session.message = {
+    // 5. Success (JSON only)
+    return res.status(201).json({
       success: true,
-      text: `Product has been added successfully!`
-    };
-
-    return res.redirect("/admin/products");
+      message: "Product added successfully"
+    });
 
   } catch (err) {
-    console.error("Error adding product:", err);
+    console.error("ADD PRODUCT ERROR:", err);
 
-    const categories = await Category.find({ isActive: true });
-
-    let errorMessage = "Failed to add product. Please try again.";
+    // Duplicate key (name)
     if (err.code === 11000) {
-      errorMessage = "A product with this name already exists.";
+      return res.status(409).json({
+        success: false,
+        message: "A product with this name already exists"
+      });
     }
 
-    return res.render("addProducts", {
-      categories,
-      message: { success: false, text: errorMessage }
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
     });
   }
 };
+
+
 
 const viewProduct = async (req, res) => {
   try {

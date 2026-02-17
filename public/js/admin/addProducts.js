@@ -195,26 +195,55 @@ document.addEventListener("DOMContentLoaded", () => {
      FINAL SUBMIT (NORMAL FORM)
   =========================== */
 
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
     const error = validateAddProductForm();
     if (error) {
-      e.preventDefault();
-      Swal.fire({
-        icon: "error",
-        title: "Validation Error",
-        text: error
-      });
+      Swal.fire({ icon: "error", title: "Validation Error", text: error });
       return;
     }
 
-    // inject cropped images into real inputs
+    const formData = new FormData(form);
+
+    // inject cropped images
     const mainDT = new DataTransfer();
     mainDT.items.add(croppedFiles.mainImage);
-    mainImageInput.files = mainDT.files;
+    formData.set("mainImage", mainDT.files[0]);
 
-    const addDT = new DataTransfer();
-    croppedFiles.additionalImages.forEach(f => addDT.items.add(f));
-    additionalImagesInput.files = addDT.files;
+    croppedFiles.additionalImages.forEach(f => {
+      formData.append("additionalImages", f);
+    });
+
+    try {
+      const res = await fetch("/admin/products/add", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        Swal.fire({ icon: "error", title: "Error", text: data.message });
+        return;
+      }
+
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: data.message
+      }).then(() => {
+        window.location.href = "/admin/products";
+      });
+
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Server Error",
+        text: "Something went wrong"
+      });
+    }
   });
+
 
 });
