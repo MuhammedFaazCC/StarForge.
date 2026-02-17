@@ -156,11 +156,6 @@
                                     </div>
 
                                     <div class="address-footer">
-                                      <button class="quick-action-btn" onclick="copyAddress('<%= address._id %>')"
-                                        title="Copy Address">
-                                        <i class="fas fa-copy"></i>
-                                        Copy
-                                      </button>
                                       <% if (!address.isDefault) { %>
                                         <button class="quick-action-btn"
                                           onclick="setDefaultAddress(event, '<%= address._id %>')"

@@ -266,7 +266,7 @@
                     <select class="status-dropdown" data-item-id="<%= item._id %>" data-current-status="<%= itemStatus %>">
                       <option value="">Select Status</option>
                       <% 
-                        const statusOptions = ['Placed', 'Ordered', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'];
+                        const statusOptions = ['Placed', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered'];
                         const currentIndex = statusOptions.indexOf(itemStatus);
                         statusOptions.forEach((status, index) => {
                           // Only show valid next statuses
@@ -304,7 +304,6 @@
         </tbody>
       </table>
       </div>
-      <a href="/admin/orders/<%= order._id %>/invoice" class="invoice-btn">Download Invoice</a>
       <a href="/admin/orders" class="back-btn" style="margin-top: 20px;">Back to Orders</a>
     </div>
   </div>

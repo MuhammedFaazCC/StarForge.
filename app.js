@@ -89,6 +89,16 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
+app.use((err, req, res, next) => {
+  if (err && err.name === "MulterError") {
+    return res.status(400).json({
+      success: false,
+      message: err.message
+    });
+  }
+  next(err);
+});
+
 // Passport should only attach session for user side
 app.use(passport.initialize());
 const passportSession = passport.session();

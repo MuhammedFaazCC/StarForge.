@@ -169,7 +169,7 @@
                                                                 data-current-status="<%= itemStatus %>">
                                                             <option value="">Update Status</option>
                                                             <% 
-                                                                const statusOptions = ['Placed', 'Ordered', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'];
+                                                                const statusOptions = ['Placed', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered'];
                                                                 const currentIndex = statusOptions.indexOf(itemStatus);
                                                                 statusOptions.forEach((status, statusIndex) => {
                                                                     // Only show valid next statuses

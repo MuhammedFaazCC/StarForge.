@@ -81,135 +81,162 @@ const signUpPage = async (req, res) => {
 
 // POST /signup
 const signUp = async (req, res) => {
-  const { fullName, email, mobile, password, confirmPassword, referralCode } =
+  let { fullName, email, mobile, password, confirmPassword, referralCode } =
     req.body || {};
+
   try {
-    // Prevent duplicate OTP sends within a short window (e.g., double-click)
+    // Normalize inputs
+    email = email?.toLowerCase().trim();
+    mobile = mobile?.trim();
+
+    // OTP spam prevention
     const now = Date.now();
     const lastSend = req.session._otp_sending_ts || 0;
     if (now - lastSend < 4000) {
-      return res.json({
+      return res.status(429).json({
         success: false,
-        message: "Please wait a moment before retrying.",
+        message: "Please wait a moment before retrying."
       });
     }
 
-    // Basic validations
+    // Full Name
     if (!fullName || fullName.trim().length < 2 || fullName.trim().length > 50) {
-      return res.json({
+      return res.status(400).json({
         success: false,
         field: "fullName",
-        message: "Full name must be between 2 and 50 characters",
+        message: "Full name must be between 2 and 50 characters."
       });
     }
 
+    if (!/^[A-Za-z\s]+$/.test(fullName)) {
+      return res.status(400).json({
+        success: false,
+        field: "fullName",
+        message: "Full name can contain only letters and spaces."
+      });
+    }
+
+    // Email
     const emailRegex = /^\S+@\S+\.\S+$/;
     if (!email || !emailRegex.test(email)) {
-      return res.json({
+      return res.status(400).json({
         success: false,
         field: "email",
-        message: "Please provide a valid email address",
+        message: "Please provide a valid email address."
       });
     }
 
-    const mobileRegex = /^\d{10}$/;
-    if (!mobile || !mobileRegex.test(mobile)) {
-      return res.json({
+    // Mobile
+    if (!/^\d{10}$/.test(mobile)) {
+      return res.status(400).json({
         success: false,
         field: "mobile",
-        message: "Mobile number must be exactly 10 digits",
+        message: "Mobile number must be exactly 10 digits."
       });
     }
 
-    if (!password || password.length < 6) {
-      return res.json({
+    // Password
+    if (
+      !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(password)
+    ) {
+      return res.status(400).json({
         success: false,
         field: "password",
-        message: "Password must be at least 6 characters",
+        message:
+          "Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
       });
     }
 
     if (password !== confirmPassword) {
-      return res.json({
+      return res.status(400).json({
         success: false,
         field: "confirmPassword",
-        message: "Passwords do not match",
+        message: "Passwords do not match."
       });
     }
 
     // Uniqueness checks
-    const existingByEmail = await User.findOne({ email });
-    if (existingByEmail) {
-      return res.json({
+    if (await User.findOne({ email })) {
+      return res.status(409).json({
         success: false,
         field: "email",
-        message: "Email already exists",
-      });
-    }
-    const existingByMobile = await User.findOne({ mobile });
-    if (existingByMobile) {
-      return res.json({
-        success: false,
-        field: "mobile",
-        message: "Mobile number already exists",
+        message: "Email already exists."
       });
     }
 
-    // Referral code validation (now only by referralCode field)
+    if (await User.findOne({ mobile })) {
+      return res.status(409).json({
+        success: false,
+        field: "mobile",
+        message: "Mobile number already exists."
+      });
+    }
+
+    // Referral code validation
     if (referralCode) {
-      const referringUser = await User.findOne({ referralCode });
-      if (!referringUser) {
-        return res.json({
+      const refUser = await User.findOne({
+        referralCode,
+        isActive: true,
+        isBlocked: false
+      });
+
+      if (!refUser) {
+        return res.status(400).json({
           success: false,
           field: "referralCode",
-          message: "Invalid referral code",
+          message: "Invalid referral code."
         });
       }
     }
 
+    // Generate OTP
     const otp = generateOTP();
+
     req.session.otp = {
       code: otp,
       expires: Date.now() + 5 * 60 * 1000,
+      action: "signup",
       userData: {
         fullName,
         email,
         mobile,
-        password,
+        rawPassword: password, // explicit
         referralCode,
-        // identifier from referral link, if any
-        referralIdentifier: req.session.referralIdentifier || null,
-      },
-      action: "signup",
+        referralIdentifier: req.session.referralIdentifier || null
+      }
     };
 
-    // mark sending timestamp to prevent immediate duplicates
     req.session._otp_sending_ts = Date.now();
 
     req.session.save(async (err) => {
       if (err) {
-        console.error("Session save error in signUp:", err);
-        return res.json({
+        console.error("Session save error:", err);
+        return res.status(500).json({
           success: false,
-          message: "Failed to start verification. Please try again.",
+          message: "Failed to start verification. Please try again."
         });
       }
+
       try {
         await sendOTP(email, otp);
-        return res.json({ success: true, redirect: "/otp-verification" });
-      } catch (sendErr) {
-        console.error("Error sending OTP:", sendErr);
-        return res.json({
+        return res.status(200).json({
+          success: true,
+          redirect: "/otp-verification"
+        });
+      } catch (mailErr) {
+        console.error("OTP send error:", mailErr);
+        return res.status(500).json({
           success: false,
-          message: "Failed to send OTP. Please try again.",
+          message: "Failed to send OTP. Please try again."
         });
       }
     });
+
   } catch (error) {
-    console.error("Error in signUp:", error.message);
-    return res.json({
+    console.error("SIGNUP SERVER ERROR:", error);
+    return res.status(500).json({
       success: false,
-      message: "Server error, try again later",
+      message: "Internal server error. Please try again later."
     });
   }
 };

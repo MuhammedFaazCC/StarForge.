@@ -16,7 +16,7 @@
     <h1>Order Details</h1>
 
     <%
-      const finalItemStates = ['Delivered', 'Returned', 'Return Requested'];
+      const finalItemStates = ['Delivered', 'Returned', 'Return Requested', 'Return Declined'];
 
       const hasAnyFinalItem = order.items.some(item =>
         finalItemStates.includes(item.status)

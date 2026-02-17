@@ -515,111 +515,114 @@ const productEdit = async (req, res) => {
     const productId = req.params.id;
 
     if (!mongoose.Types.ObjectId.isValid(productId)) {
-      req.session.message = { success: false, text: "Invalid product ID" };
-      return res.redirect("/admin/products");
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID"
+      });
     }
 
     const product = await Product.findById(productId);
     if (!product) {
-      req.session.message = { success: false, text: "Product not found" };
-      return res.redirect("/admin/products");
-    }
-
-    // Validate core fields (edit mode)
-    const v = await validateAndNormalizePayload(req.body, { isEdit: true, productId });
-    if (!v.ok) {
-      const categories = await Category.find({ isActive: true }).lean();
-      return res.render("editProduct", {
-        product: product.toObject(),
-        categories,
-        message: { success: false, text: v.error },
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
       });
     }
+
+    // 1. Validate core fields
+    const v = await validateAndNormalizePayload(req.body, {
+      isEdit: true,
+      productId
+    });
+
+    if (!v.ok) {
+      return res.status(400).json({
+        success: false,
+        message: v.error
+      });
+    }
+
     const core = v.data;
 
-    // Validate images if provided (main image optional on edit)
+    // 2. Image handling
     let baseMain = product.mainImage;
-    let baseAdditional = Array.isArray(product.additionalImages) ? [...product.additionalImages] : [];
+    let baseAdditional = [...(product.additionalImages || [])];
 
-    // Handle remove flags from form
-    const removeMain = req.body.removeMainImage === "true" || req.body.removeMainImage === "on";
+    const removeMain =
+      req.body.removeMainImage === "true" ||
+      req.body.removeMainImage === "on";
+
     let removedAdditional = req.body.removedAdditional || [];
-    if (!Array.isArray(removedAdditional) && removedAdditional) {removedAdditional = [removedAdditional];}
+    if (!Array.isArray(removedAdditional) && removedAdditional) {
+      removedAdditional = [removedAdditional];
+    }
 
     if (removedAdditional.length) {
-      const removedSet = new Set(removedAdditional);
-      baseAdditional = baseAdditional.filter((img) => !removedSet.has(img));
+      const removeSet = new Set(removedAdditional);
+      baseAdditional = baseAdditional.filter(img => !removeSet.has(img));
     }
 
-    // If new files uploaded, validate and merge
-    if (req.files && (req.files.mainImage?.[0] || (req.files.additionalImages?.length || 0) > 0)) {
+    if (req.files && (req.files.mainImage?.[0] || req.files.additionalImages?.length)) {
       const img = validateImages(req.files, { requireMainImage: false });
       if (!img.ok) {
-        const categories = await Category.find({ isActive: true }).lean();
-        return res.render("editProduct", {
-          product: product.toObject(),
-          categories,
-          message: { success: false, text: img.error },
+        return res.status(400).json({
+          success: false,
+          message: img.error
         });
       }
-      if (img.mainImage) {baseMain = img.mainImage;} // replace main if provided
-      if (img.additionalImages?.length) {baseAdditional = baseAdditional.concat(img.additionalImages);} // append new images
+
+      if (img.mainImage) {baseMain = img.mainImage};
+      if (img.additionalImages.length){baseAdditional = baseAdditional.concat(img.additionalImages)};
     }
 
-    // If requested to remove main image and no replacement uploaded, clear it
-    if (removeMain && !(req.files && req.files.mainImage?.[0])) {
+    if (removeMain && !req.files?.mainImage?.[0]) {
       baseMain = "";
     }
 
-    // Compute pricing
-    const { salesPrice } = computeSalesPrice(core.price, core.offer, core.categoryOffer);
+    // 3. Pricing
+    const { salesPrice } = computeSalesPrice(
+      core.price,
+      core.offer,
+      core.categoryOffer
+    );
 
-    // Update product
+    // 4. Update
     product.name = core.name;
     product.brand = core.brand;
+    product.description = core.description;
     product.price = core.price;
     product.offer = core.offer;
-    product.categoryOffer = core.categoryOffer;
-    product.description = core.description;
     product.category = core.category;
+    product.categoryOffer = core.categoryOffer;
     product.stock = core.stock;
     product.sizes = core.sizes;
     product.rimMaterial = core.rimMaterial;
-    product.finish = core.finish;
+    product.color = core.color;
     product.salesPrice = salesPrice;
     product.mainImage = baseMain;
     product.additionalImages = baseAdditional;
 
     await product.save();
 
-    req.session.message = {
+    return res.status(200).json({
       success: true,
-      text: `Product "${product.name}" has been updated successfully!`,
-    };
-    res.redirect("/admin/products");
+      message: "Product updated successfully"
+    });
+
   } catch (err) {
-    console.error("Error updating product:", err);
+    console.error("EDIT PRODUCT ERROR:", err);
 
-    let errorMessage = "Failed to update product. Please try again.";
     if (err.code === 11000) {
-      errorMessage = "A product with this name already exists.";
-    } else if (err.name === "ValidationError") {
-      errorMessage = "Please check your input data and try again.";
+      return res.status(409).json({
+        success: false,
+        message: "A product with this name already exists"
+      });
     }
 
-    try {
-      const product = await Product.findById(req.params.id).lean();
-      const categories = await Category.find({ isActive: true }).lean();
-      res.render("editProduct", {
-        product,
-        categories,
-        message: { success: false, text: errorMessage },
-      });
-    } catch (renderErr) {
-      console.error("Error rendering edit page after update failure:", renderErr);
-      req.session.message = { success: false, text: errorMessage };
-      res.redirect("/admin/products");
-    }
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
   }
 };
 

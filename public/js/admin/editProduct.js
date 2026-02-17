@@ -1,19 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
 
   /* =========================
-     SERVER MESSAGE
-  ========================= */
-
-  if (window.__SERVER_MESSAGE__ && window.__SERVER_MESSAGE__.text) {
-    Swal.fire({
-      icon: window.__SERVER_MESSAGE__.success ? "success" : "error",
-      title: window.__SERVER_MESSAGE__.success ? "Success" : "Error",
-      text: window.__SERVER_MESSAGE__.text,
-      confirmButtonText: "OK"
-    });
-  }
-
-  /* =========================
      DOM ELEMENTS
   ========================= */
 
@@ -68,6 +55,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const img = document.createElement("img");
     img.src = URL.createObjectURL(file);
     container.appendChild(img);
+  }
+
+  function clearErrors() {
+    document
+      .querySelectorAll(".form-group")
+      .forEach(g => g.classList.remove("error"));
   }
 
   /* =========================
@@ -144,12 +137,6 @@ document.addEventListener("DOMContentLoaded", () => {
           addPreview(additionalPreview, file);
           additionalIndex++;
 
-          const dt = new DataTransfer();
-          Array.from(additionalPreview.querySelectorAll("img")).forEach((_, i) => {
-            if (additionalQueue[i]) {
-              dt.items.add(file);
-            }
-          });
           setFileToInput(additionalImagesInput, file);
 
           if (additionalIndex < additionalQueue.length) {
@@ -181,17 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* =========================
-     VALIDATION
-  ========================= */
-
-  function clearErrors() {
-    document
-      .querySelectorAll(".form-group")
-      .forEach(g => g.classList.remove("error"));
-  }
-
-  /* =========================
-     FORM SUBMIT
+     FORM SUBMIT (AJAX)
   ========================= */
 
   form.addEventListener("submit", function (e) {
@@ -280,11 +257,55 @@ document.addEventListener("DOMContentLoaded", () => {
       icon: "question",
       showCancelButton: true,
       confirmButtonText: "Yes, update it!"
-    }).then(result => {
+    }).then(async result => {
       if (!result.isConfirmed) return;
 
       loadingOverlay?.classList.add("active");
-      form.submit();
+
+      const formData = new FormData(form);
+
+      try {
+        const res = await fetch(form.action, {
+          method: "POST",
+          body: formData
+        });
+
+        let data;
+        const contentType = res.headers.get("content-type");
+
+        if (contentType && contentType.includes("application/json")) {
+          data = await res.json();
+        } else {
+          const text = await res.text();
+          throw new Error("Server returned non-JSON response");
+        }
+
+        if (!res.ok) {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: data.message || "Request failed"
+          });
+          return;
+        }
+
+
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: data.message
+        }).then(() => {
+          window.location.href = "/admin/products";
+        });
+
+      } catch (err) {
+        loadingOverlay?.classList.remove("active");
+        Swal.fire({
+          icon: "error",
+          title: "Server Error",
+          text: "Something went wrong"
+        });
+      }
     });
   });
 
