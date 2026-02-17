@@ -4,20 +4,28 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Edit Product - StarForge</title>
-
   <link rel="stylesheet" href="/css/admin/common.css" />
   <link rel="stylesheet" href="/css/admin/addProduct.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-
 <body>
   <%- include('../partials/admin/navbar') %>
 
   <div class="main-content">
     <div class="container">
-      <h2>Edit Product</h2>
+      <!-- Page Header with Back Button -->
+      <div class="page-header">
+        <button type="button" class="back-btn" onclick="window.location.href='/admin/products'">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          <span>Back to Products</span>
+        </button>
+        <h2>Edit Product</h2>
+      </div>
 
+      <!-- Form -->
       <form
         id="editProductForm"
         action="/admin/products/edit/<%= product._id %>"
@@ -25,112 +33,200 @@
         enctype="multipart/form-data"
       >
 
-        <!-- PRODUCT DETAILS -->
+        <!-- Product Details Section -->
         <div class="form-section">
-          <h3>Product Details</h3>
+          <h3>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+            </svg>
+            Product Details
+          </h3>
 
-          <div class="form-group">
-            <label>Product Name</label>
-            <input id="name" name="name" value="<%= product.name %>" />
+          <div class="form-row">
+            <div class="form-group">
+              <label for="name">Product Name <span class="required">*</span></label>
+              <input type="text" id="name" name="name" value="<%= product.name %>" placeholder="Enter product name" />
+              <span class="error-message">Product name is required</span>
+            </div>
+
+            <div class="form-group">
+              <label for="brand">Brand <span class="required">*</span></label>
+              <input type="text" id="brand" name="brand" value="<%= product.brand %>" placeholder="Enter brand name" />
+              <span class="error-message">Brand is required</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="price">Price (₹) <span class="required">*</span></label>
+              <input type="number" id="price" name="price" value="<%= product.price %>" placeholder="0.00" step="0.01" min="0" />
+              <span class="error-message">Price is required</span>
+            </div>
+
+            <div class="form-group">
+              <label for="offer">Offer (%)</label>
+              <input type="number" id="offer" name="offer" value="<%= product.offer %>" placeholder="0" min="0" max="100" />
+              <span class="error-message">Offer must be between 0 and 100</span>
+            </div>
           </div>
 
           <div class="form-group">
-            <label>Brand</label>
-            <input id="brand" name="brand" value="<%= product.brand %>" />
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="4" placeholder="Describe your product..."><%= product.description %></textarea>
+            <span class="error-message">Description is required</span>
           </div>
 
-          <div class="form-group">
-            <label>Price</label>
-            <input id="price" name="price" value="<%= product.price %>" />
+          <div class="form-row">
+            <div class="form-group">
+              <label for="category">Category <span class="required">*</span></label>
+              <select id="category" name="category">
+                <% categories.forEach(c => { %>
+                  <option value="<%= c._id %>" <%= c._id.toString() === product.category.toString() ? 'selected' : '' %>>
+                    <%= c.name %>
+                  </option>
+                <% }) %>
+              </select>
+              <span class="error-message">Category is required</span>
+            </div>
+
+            <div class="form-group">
+              <label for="stock">Stock <span class="required">*</span></label>
+              <input type="number" id="stock" name="stock" value="<%= product.stock %>" placeholder="0" min="0" />
+              <span class="error-message">Stock is required</span>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label>Offer (%)</label>
-            <input id="offer" name="offer" value="<%= product.offer %>" />
-          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="sizes">Size <span class="required">*</span></label>
+              <input type="text" id="sizes" name="sizes" value="<%= product.sizes.join(', ') %>" placeholder="e.g., S, M, L, XL" />
+              <span class="help-text">Separate sizes with commas</span>
+              <span class="error-message">Size is required</span>
+            </div>
 
-          <div class="form-group">
-            <label>Description</label>
-            <textarea id="description" name="description"><%= product.description %></textarea>
-          </div>
-
-          <div class="form-group">
-            <label>Category</label>
-            <select id="category" name="category">
-              <% categories.forEach(c => { %>
-                <option value="<%= c._id %>" <%= c._id.toString() === product.category.toString() ? 'selected' : '' %>>
-                  <%= c.name %>
-                </option>
-              <% }) %>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Size</label>
-            <input id="sizes" name="sizes" value="<%= product.sizes.join(', ') %>" />
-          </div>
-
-          <div class="form-group">
-            <label>Rim Material</label>
-            <input id="rimMaterial" name="rimMaterial" value="<%= product.rimMaterial %>" />
-          </div>
-
-          <div class="form-group">
-            <label>Stock</label>
-            <input id="stock" name="stock" value="<%= product.stock %>" />
+            <div class="form-group">
+              <label for="rimMaterial">Rim Material</label>
+              <input type="text" id="rimMaterial" name="rimMaterial" value="<%= product.rimMaterial %>" placeholder="e.g., Metal, Plastic" />
+            </div>
           </div>
         </div>
 
-        <!-- IMAGES -->
+        <!-- Images Section -->
         <div class="form-section">
-          <h3>Images</h3>
+          <h3>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            Product Images
+          </h3>
 
+          <!-- Main Image -->
           <div class="form-group">
-            <label>Main Image (optional)</label>
-            <input type="file" id="mainImage" name="mainImage" accept="image/*" />
+            <label for="mainImage">Main Image <span class="optional">(leave empty to keep current)</span></label>
+            
             <% if (product.mainImage) { %>
-              <img src="<%= product.mainImage %>" width="100" />
-              <label>
-                <input type="checkbox" name="removeMainImage" /> Remove current
-              </label>
-            <% } %>
-            <div id="mainImagePreview"></div>
-          </div>
-
-          <div class="form-group">
-            <label>Additional Images</label>
-            <input type="file" id="additionalImages" name="additionalImages" multiple />
-            <div id="additionalImagesPreview"></div>
-
-            <% product.additionalImages.forEach(img => { %>
-              <div>
-                <img src="<%= img %>" width="80" />
-                <label>
-                  <input type="checkbox" name="removedAdditional" value="<%= img %>" />
-                  Remove
+            <div class="current-image-container">
+              <div class="current-image-label">Current Main Image:</div>
+              <div class="current-image-wrapper">
+                <img src="<%= product.mainImage %>" alt="Main product image" />
+                <label class="remove-image-checkbox">
+                  <input type="checkbox" name="removeMainImage" />
+                  <span>Remove this image</span>
                 </label>
               </div>
-            <% }) %>
+            </div>
+            <% } %>
+
+            <label for="mainImage" class="file-input-wrapper">
+              <div class="file-input-display">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span>Upload new main image</span>
+              </div>
+              <input type="file" id="mainImage" name="mainImage" accept="image/*" />
+            </label>
+            <span class="help-text">Recommended: Square image (1:1 ratio), max 5MB</span>
+            <div id="mainImagePreview" class="image-preview main-image-preview"></div>
+          </div>
+
+          <!-- Additional Images -->
+          <div class="form-group">
+            <label for="additionalImages">Additional Images <span class="optional">(up to 5 total)</span></label>
+            
+            <% if (product.additionalImages && product.additionalImages.length > 0) { %>
+            <div class="current-images-grid">
+              <div class="current-image-label">Current Additional Images:</div>
+              <div class="additional-images-container">
+                <% product.additionalImages.forEach((img, index) => { %>
+                <div class="additional-image-item">
+                  <img src="<%= img %>" alt="Additional image <%= index + 1 %>" />
+                  <label class="remove-image-checkbox">
+                    <input type="checkbox" name="removedAdditional" value="<%= img %>" />
+                    <span>Remove</span>
+                  </label>
+                </div>
+                <% }) %>
+              </div>
+            </div>
+            <% } %>
+
+            <label for="additionalImages" class="file-input-wrapper">
+              <div class="file-input-display">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span>Add more images</span>
+              </div>
+              <input type="file" id="additionalImages" name="additionalImages" accept="image/*" multiple />
+            </label>
+            <span class="help-text">You can select multiple images at once</span>
+            <div id="additionalImagesPreview" class="image-preview additional-image-preview"></div>
           </div>
         </div>
 
-        <button type="submit">Update Product</button>
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="window.location.href='/admin/products'">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            Update Product
+          </button>
+        </div>
       </form>
     </div>
   </div>
 
-  <!-- CROP MODAL -->
+  <!-- Crop Modal -->
   <div id="cropModal" class="crop-modal">
     <div class="crop-modal-content">
       <h3>Crop Image</h3>
       <div class="crop-image-wrapper">
-        <img id="cropImage" />
+        <img id="cropImage" alt="Image to crop" />
       </div>
       <div class="crop-buttons">
-        <button id="cropButton" type="button">Crop</button>
-        <button id="cancelCropButton" type="button">Cancel</button>
+        <button type="button" id="cancelCropButton">Cancel</button>
+        <button type="button" id="cropButton">Crop & Save</button>
       </div>
     </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <p class="loading-text">Updating product...</p>
   </div>
 
   <script>

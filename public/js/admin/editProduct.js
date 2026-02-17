@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
 
   /* =========================
-     SERVER MESSAGE (SAFE)
+     SERVER MESSAGE
   ========================= */
 
   if (window.__SERVER_MESSAGE__ && window.__SERVER_MESSAGE__.text) {
@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* =========================
-     DOM ELEMENTS (SAFE)
+     DOM ELEMENTS
   ========================= */
 
   const form = document.getElementById("editProductForm");
@@ -24,6 +24,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const mainImageInput = document.getElementById("mainImage");
   const additionalImagesInput = document.getElementById("additionalImages");
+
+  const mainPreview = document.getElementById("mainImagePreview");
+  const additionalPreview = document.getElementById("additionalImagesPreview");
 
   const cropModal = document.getElementById("cropModal");
   const cropImage = document.getElementById("cropImage");
@@ -37,18 +40,13 @@ document.addEventListener("DOMContentLoaded", () => {
   ========================= */
 
   let cropper = null;
-  let currentInput = null;
+  let activeInput = null;
 
-  let additionalFilesQueue = [];
+  let additionalQueue = [];
   let additionalIndex = 0;
 
-  const croppedFiles = {
-    mainImage: null,
-    additionalImages: []
-  };
-
   /* =========================
-     MODAL HELPERS (ADDED)
+     HELPERS
   ========================= */
 
   function openCropModal() {
@@ -59,12 +57,25 @@ document.addEventListener("DOMContentLoaded", () => {
     cropModal.classList.remove("active");
   }
 
+  function setFileToInput(input, file) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+  }
+
+  function addPreview(container, file, clear = false) {
+    if (clear) container.innerHTML = "";
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(file);
+    container.appendChild(img);
+  }
+
   /* =========================
-     INIT CROPPER (UNCHANGED)
+     INIT CROPPER
   ========================= */
 
   function initCropper(file, input) {
-    currentInput = input;
+    activeInput = input;
     openCropModal();
 
     const reader = new FileReader();
@@ -77,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
         cropper = new Cropper(cropImage, {
           aspectRatio: 1,
           viewMode: 1,
-          autoCropArea: 0.8,
+          autoCropArea: 1,
           responsive: true,
           movable: true,
           zoomable: true,
@@ -93,31 +104,30 @@ document.addEventListener("DOMContentLoaded", () => {
      FILE INPUT HANDLERS
   ========================= */
 
-  mainImageInput?.addEventListener("change", function () {
+  mainImageInput.addEventListener("change", function () {
     if (this.files && this.files[0]) {
       initCropper(this.files[0], mainImageInput);
     }
   });
 
-  additionalImagesInput?.addEventListener("change", function () {
-    additionalFilesQueue = Array.from(this.files)
-      .slice(0, 5 - croppedFiles.additionalImages.length);
-
+  additionalImagesInput.addEventListener("change", function () {
+    additionalQueue = Array.from(this.files).slice(0, 5);
     additionalIndex = 0;
 
-    if (additionalFilesQueue.length) {
-      initCropper(additionalFilesQueue[additionalIndex], additionalImagesInput);
+    if (additionalQueue.length) {
+      initCropper(additionalQueue[additionalIndex], additionalImagesInput);
     }
   });
 
   /* =========================
-     CROP CONFIRM (SINGLE HANDLER)
+     CROP & SAVE
   ========================= */
 
   cropButton.addEventListener("click", () => {
-    if (!cropper || !currentInput) return;
+    if (!cropper || !activeInput) return;
 
-    cropper.getCroppedCanvas({ width: 300, height: 300 })
+    cropper
+      .getCroppedCanvas({ width: 800, height: 800 })
       .toBlob(blob => {
 
         const file = new File(
@@ -126,51 +136,57 @@ document.addEventListener("DOMContentLoaded", () => {
           { type: "image/jpeg" }
         );
 
-        if (currentInput === mainImageInput) {
-          croppedFiles.mainImage = file;
-          currentInput = null;
+        if (activeInput === mainImageInput) {
+          setFileToInput(mainImageInput, file);
+          addPreview(mainPreview, file, true);
           closeCropModal();
         } else {
-          croppedFiles.additionalImages.push(file);
+          addPreview(additionalPreview, file);
           additionalIndex++;
 
-          if (additionalIndex < additionalFilesQueue.length) {
-            initCropper(
-              additionalFilesQueue[additionalIndex],
-              additionalImagesInput
-            );
+          const dt = new DataTransfer();
+          Array.from(additionalPreview.querySelectorAll("img")).forEach((_, i) => {
+            if (additionalQueue[i]) {
+              dt.items.add(file);
+            }
+          });
+          setFileToInput(additionalImagesInput, file);
+
+          if (additionalIndex < additionalQueue.length) {
+            initCropper(additionalQueue[additionalIndex], additionalImagesInput);
             return;
           }
 
-          currentInput = null;
           closeCropModal();
         }
 
         cropper.destroy();
         cropper = null;
+        activeInput = null;
 
       }, "image/jpeg", 0.9);
   });
 
   /* =========================
-     CROP CANCEL
+     CANCEL CROP
   ========================= */
 
   cancelCropButton.addEventListener("click", () => {
-    closeCropModal();
     if (cropper) cropper.destroy();
     cropper = null;
-    currentInput = null;
-    additionalFilesQueue = [];
+    activeInput = null;
+    additionalQueue = [];
     additionalIndex = 0;
+    closeCropModal();
   });
 
   /* =========================
-     VALIDATION HELPERS
+     VALIDATION
   ========================= */
 
   function clearErrors() {
-    document.querySelectorAll(".form-group")
+    document
+      .querySelectorAll(".form-group")
       .forEach(g => g.classList.remove("error"));
   }
 
@@ -182,7 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     clearErrors();
 
-    let isValid = true;
+    let valid = true;
     const errors = [];
 
     const name = document.getElementById("name");
@@ -198,58 +214,58 @@ document.addEventListener("DOMContentLoaded", () => {
     if (name.value.trim().length < 3) {
       name.parentElement.classList.add("error");
       errors.push("Product name must be at least 3 characters.");
-      isValid = false;
+      valid = false;
     }
 
     if (brand.value.trim().length < 2) {
       brand.parentElement.classList.add("error");
       errors.push("Brand must be at least 2 characters.");
-      isValid = false;
+      valid = false;
     }
 
     if (Number(price.value) <= 0) {
       price.parentElement.classList.add("error");
       errors.push("Price must be positive.");
-      isValid = false;
+      valid = false;
     }
 
     if (offer.value && (offer.value < 0 || offer.value > 100)) {
       offer.parentElement.classList.add("error");
       errors.push("Offer must be between 0 and 100.");
-      isValid = false;
+      valid = false;
     }
 
     if (!description.value.trim()) {
       description.parentElement.classList.add("error");
-      errors.push("Description required.");
-      isValid = false;
+      errors.push("Description is required.");
+      valid = false;
     }
 
     if (!category.value) {
       category.parentElement.classList.add("error");
-      errors.push("Category required.");
-      isValid = false;
+      errors.push("Category is required.");
+      valid = false;
     }
 
     if (!sizes.value.trim()) {
       sizes.parentElement.classList.add("error");
-      errors.push("Sizes required.");
-      isValid = false;
+      errors.push("Sizes are required.");
+      valid = false;
     }
 
     if (!rimMaterial.value.trim()) {
       rimMaterial.parentElement.classList.add("error");
-      errors.push("Rim material required.");
-      isValid = false;
+      errors.push("Rim material is required.");
+      valid = false;
     }
 
     if (Number(stock.value) < 0) {
       stock.parentElement.classList.add("error");
       errors.push("Stock cannot be negative.");
-      isValid = false;
+      valid = false;
     }
 
-    if (!isValid) {
+    if (!valid) {
       Swal.fire({
         icon: "error",
         title: "Validation Error",
@@ -267,22 +283,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }).then(result => {
       if (!result.isConfirmed) return;
 
-      if (croppedFiles.mainImage) {
-        const dt = new DataTransfer();
-        dt.items.add(croppedFiles.mainImage);
-        mainImageInput.files = dt.files;
-      }
-
-      if (croppedFiles.additionalImages.length) {
-        const dt = new DataTransfer();
-        croppedFiles.additionalImages.forEach(f => dt.items.add(f));
-        additionalImagesInput.files = dt.files;
-      }
-
-      if (loadingOverlay) {
-        loadingOverlay.classList.add("active");
-      }
-
+      loadingOverlay?.classList.add("active");
       form.submit();
     });
   });
