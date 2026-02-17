@@ -103,7 +103,7 @@
               </span>
             </div>
           </div>
-          <button type="button" class="edit-profile-btn" onclick="openEditProfileModal()">
+          <button id="editProfileBtn" class="edit-profile-btn">
             <i class="fas fa-edit"></i> Edit Profile
           </button>
         </div>
@@ -139,17 +139,6 @@
           <input type="text" name="mobile" class="form-input" value="<%= user.mobile || '' %>" pattern="[0-9]{10}" maxlength="10" title="Please enter a valid 10-digit mobile number">
           <div class="invalid-feedback"></div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Profile Image</label>
-          <div class="file-upload-area" onclick="document.getElementById('profileImageEdit').click()">
-            <div class="upload-icon">
-              <i class="fas fa-cloud-upload-alt"></i>
-            </div>
-            <div class="upload-text">Click to select or drag and drop</div>
-            <div class="upload-hint">JPG, PNG or GIF (max 5MB) - Optional</div>
-          </div>
-          <input type="file" id="profileImageEdit" name="profileImage" accept="image/*" style="display: none;">
-        </div>
         <div class="modal-actions">
           <button type="button" class="btn-secondary" onclick="closeEditProfileModal()">Cancel</button>
           <button type="submit" class="btn-primary">
@@ -181,7 +170,7 @@
             <div class="upload-text">Click to select or drag and drop</div>
             <div class="upload-hint">JPG, PNG or GIF (max 5MB)</div>
           </div>
-          <input type="file" id="profileImageInput" name="profileImage" accept="image/*" required>
+          <input type="file" id="profileImageInput" name="profileImage" accept="image/*" style="display:none;" required>
         </div>
         <div class="modal-actions">
           <% if (user.profileImage) { %>
@@ -206,6 +195,18 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="/js/user/landingPage.js"></script>
   <script src="/js/user/userProfile.js"></script>
+  <script>
+    // Wire up the Edit Profile button
+    document.getElementById('editProfileBtn').addEventListener('click', openEditProfileModal);
+
+    // Flash messages rendered by EJS (must live here, not in the static .js file)
+    if (typeof success !== 'undefined' && success) {
+      showToast(success.replace(/'/g, "\\'"), 'success');
+    }
+    if (typeof error !== 'undefined' && error) {
+      showToast(error.replace(/'/g, "\\'"), 'error');
+    }
+  </script>
 </body>
 
 </html>

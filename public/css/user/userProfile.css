@@ -516,9 +516,7 @@
       color: #6b7280;
     }
 
-    #profileImageInput {
-      display: none;
-    }
+    /* profileImageInput is hidden via inline style="display:none" on the element */
 
     .toast {
       position: fixed;

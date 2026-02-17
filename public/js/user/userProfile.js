@@ -1,4 +1,4 @@
-
+console.log('userProfile.js loaded');
     
     
     function showFieldError(field, message) {
@@ -93,7 +93,7 @@
       } else if (!/[A-Za-z]/.test(name)) {
         setError(nameInput, 'Name must contain letters');
         valid = false;
-      } else if (/([\-'])\1{2,}/.test(name)) {
+      } else if (/([-'])\1{2,}/.test(name)) {
         setError(nameInput, 'Repeated symbols are not allowed');
         valid = false;
       } else if (/^[-']|[-']$/.test(name)) {
@@ -133,7 +133,6 @@
     }
 
     function resetEditProfileModal() {
-      const modal = document.getElementById('editProfileModal');
       const form = document.getElementById('editProfileForm');
 
       if (!form) return;
@@ -209,28 +208,34 @@
     handleFileUpload('profileImageInput', '#imageUploadModal .file-upload-area');
     handleFileUpload('profileImageEdit', '#editProfileModal .file-upload-area');
 
-    const uploadArea = document.querySelector('.file-upload-area');
-    
-    uploadArea.addEventListener('dragover', function(e) {
-      e.preventDefault();
-      this.classList.add('dragover');
-    });
+    document.querySelectorAll('.file-upload-area').forEach(uploadArea => {
+  uploadArea.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    this.classList.add('dragover');
+  });
 
-    uploadArea.addEventListener('dragleave', function(e) {
-      e.preventDefault();
-      this.classList.remove('dragover');
-    });
+  uploadArea.addEventListener('dragleave', function (e) {
+    e.preventDefault();
+    this.classList.remove('dragover');
+  });
 
-    uploadArea.addEventListener('drop', function(e) {
-      e.preventDefault();
-      this.classList.remove('dragover');
-      
-      const files = e.dataTransfer.files;
-      if (files.length > 0) {
-        document.getElementById('profileImageInput').files = files;
-        document.getElementById('profileImageInput').dispatchEvent(new Event('change'));
-      }
-    });
+  uploadArea.addEventListener('drop', function (e) {
+    e.preventDefault();
+    this.classList.remove('dragover');
+
+    const files = e.dataTransfer.files;
+    if (!files || !files.length) return;
+
+    const input = this.querySelector('input[type="file"]')
+      || document.getElementById('profileImageInput')
+      || document.getElementById('profileImageEdit');
+
+    if (!input) return;
+
+    input.files = files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+});
 
 
 
@@ -325,10 +330,4 @@
       }
     });
 
-    <% if (typeof success !== 'undefined' && success) { %>
-      showToast('<%= success %>', 'success');
-    <% } %>
-
-    <% if (typeof error !== 'undefined' && error) { %>
-      showToast('<%= error %>', 'error');
-    <% } %>
+// Flash messages are handled in the inline <script> block inside the EJS template.

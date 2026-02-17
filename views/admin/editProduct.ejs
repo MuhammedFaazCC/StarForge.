@@ -230,7 +230,7 @@
   </div>
 
   <script>
-    window.__SERVER_MESSAGE__ = <%- JSON.stringify(message || null) %>;
+    window.__SERVER_MESSAGE__ = JSON.stringify(message || null);
   </script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
