@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Products - StarForge</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@600&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="/css/admin/common.css">
     <link rel="stylesheet" href="/css/admin/products.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -26,7 +27,8 @@
                     </div>
 
                     <div class="products-controls">
-                        <input type="text" id="searchInput" placeholder="Search by name..." value="<%= search || '' %>"/>
+                        <input type="text" id="searchInput" placeholder="Search by name..."
+                            value="<%= search || '' %>" />
                     </div>
 
                     <div class="table-responsive">
@@ -92,35 +94,29 @@
                         <div class="pagination">
 
                             <% if (hasPrevPage) { %>
-                                <a
-                                href="/admin/products?page=<%= prevPage %><%= search ? `&search=${search}` : '' %>"
-                                class="page-link"
-                                >
-                                Previous
+                                <a href="/admin/products?page=<%= prevPage %><%= search ? `&search=${search}` : '' %>"
+                                    class="page-link">
+                                    Previous
                                 </a>
-                            <% } else { %>
-                                <span class="page-link disabled">Previous</span>
-                            <% } %>
+                                <% } else { %>
+                                    <span class="page-link disabled">Previous</span>
+                                    <% } %>
 
-                            <% for (let i = 1; i <= totalPages; i++) { %>
-                                <a
-                                href="/admin/products?page=<%= i %><%= search ? `&search=${search}` : '' %>"
-                                class="page-link <%= i === currentPage ? 'active' : '' %>"
-                                >
-                                <%= i %>
-                                </a>
-                            <% } %>
+                                        <% for (let i=1; i <=totalPages; i++) { %>
+                                            <a href="/admin/products?page=<%= i %><%= search ? `&search=${search}` : '' %>"
+                                                class="page-link <%= i === currentPage ? 'active' : '' %>">
+                                                <%= i %>
+                                            </a>
+                                            <% } %>
 
-                            <% if (hasNextPage) { %>
-                                <a
-                                href="/admin/products?page=<%= nextPage %><%= search ? `&search=${search}` : '' %>"
-                                class="page-link"
-                                >
-                                Next
-                                </a>
-                            <% } else { %>
-                                <span class="page-link disabled">Next</span>
-                            <% } %>
+                                                <% if (hasNextPage) { %>
+                                                    <a href="/admin/products?page=<%= nextPage %><%= search ? `&search=${search}` : '' %>"
+                                                        class="page-link">
+                                                        Next
+                                                    </a>
+                                                    <% } else { %>
+                                                        <span class="page-link disabled">Next</span>
+                                                        <% } %>
 
                         </div>
                     </div>
@@ -131,72 +127,63 @@
                     <script src="/js/admin/common.js"></script>
                     <script src="/js/admin/products.js"></script>
                     <script>
-                        const searchInput = document.getElementById("searchInput");
+  const searchInput = document.getElementById("searchInput");
 
-                        if (searchInput) {
-                            let timer;
-                            searchInput.addEventListener("input", function () {
-                            clearTimeout(timer);
-                            timer = setTimeout(() => {
-                                const value = this.value.trim();
-                                const params = new URLSearchParams(window.location.search);
+  if (searchInput) {
+    let timer;
+    searchInput.addEventListener("input", function () {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const value = this.value.trim();
+        const params = new URLSearchParams(window.location.search);
 
-                                if (value) {
-                                params.set("search", value);
-                                params.set("page", 1);
-                                } else {
-                                params.delete("search");
-                                params.set("page", 1);
-                                }
+        if (value) {
+          params.set("search", value);
+          params.set("page", 1);
+        } else {
+          params.delete("search");
+          params.set("page", 1);
+        }
 
-                                window.location.href = `/admin/products?${params.toString()}`;
-                            }, 300);
-                            });
-                        }
+        window.location.href = `/admin/products?${params.toString()}`;
+      }, 300);
+    });
+  }
 
-                        function handleAddProduct() {
-                                window.location.href = '/admin/products/add';
-                        }
+  function handleAddProduct() {
+    window.location.href = '/admin/products/add';
+  }
 
-                        function handleViewProduct(productId) {
-                                window.location.href = `/admin/products/view/${productId}`;
-                        }
+  function handleViewProduct(productId) {
+    window.location.href = `/admin/products/view/${productId}`;
+  }
 
-                        function handleEditProduct(productId) {
-                                window.location.href = `/admin/products/edit/${productId}`;
-                        }
+  function handleEditProduct(productId) {
+    window.location.href = `/admin/products/edit/${productId}`;
+  }
 
-        <% if (message) { %>
-            <% if (message.success !== undefined) { %>
-                                Swal.fire({
-                                    icon: '<%= message.success ? "success" : "error" %>',
-                                    title: '<%= message.success ? "Success!" : "Error!" %>',
-                                    text: '<%= message.text %>',
-                                    timer: 3000,
-                                    showConfirmButton: false,
-                                    toast: true,
-                                    position: 'top-end'
-                                });
-            <% } else { %>
-                                Swal.fire({
-                                    icon: '<%= message.type %>',
-                                    title: '<%= message.type === "success" ? "Success!" : message.type === "error" ? "Error!" : "Info" %>',
-                                    text: '<%= message.text %>',
-                                    timer: 3000,
-                                    showConfirmButton: false,
-                                    toast: true,
-                                    position: 'top-end'
-                                });
-            <% } %>
-        <% } %>
+  document.addEventListener('DOMContentLoaded', function () {
+    const productsCount = document.querySelectorAll('#productsTable tbody tr').length;
+    if (productsCount > 0) {
+      console.log(`Loaded ${productsCount} products successfully`);
+    }
+  });
+</script>
 
-                            document.addEventListener('DOMContentLoaded', function () {
-                                const productsCount = document.querySelectorAll('#productsTable tbody tr').length;
-                                if (productsCount > 0) {
-                                    console.log(`Loaded ${productsCount} products successfully`);
-                                }
-                            });
-                    </script>
+<% if (message && typeof message === 'object') { %>
+<script>
+  Swal.fire({
+    icon: "<%= message.success ? 'success' : 'error' %>",
+    title: "<%= message.success ? 'Success!' : 'Error!' %>",
+    text: "<%= message.text || '' %>",
+    timer: 3000,
+    showConfirmButton: false,
+    toast: true,
+    position: 'top-end'
+  });
+</script>
+<% } %>
+
 </body>
 
 </html>

@@ -116,8 +116,7 @@
           <div class="form-row">
             <div class="form-group">
               <label for="sizes">Size <span class="required">*</span></label>
-              <input type="text" id="sizes" name="sizes" placeholder="e.g., S, M, L, XL" />
-              <span class="help-text">Separate sizes with commas</span>
+              <input type="text" id="sizes" name="sizes" placeholder="Enter size in Inches" />
               <div id="sizesPreview" class="sizes-preview"></div>
               <span class="error-message">Size is required</span>
             </div>
@@ -156,7 +155,7 @@
                 </svg>
                 <span>Click to upload main image</span>
               </div>
-              <input type="file" id="mainImage" name="mainImage" accept="image/*" />
+              <input type="file" id="mainImage" name="mainImage" accept="image/*">
             </label>
             <span class="help-text">Recommended: Square image (1:1 ratio), max 5MB</span>
             <div id="mainImagePreview" class="image-preview main-image-preview"></div>
@@ -200,7 +199,7 @@
   </div>
 
   <!-- Crop Modal -->
-  <div id="cropModal" class="crop-modal">
+  <div id="cropModal" style="display:none" class="crop-modal">
     <div class="crop-modal-content">
       <h3>Crop Image</h3>
       <div class="crop-image-wrapper">

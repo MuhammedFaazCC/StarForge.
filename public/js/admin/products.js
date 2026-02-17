@@ -10,6 +10,50 @@ if (toggleBtn && sidePanel && mainContent) {
   });
 }
 
+window.deleteProduct = async function (productId) {
+  const result = await Swal.fire({
+    title: 'Delete product?',
+    text: 'This action cannot be undone.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ef4444',
+    confirmButtonText: 'Delete',
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    const res = await fetch(`/admin/products/delete/${productId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'Delete failed');
+    }
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Deleted',
+      text: data.message,
+      timer: 2000,
+      showConfirmButton: false
+    });
+
+    setTimeout(() => window.location.reload(), 1200);
+
+  } catch (err) {
+    console.error(err);
+    Swal.fire({
+      icon: 'error',
+      title: 'Delete failed',
+      text: err.message || 'Something went wrong'
+    });
+  }
+};
+
 document.querySelectorAll(".side-panel a").forEach((link) => {
   link.addEventListener("click", (e) => {
     e.preventDefault();

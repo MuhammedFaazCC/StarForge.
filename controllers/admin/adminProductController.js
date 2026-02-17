@@ -313,8 +313,12 @@ const productsPage = async (req, res) => {
 
     const totalPages = Math.ceil(totalProducts / limit);
 
-    const message = req.session.message;
-    req.session.message = null;
+    const message =
+      req.session.message && typeof req.session.message === 'object'
+        ? req.session.message
+        : null;
+
+    delete req.session.message;
 
     res.render("products", {
       products,
@@ -364,57 +368,67 @@ const addProduct = async (req, res) => {
 
 const productAdd = async (req, res) => {
   try {
+    const categories = await Category.find({ isActive: true });
+
     // Validate and normalize core fields
     const v = await validateAndNormalizePayload(req.body, { isEdit: false });
     if (!v.ok) {
-      return res.status(400).json({ success: false, message: v.error });
+      return res.render("addProducts", {
+        categories,
+        message: { success: false, text: v.error }
+      });
     }
-    const core = v.data;
 
-    // Validate images (mainImage required on add)
+    // Validate images
     const img = validateImages(req.files, { requireMainImage: true });
     if (!img.ok) {
-      return res.status(400).json({ success: false, message: img.error });
+      return res.render("addProducts", {
+        categories,
+        message: { success: false, text: img.error }
+      });
     }
 
+    const core = v.data;
+
     // Compute pricing
-    const { effectiveOffer, salesPrice } = computeSalesPrice(core.price, core.offer, core.categoryOffer);
+    const { salesPrice } = computeSalesPrice(
+      core.price,
+      core.offer,
+      core.categoryOffer
+    );
 
     const newProduct = new Product({
-      name: core.name,
-      brand: core.brand,
-      price: core.price,
-      offer: core.offer,
-      categoryOffer: core.categoryOffer,
+      ...core,
       salesPrice,
-      description: core.description,
-      category: core.category,
-      sizes: core.sizes,
-      rimMaterial: core.rimMaterial,
-      finish: core.finish,
-      stock: core.stock,
       mainImage: img.mainImage,
       additionalImages: img.additionalImages,
       isDeleted: false,
-      isListed: true,
+      isListed: true
     });
 
     await newProduct.save();
 
-    return res.status(200).json({
+    req.session.message = {
       success: true,
-      message: `Product "${core.name}" has been added successfully!`,
-      effectiveOffer,
-    });
+      text: `Product has been added successfully!`
+    };
+
+    return res.redirect("/admin/products");
+
   } catch (err) {
     console.error("Error adding product:", err);
+
+    const categories = await Category.find({ isActive: true });
+
     let errorMessage = "Failed to add product. Please try again.";
     if (err.code === 11000) {
       errorMessage = "A product with this name already exists.";
-    } else if (err.name === "ValidationError") {
-      errorMessage = "Please check your input data and try again.";
     }
-    return res.status(500).json({ success: false, message: errorMessage });
+
+    return res.render("addProducts", {
+      categories,
+      message: { success: false, text: errorMessage }
+    });
   }
 };
 
