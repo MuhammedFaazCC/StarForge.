@@ -1,4 +1,20 @@
-/* eslint-disable no-undef */
+function resetAddressForm() {
+  const form = document.getElementById('addressForm');
+  if (!form) return;
+
+  form.reset();
+  form.removeAttribute('data-address-id');
+
+  // Clear validation states
+  form.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+  form.querySelectorAll('.valid').forEach(el => el.classList.remove('valid'));
+
+  // Clear error messages
+  form.querySelectorAll('.error-message').forEach(el => {
+    el.textContent = '';
+  });
+}
+
 function selectAddress(addressId) {
   const selectedCard = document.querySelector(`[data-address-id="${addressId}"]`);
   const hiddenInput = document.getElementById('selectedAddressId');

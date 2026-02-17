@@ -59,6 +59,52 @@ async function handleQuantityChange(event) {
   }
 }
 
+async function removeFromCart(itemId) {
+  try {
+    const confirm = await Swal.fire({
+      title: 'Remove item?',
+      text: 'This item will be removed from your cart.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, remove'
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    const res = await fetch(`/cart/remove/${itemId}`, {
+      method: 'DELETE',
+      headers: { Accept: 'application/json' }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Remove failed');
+    }
+
+    const cartItem = document.querySelector(
+      `.cart-item[data-item-id="${itemId}"]`
+    );
+    if (cartItem) cartItem.remove();
+
+    document.getElementById('total-items').textContent = data.totalItems;
+    document.getElementById('cart-total').textContent = data.cartTotal;
+
+    if (data.totalItems === 0) {
+      location.reload();
+    }
+
+    showToast('Item removed', 'success');
+
+  } catch (err) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: err.message
+    });
+  }
+}
+
 function updateCartUI(cartItem, data) {
   const quantityInput = cartItem.querySelector('.quantity-input');
   const itemSubtotalElement = cartItem.querySelector('.item-subtotal');

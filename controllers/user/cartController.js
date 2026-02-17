@@ -184,19 +184,39 @@ const updateCartQuantity = async (req, res) => {
 
 const removeFromCart = async (req, res) => {
   try {
-    const {  id: cartItemId  } = req.params;
-    console.log(req.params)
+    const { id: cartItemId } = req.params;
+
     await Cart.updateOne(
       { userId: req.session.user._id },
       { $pull: { items: { _id: cartItemId } } }
     );
-    // compute updated cart count
-    const updatedCart = await Cart.findOne({ userId: req.session.user._id });
-    const cartCount = updatedCart && updatedCart.items ? updatedCart.items.length : 0;
-    res.json({ success: true, cartCount });
+
+    const updatedCart = await Cart
+      .findOne({ userId: req.session.user._id })
+      .populate('items.productId');
+
+    const totalItems = updatedCart.items.reduce(
+      (sum, item) => sum + item.quantity,
+      0
+    );
+
+    const cartTotal = updatedCart.items.reduce((sum, item) => {
+      const price = Number(item.productId?.salesPrice) || 0;
+      return sum + price * item.quantity;
+    }, 0);
+
+    return res.json({
+      success: true,
+      totalItems,
+      cartTotal: cartTotal.toFixed(2)
+    });
+
   } catch (error) {
     console.error('Error in removeFromCart:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
   }
 };
 
