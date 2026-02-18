@@ -200,7 +200,7 @@ const signUp = async (req, res) => {
         fullName,
         email,
         mobile,
-        rawPassword: password, // explicit
+        password: password, // explicit
         referralCode,
         referralIdentifier: req.session.referralIdentifier || null
       }

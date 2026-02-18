@@ -307,6 +307,12 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(err => {
           console.error('Wishlist update error:', err);
+          Swal.fire({
+            icon: 'error',
+            title: 'Wishlist Error',
+            text: 'Failed to update wishlist. Please try again.',
+            confirmButtonColor: '#fca120'
+          });
         });
     });
   });

@@ -40,31 +40,42 @@ console.log('userProfile.js loaded');
       document.body.classList.remove('modal-open');
     }
 
-    function removeProfileImage() {
-      if (confirm('Are you sure you want to remove your profile picture?')) {
-        fetch('/profile/remove-image', {
+    async function removeProfileImage() {
+      const result = await Swal.fire({
+        title: 'Remove Profile Picture?',
+        text: 'Are you sure you want to remove your profile picture?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, remove',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6c757d'
+      });
+
+      if (!result.isConfirmed) return;
+
+      try {
+        const response = await fetch('/profile/remove-image', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           }
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            showToast('Profile picture removed successfully!', 'success');
-            setTimeout(() => {
-              window.location.reload();
-            }, 1500);
-          } else {
-            showToast(data.message || 'Failed to remove profile picture', 'error');
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          showToast('An error occurred while removing profile picture', 'error');
         });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showToast('Profile picture removed successfully!', 'success');
+          setTimeout(() => window.location.reload(), 1500);
+        } else {
+          showToast(data.message || 'Failed to remove profile picture', 'error');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        showToast('An error occurred while removing profile picture', 'error');
       }
     }
+
 
     function validateEditProfileForm(form) {
       let valid = true;
@@ -194,112 +205,109 @@ console.log('userProfile.js loaded');
           }
 
           const uploadArea = document.querySelector(uploadAreaSelector);
-          uploadArea.innerHTML = `
-            <div class="upload-icon">
-              <i class="fas fa-check-circle" style="color: #28a745;"></i>
-            </div>
-            <div class="upload-text">${file.name}</div>
-            <div class="upload-hint">Ready to upload</div>
-          `;
+          const icon = uploadArea.querySelector('.upload-icon i');
+          const text = uploadArea.querySelector('.upload-text');
+          const hint = uploadArea.querySelector('.upload-hint');
+
+          if (icon) {
+            icon.className = 'fas fa-check-circle';
+            icon.style.color = '#28a745';
+          }
+
+          if (text) {
+            text.textContent = file.name;
+          }
+
+          if (hint) {
+            hint.textContent = 'Ready to upload';
+          }
         }
       });
     }
 
     handleFileUpload('profileImageInput', '#imageUploadModal .file-upload-area');
-    handleFileUpload('profileImageEdit', '#editProfileModal .file-upload-area');
 
     document.querySelectorAll('.file-upload-area').forEach(uploadArea => {
-  uploadArea.addEventListener('dragover', function (e) {
-    e.preventDefault();
-    this.classList.add('dragover');
-  });
+      uploadArea.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+      });
 
-  uploadArea.addEventListener('dragleave', function (e) {
-    e.preventDefault();
-    this.classList.remove('dragover');
-  });
+      uploadArea.addEventListener('dragleave', function (e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+      });
 
-  uploadArea.addEventListener('drop', function (e) {
-    e.preventDefault();
-    this.classList.remove('dragover');
+      uploadArea.addEventListener('drop', function (e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
 
-    const files = e.dataTransfer.files;
-    if (!files || !files.length) return;
+        const files = e.dataTransfer.files;
+        if (!files || !files.length) return;
 
-    const input = this.querySelector('input[type="file"]')
-      || document.getElementById('profileImageInput')
-      || document.getElementById('profileImageEdit');
+        const input = document.getElementById('profileImageInput');
+        if (!input) return;
 
-    if (!input) return;
+        input.files = files;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
 
-    input.files = files;
-    input.dispatchEvent(new Event('change', { bubbles: true }));
-  });
-});
+        if (!input) return;
 
-
-
-    document.getElementById('editProfileForm').addEventListener('submit', function (e) {
-      e.preventDefault();
-
-      if (!validateEditProfileForm(this)) return;
-
-      const formData = new FormData(this);
-      const submitBtn = this.querySelector('button[type="submit"]');
-
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-
-      fetch('/user/updateProfile', {
-        method: 'POST',
-        body: formData
-      })
-        .then(res => {
-          if (res.redirected) {
-            window.location.href = res.url;
-          } else {
-            return res.json();
-          }
-        })
-        .catch(() => showToast('Profile update failed', 'error'))
-        .finally(() => {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
-        });
+        input.files = files;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      });
     });
 
-    document.getElementById('imageUploadForm').addEventListener('submit', function(e) {
+    document.getElementById('imageUploadForm').addEventListener('submit', async function (e) {
       e.preventDefault();
-      
+
       const formData = new FormData(this);
       const submitBtn = this.querySelector('button[type="submit"]');
-      
+
+      if (!formData.get('profileImage')) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'No Image Selected',
+          text: 'Please select an image to upload'
+        });
+        return;
+      }
+
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
-      
-      fetch('/profile/upload-image', {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
+
+      try {
+        const res = await fetch('/profile/upload-image', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+
         if (data.success) {
-          showToast('Profile picture updated successfully!', 'success');
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
+          Swal.fire({
+            icon: 'success',
+            title: 'Profile Picture Updated',
+            text: data.message || 'Image uploaded successfully',
+            confirmButtonColor: '#fca120'
+          }).then(() => window.location.reload());
         } else {
-          showToast(data.message || 'Failed to upload image', 'error');
+          Swal.fire({
+            icon: 'error',
+            title: 'Upload Failed',
+            text: data.message || 'Unable to upload image'
+          });
         }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        showToast('An error occurred while uploading image', 'error');
-      })
-      .finally(() => {
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Something went wrong while uploading'
+        });
+      } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Picture';
-      });
+      }
     });
 
     function showToast(message, type = 'success') {
@@ -329,5 +337,3 @@ console.log('userProfile.js loaded');
         }
       }
     });
-
-// Flash messages are handled in the inline <script> block inside the EJS template.

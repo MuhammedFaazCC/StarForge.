@@ -2,143 +2,144 @@ const express = require("express");
 const path = require("path");
 const multer = require("multer");
 const db = require("./config/db");
-const flash = require('connect-flash');
+const flash = require("connect-flash");
 const userRouter = require("./routes/userRouter");
 const adminRouter = require("./routes/adminRouter");
-const session = require('express-session');
-const MongoStore = require('connect-mongo');
-const passport = require('./config/passport');
-const cartWishlistCount = require('./middlewares/cartWishlistCount');
-require('dotenv').config();
+const session = require("express-session");
+const MongoStore = require("connect-mongo");
+const passport = require("./config/passport");
+const cartWishlistCount = require("./middlewares/cartWishlistCount");
+require("dotenv").config();
 
 const app = express();
+
 db();
-app.use(flash());
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
-
+/* ---------------- View engine ---------------- */
 app.set("view engine", "ejs");
 app.set("views", [
   path.join(__dirname, "views/admin"),
   path.join(__dirname, "views/user"),
 ]);
 
-// Setup a shared Mongo session store
+/* ---------------- Core middleware ---------------- */
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "public")));
+app.use(flash());
+
+/* ---------------- Session store ---------------- */
 const mongoUrl = process.env.MONGODB_URI;
 const sessionStore = MongoStore.create({
   mongoUrl,
-  collectionName: 'sessions',
+  collectionName: "sessions",
 });
 
-// Define distinct session middlewares
+/* ---------------- Sessions ---------------- */
 const adminSession = session({
-  name: 'admin_session',
-  secret: process.env.ADMIN_SESSION_SECRET || 'starforge-admin-secret',
+  name: "admin_session",
+  secret: process.env.ADMIN_SESSION_SECRET || "starforge-admin-secret",
   resave: false,
   saveUninitialized: false,
   store: sessionStore,
   cookie: {
     maxAge: 24 * 60 * 60 * 1000,
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === "production",
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: "lax",
   },
 });
 
 const userSession = session({
-  name: 'user_session',
-  secret: process.env.USER_SESSION_SECRET || 'starforge-user-secret',
+  name: "user_session",
+  secret: process.env.USER_SESSION_SECRET || "starforge-user-secret",
   resave: false,
   saveUninitialized: false,
   store: sessionStore,
   cookie: {
     maxAge: 24 * 60 * 60 * 1000,
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === "production",
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: "lax",
   },
 });
 
-// Apply sessions per namespace
-app.use('/admin', adminSession);
+/* ---------------- Apply sessions ---------------- */
+app.use("/admin", adminSession);
 app.use((req, res, next) => {
-  if (req.path.startsWith('/admin')) {return next();}
+  if (req.path.startsWith("/admin")){return next()};
   return userSession(req, res, next);
 });
 
-app.use((err, req, res, next) => {
-  // Multer-specific errors
-  if (err instanceof multer.MulterError) {
-    return res.status(400).json({
-      success: false,
-      message: err.message
-    });
-  }
-
-  // File filter errors (custom)
-  if (err && err.message && err.message.toLowerCase().includes("file")) {
-    return res.status(400).json({
-      success: false,
-      message: err.message
-    });
-  }
-
-  // Pass non-multer errors forward
-  next(err);
-});
-
-app.use((err, req, res, next) => {
-  if (err && err.name === "MulterError") {
-    return res.status(400).json({
-      success: false,
-      message: err.message
-    });
-  }
-  next(err);
-});
-
-// Passport should only attach session for user side
+/* ---------------- Passport ---------------- */
 app.use(passport.initialize());
 const passportSession = passport.session();
 app.use((req, res, next) => {
-  if (req.path.startsWith('/admin')) {return next();}
+  if (req.path.startsWith("/admin")){return next()};
   return passportSession(req, res, next);
 });
 
+/* ---------------- Cache control (must be BEFORE routes) ---------------- */
 app.use((req, res, next) => {
-    if (req.path === '/admin' || req.path === '/admin/') {
-        if (req.session && req.session.admin && req.session.admin._id) {
-            console.log("Admin redirect middleware: redirecting to dashboard");
-            return res.redirect('/admin/dashboard');
-        }
-    }
-    next();
-});
-
-app.use((req, res, next) => {
-    res.locals.user = req.session.user || null;
-    res.locals.admin = req.session.admin || null;
-    res.locals.error = req.session.error || null;
-    res.locals.success = req.session.success || null;
-    res.locals.message = req.session.message || null;
-    next();
-});
-
-app.use(cartWishlistCount);
-
-app.use("/", userRouter);
-app.use("/admin", adminRouter);
-app.use((req, res,error) => { 
-  console.log(error)
-  res.status(404).render("pageNotFound");
-});
-app.use((req, res, next) => {
-  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
   next();
 });
- 
+
+/* ---------------- Admin root redirect ---------------- */
+app.use((req, res, next) => {
+  if ((req.path === "/admin" || req.path === "/admin/") &&
+      req.session?.admin?._id) {
+    return res.redirect("/admin/dashboard");
+  }
+  next();
+});
+
+/* ---------------- res.locals ---------------- */
+app.use((req, res, next) => {
+  res.locals.user = req.session.user || null;
+  res.locals.admin = req.session.admin || null;
+  res.locals.error = req.session.error || null;
+  res.locals.success = req.session.success || null;
+  res.locals.message = req.session.message || null;
+  next();
+});
+
+/* ---------------- Cart / Wishlist counts ---------------- */
+app.use(cartWishlistCount);
+
+/* ---------------- Routes ---------------- */
+app.use("/", userRouter);
+app.use("/admin", adminRouter);
+
+/* ---------------- 404 handler ---------------- */
+app.use((req, res) => {
+  res.status(404).render("pageNotFound");
+});
+
+/* ---------------- Error handler ---------------- */
+app.use((err, req, res, next) => {
+  console.error(err);
+
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({
+      success: false,
+      message: err.message,
+    });
+  }
+
+  if (err?.message?.toLowerCase().includes("file")) {
+    return res.status(400).json({
+      success: false,
+      message: err.message,
+    });
+  }
+
+  res.status(500).render("error", {
+    message: "Something went wrong. Please try again later.",
+  });
+});
+
+/* ---------------- Server ---------------- */
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`http://localhost:${PORT}/`);

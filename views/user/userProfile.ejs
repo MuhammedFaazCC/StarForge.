@@ -161,7 +161,7 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      <form id="imageUploadForm" action="/profile/upload-image" method="POST" enctype="multipart/form-data">
+      <form id="imageUploadForm" enctype="multipart/form-data" novalidate>
         <div class="form-group">
           <div class="file-upload-area" onclick="document.getElementById('profileImageInput').click()">
             <div class="upload-icon">
@@ -180,7 +180,7 @@
             </button>
           <% } %>
           <button type="button" class="btn-secondary" onclick="closeImageUploadModal()">Cancel</button>
-          <button type="submit" class="btn-primary">
+          <button type="submit" id="uploadImageBtn" class="btn-primary">
             <i class="fas fa-upload"></i>
             Upload Picture
           </button>

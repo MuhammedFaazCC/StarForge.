@@ -88,60 +88,57 @@ const postEditProfile = async (req, res) => {
   try {
     const user = await User.findById(req.session.user._id);
     if (!user) {
-      req.flash("error", "User not found.");
-      return res.redirect("/pageNotFound");
+      return res.json({ success: false, message: "User not found" });
     }
 
     const { name, email, mobile } = req.body;
-    const trimmedName = name ? name.trim() : "";
-    const normalizedEmail = email ? email.trim().toLowerCase() : "";
-    const trimmedMobile = mobile ? mobile.trim() : undefined;
+    const trimmedName = name?.trim();
+    const normalizedEmail = email?.trim().toLowerCase();
+    const trimmedMobile = mobile?.trim();
 
     if (!trimmedName || !normalizedEmail) {
-      req.flash("error", "Name and email are required.");
-      return res.redirect("/profile");
+      return res.json({ success: false, message: "Name and email are required" });
     }
 
+    // Email unchanged
     if (normalizedEmail === user.email) {
-      // Update basic fields directly when email is unchanged
       user.fullName = trimmedName;
-      user.mobile = typeof trimmedMobile === 'string' && trimmedMobile.length > 0 ? trimmedMobile : user.mobile;
+      user.mobile = trimmedMobile || user.mobile;
 
-      // If a new profile image is uploaded via the same form, replace it
       if (req.file) {
-        if (user.profileImage) {
-          await deleteImage(user.profileImage);
-        }
+        if (user.profileImage) await deleteImage(user.profileImage);
         user.profileImage = req.file.filename;
       }
 
       await user.save();
-      req.flash("success", "Profile updated successfully.");
-      return res.redirect("/profile");
+      return res.json({ success: true, message: "Profile updated successfully" });
     }
 
+    // Email already exists
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
-      req.flash("error", "Email is already taken.");
-      return res.redirect("/profile");
+      return res.json({ success: false, message: "Email is already taken" });
     }
 
+    // OTP flow (still JSON)
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     req.session.otp = {
       code: otp,
       email: normalizedEmail,
       expires: Date.now() + 10 * 60 * 1000,
-      userData: { fullName: trimmedName, mobile: typeof trimmedMobile === 'string' && trimmedMobile.length > 0 ? trimmedMobile : user.mobile },
+      userData: {
+        fullName: trimmedName,
+        mobile: trimmedMobile || user.mobile,
+      },
       action: "editProfile",
     };
 
     await sendOtpEmail(normalizedEmail, otp);
-    req.flash("success", "OTP sent to your new email. Please verify.");
-    res.redirect("/otp-verification");
+
+    return res.redirect("/otp-verification");
   } catch (err) {
     console.error("Error updating profile:", err);
-    req.flash("error", "Error updating profile.");
-    res.redirect("/profile");
+    return res.json({ success: false, message: "Error updating profile" });
   }
 };
 

@@ -1,39 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OTP Verification - StarForge</title>
-    <link rel="stylesheet" href="/css/user/otpVerification.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OTP Verification - StarForge</title>
+  <link rel="stylesheet" href="/css/user/otpVerification.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
-    <div class="background">
-        <div class="login-container">
-            <h2>OTP Verification</h2>
-            <% if (error) { %>
-              <div class="error-message"><%= error %></div>
-            <% } %>
-            <% if (success) { %>
-              <div class="success-message"><%= success %></div>
-            <% } %>
-            <form action="/otp-verification" method="POST">
-              <div class="input-group">
-                <label for="otp">Enter OTP</label>
-                <div class="input-wrapper">
-                  <input type="text" id="otp" name="otp" placeholder="6-digit OTP" required maxlength="6">
-                  <i class="fas fa-lock icon"></i>
-                </div>
-              </div>
-              <button type="submit">Verify OTP</button>
-              <div class="divider" style="margin-top:10px;"></div>
-              <div class="resend-row" style="display:flex;align-items:center;gap:10px;justify-content:space-between;">
-                <button type="button" id="resendOtpBtn" class="btn-secondary" style="background:#f3f4f6;border:1px solid #e5e7eb;color:#111827;padding:10px 14px;border-radius:8px;font-weight:600;cursor:pointer;">
-                  <i class="fas fa-redo" style="margin-right:6px;"></i> Resend OTP
-                </button>
-                <small id="resendStatus" style="color:#6b7280;"></small>
-              </div>
-              <div class="divider">
-                <a href="/<%= otpAction === 'signup' ? 'signup' : 'forgotPassword' %>">Back to <%= otpAction === 'signup' ? 'Sign Up' : 'Forgot Password' %></a>
-              </div>
-            </form>
+<div class="background">
+  <div class="login-container">
+    <h2>OTP Verification</h2>
+
+    <% if (error) { %>
+      <div class="error-message"><%= error %></div>
+    <% } %>
+
+    <% if (success) { %>
+      <div class="success-message"><%= success %></div>
+    <% } %>
+
+    <!-- VERIFY FORM -->
+    <form action="/otp-verification" method="POST">
+      <div class="input-group">
+        <label for="otp">Enter OTP</label>
+        <div class="input-wrapper">
+          <input
+            type="text"
+            id="otp"
+            name="otp"
+            placeholder="6-digit OTP"
+            required
+            maxlength="6"
+            pattern="\d{6}"
+          >
+          <i class="fas fa-lock icon"></i>
+        </div>
+      </div>
+
+      <div id="otpTimer" style="margin:10px 0;font-weight:600;">
+        OTP expires in <span id="timeLeft">--:--</span>
+      </div>
+
+      <!-- ✅ SUBMIT BUTTON -->
+      <button type="submit" id="verifyOtpBtn">Verify OTP</button>
+    </form>
+
+    <div class="divider" style="margin-top:10px;"></div>
+
+    <!-- RESEND -->
+    <div class="resend-row" style="display:flex;align-items:center;gap:10px;justify-content:space-between;">
+      <button type="button" id="resendOtpBtn" class="btn-secondary">
+        <i class="fas fa-redo"></i> Resend OTP
+      </button>
+      <small id="resendStatus"></small>
+    </div>
+
+    <div class="divider">
+      <a href="/<%= otpAction === 'signup' ? 'signup' : 'forgotPassword' %>">
+        Back to <%= otpAction === 'signup' ? 'Sign Up' : 'Forgot Password' %>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const otpExpiresAt = <%= otpExpiresAt || 0 %>;
+  const RESEND_COOLDOWN = 30;
+
+  const timerEl = document.getElementById("timeLeft");
+  const verifyBtn = document.getElementById("verifyOtpBtn");
+  const resendBtn = document.getElementById("resendOtpBtn");
+  const resendStatus = document.getElementById("resendStatus");
+
+  /* ---------- OTP TIMER ---------- */
+  function startOtpTimer() {
+    if (!otpExpiresAt) return;
+
+    const interval = setInterval(() => {
+      const diff = otpExpiresAt - Date.now();
+
+      if (diff <= 0) {
+        clearInterval(interval);
+        timerEl.textContent = "Expired";
+        verifyBtn.disabled = true;
+        verifyBtn.style.opacity = "0.6";
+        return;
+      }
+
+      const mins = Math.floor(diff / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+      timerEl.textContent =
+        String(mins).padStart(2, "0") + ":" +
+        String(secs).padStart(2, "0");
+    }, 1000);
+  }
+
+  /* ---------- RESEND ---------- */
+  resendBtn.addEventListener("click", async () => {
+    resendBtn.disabled = true;
+    resendStatus.textContent = "Sending OTP...";
+
+    try {
+      const res = await fetch("/resend-otp", { method: "POST" });
+      const data = await res.json();
+
+      if (!data.success) {
+        resendStatus.textContent = data.message || "Failed to resend OTP";
+        resendBtn.disabled = false;
+        return;
+      }
+
+      let remaining = RESEND_COOLDOWN;
+      resendStatus.textContent = `Resend available in ${remaining}s`;
+
+      const cooldown = setInterval(() => {
+        remaining--;
+        resendStatus.textContent = `Resend available in ${remaining}s`;
+
+        if (remaining <= 0) {
+          clearInterval(cooldown);
+          resendStatus.textContent = "";
+          resendBtn.disabled = false;
+        }
+      }, 1000);
+
+    } catch {
+      resendStatus.textContent = "Error resending OTP";
+      resendBtn.disabled = false;
+    }
+  });
+
+  startOtpTimer();
+</script>
+</body>
+</html>

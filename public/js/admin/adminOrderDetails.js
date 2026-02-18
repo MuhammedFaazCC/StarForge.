@@ -74,8 +74,18 @@
           }
 
           // Confirm the status change
-          const confirmed = confirm(`Change item status from "${currentStatus}" to "${newStatus}"?`);
-          if (!confirmed) return;
+          const result = await Swal.fire({
+            title: 'Confirm Status Change',
+            text: `Change item status from "${currentStatus}" to "${newStatus}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, update',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#fca120',
+            cancelButtonColor: '#6c757d'
+          });
+
+          if (!result.isConfirmed) return;
 
           // Disable button during request
           this.disabled = true;
@@ -151,8 +161,18 @@
           const orderId = this.getAttribute('data-order-id');
           const itemId = this.getAttribute('data-item-id');
           
-          const confirmed = confirm('Mark this item as delivered?');
-          if (!confirmed) return;
+          const result = await Swal.fire({
+            title: 'Mark as Delivered',
+            text: 'Are you sure you want to mark this item as delivered?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, mark delivered',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d'
+          });
+
+          if (!result.isConfirmed) return;
 
           try {
             const response = await fetch(`/admin/orders/${orderId}/items/${itemId}/status`, {

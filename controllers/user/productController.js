@@ -4,281 +4,204 @@ const User = require("../../models/userSchema");
 const Review = require("../../models/reviewSchema");
 const Wishlist = require("../../models/wishlistSchema");
 
+const escapeRegex = (str = "") =>
+  str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const getAllProduct = async (req, res) => {
   try {
     const user = req.session.user;
-    const userData = user ? await User.findOne({ _id: user._id }) : null;
+    const userData = user ? await User.findById(user._id).lean() : null;
 
+    /* ---------------- pagination ---------------- */
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = 9;
     const skip = (page - 1) * limit;
 
-    const filterQuery = { isListed: true };
-
+    /* ---------------- query params ---------------- */
     const categoryParam = req.query.category || "all";
-    if (categoryParam !== "all") {
-      const categoryDoc = await Category.findOne({ name: categoryParam });
-      if (categoryDoc) {
-        filterQuery.category = categoryDoc._id;
-      }
-    }
+    const minPrice = !isNaN(parseInt(req.query.minPrice)) ? parseInt(req.query.minPrice) : null;
+    const maxPrice = !isNaN(parseInt(req.query.maxPrice)) ? parseInt(req.query.maxPrice) : null;
+    const sortParam = req.query.sort || "latest";
+    const searchTerm = req.query.search?.trim() || "";
 
-    const priceStats = await Product.aggregate([
+    /* ---------------- sale price expression (SINGLE SOURCE OF TRUTH) ---------------- */
+    const salePriceExpr = {
+      $cond: {
+        if: { $gt: [{ $max: ["$offer", "$categoryOffer"] }, 0] },
+        then: {
+          $multiply: [
+            "$price",
+            {
+              $subtract: [
+                1,
+                { $divide: [{ $max: ["$offer", "$categoryOffer"] }, 100] }
+              ]
+            }
+          ]
+        },
+        else: "$price"
+      }
+    };
+
+    /* ---------------- base pipeline ---------------- */
+    const pipelineBase = [
       { $match: { isListed: true } },
-      {
-        $addFields: {
-          salePrice: {
-            $cond: {
-              if: { $gt: ["$offer", 0] },
-              then: {
-                $multiply: [
-                  "$price",
-                  { $subtract: [1, { $divide: ["$offer", 100] }] },
-                ],
-              },
-              else: "$price",
-            },
-          },
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          minPrice: { $min: "$salePrice" },
-          maxPrice: { $max: "$salePrice" },
-        },
-      },
-    ]);
+      { $addFields: { salePrice: salePriceExpr } }
+    ];
 
-    const priceRange = {
-      min: priceStats.length > 0 ? Math.floor(priceStats[0].minPrice) : 0,
-      max: priceStats.length > 0 ? Math.ceil(priceStats[0].maxPrice) : 5000,
-    };
+    /* ---------------- category filter ---------------- */
+    let invalidCategory = false;
 
-    const minPrice = parseInt(req.query.minPrice);
-    const maxPrice = parseInt(req.query.maxPrice);
-    if (!isNaN(minPrice) || !isNaN(maxPrice)) {
-      const salePriceFilter = {};
-      if (!isNaN(minPrice)) {salePriceFilter.$gte = minPrice;}
-      if (!isNaN(maxPrice)) {salePriceFilter.$lte = maxPrice;}
-      if (!isNaN(minPrice) && !isNaN(maxPrice) && minPrice > maxPrice) {
-        salePriceFilter.$gte = maxPrice;
-        salePriceFilter.$lte = minPrice;
+    if (categoryParam !== "all") {
+      const categoryDoc = await Category.findOne({ name: categoryParam }).lean();
+      if (categoryDoc) {
+        pipelineBase.push({ $match: { category: categoryDoc._id } });
+      } else {
+        invalidCategory = true;
       }
-
-      filterQuery.$expr = {
-        $and: [
-          {
-            $gte: [
-              {
-                $cond: {
-                  if: { $gt: ["$offer", 0] },
-                  then: {
-                    $multiply: [
-                      "$price",
-                      { $subtract: [1, { $divide: ["$offer", 100] }] },
-                    ],
-                  },
-                  else: "$price",
-                },
-              },
-              salePriceFilter.$gte || 0,
-            ],
-          },
-          {
-            $lte: [
-              {
-                $cond: {
-                  if: { $gt: ["$offer", 0] },
-                  then: {
-                    $multiply: [
-                      "$price",
-                      { $subtract: [1, { $divide: ["$offer", 100] }] },
-                    ],
-                  },
-                  else: "$price",
-                },
-              },
-              salePriceFilter.$lte || 999999,
-            ],
-          },
-        ],
-      };
     }
 
-    const searchTerm = req.query.search?.trim();
+    /* ---------------- price filter ---------------- */
+    if (minPrice !== null || maxPrice !== null) {
+      pipelineBase.push({
+        $match: {
+          salePrice: {
+            ...(minPrice !== null && { $gte: minPrice }),
+            ...(maxPrice !== null && { $lte: maxPrice })
+          }
+        }
+      });
+    }
+
+    /* ---------------- search filter ---------------- */
     if (searchTerm) {
-      const searchRegex = new RegExp(searchTerm, "i");
-      filterQuery.$or = [
-        { name: searchRegex },
-        { brand: searchRegex },
-        { description: searchRegex },
-      ];
+      const safeSearch = escapeRegex(searchTerm.slice(0, 50));
+      pipelineBase.push({
+        $match: {
+          $or: [
+            { name: { $regex: safeSearch, $options: "i" } },
+            { brand: { $regex: safeSearch, $options: "i" } },
+            { description: { $regex: safeSearch, $options: "i" } }
+          ]
+        }
+      });
     }
 
-    let sortOption = { createdAt: -1 };
-    switch (req.query.sort) {
-      case "price-low-high":
-        sortOption = [
-          {
-            $addFields: {
-              salePrice: {
-                $cond: {
-                  if: { $gt: ["$offer", 0] },
-                  then: {
-                    $multiply: [
-                      "$price",
-                      { $subtract: [1, { $divide: ["$offer", 100] }] },
-                    ],
-                  },
-                  else: "$price",
-                },
-              },
-            },
-          },
-          { $sort: { salePrice: 1 } },
-        ];
-        break;
-      case "price-high-low":
-        sortOption = [
-          {
-            $addFields: {
-              salePrice: {
-                $cond: {
-                  if: { $gt: ["$offer", 0] },
-                  then: {
-                    $multiply: [
-                      "$price",
-                      { $subtract: [1, { $divide: ["$offer", 100] }] },
-                    ],
-                  },
-                  else: "$price",
-                },
-              },
-            },
-          },
-          { $sort: { salePrice: -1 } },
-        ];
-        break;
-      case "name-asc":
-        sortOption = { name: 1 };
-        break;
-      case "name-desc":
-        sortOption = { name: -1 };
-        break;
-      case "popular":
-        sortOption = { salesCount: -1, createdAt: -1 };
-        break;
-      default:
-        sortOption = { createdAt: -1 };
-    }
+    /* ---------------- sorting ---------------- */
+    const sortMap = {
+      "price-low-high": { salePrice: 1 },
+      "price-high-low": { salePrice: -1 },
+      "name-asc": { name: 1 },
+      "name-desc": { name: -1 },
+      "popular": { salesCount: -1, createdAt: -1 },
+      "latest": { createdAt: -1 }
+    };
 
-    let pipeline = [{ $match: filterQuery }];
-
-    if (Array.isArray(sortOption)) {
-      pipeline = pipeline.concat(sortOption);
-    } else {
-      pipeline.push({ $sort: sortOption });
-    }
-
-    pipeline.push({ $skip: skip });
-    pipeline.push({ $limit: limit });
-
-    pipeline.push({
-      $lookup: {
-        from: "categories",
-        localField: "category",
-        foreignField: "_id",
-        as: "category",
-      },
+    pipelineBase.push({
+      $sort: sortMap[sortParam] || sortMap.latest
     });
 
-    pipeline.push({
-      $match: {
-        "category.0": { $exists: true },
-      },
-    });
-
-    pipeline.push({
-      $unwind: "$category",
-    });
-
-    const [products, totalProducts, categories, wishlist] = await Promise.all([
-      Product.aggregate(pipeline),
-      Product.countDocuments(filterQuery),
-      Category.find().lean(),
-      Wishlist.findOne({ userId: user?._id }).populate("items.productId"),
-    ]);
-
+    /* ---------------- COUNT (uses SAME pipeline) ---------------- */
+    const countPipeline = [...pipelineBase, { $count: "total" }];
+    const countResult = await Product.aggregate(countPipeline);
+    const totalProducts = countResult[0]?.total || 0;
     const totalPages = Math.ceil(totalProducts / limit);
+    
+    if (page > totalPages && totalPages > 0) {
+      return res.redirect(`/products?page=${totalPages}`);
+    }
 
-    const formattedProducts = products.map((product) => {
-      const effectiveOffer = Math.max(
-        product.offer || 0,
-        product.categoryOffer || 0
-      );
-      const salePrice =
-        effectiveOffer > 0
-          ? product.price * (1 - effectiveOffer / 100)
-          : product.price;
-      return {
-        _id: product._id,
-        name: product.name,
-        brand: product.brand,
-        mainImage: product.mainImage,
-        regularPrice: product.price,
-        salePrice: Math.floor(salePrice),
-        offer: effectiveOffer,
-        stock: product.stock,
-        category: product.category,
-      };
-    });
+    /* ---------------- pagination ---------------- */
+    pipelineBase.push(
+      { $skip: skip },
+      { $limit: limit }
+    );
 
-    const filters = {
-      category: categoryParam,
-      minPrice: !isNaN(minPrice) ? minPrice : priceRange.min,
-      maxPrice: !isNaN(maxPrice) ? maxPrice : priceRange.max,
-      sort: req.query.sort || "latest",
-      search: searchTerm || "",
-    };
+    /* ---------------- category lookup ---------------- */
+    pipelineBase.push(
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "category"
+        }
+      },
+      { $unwind: "$category" }
+    );
 
-    const buildUrl = (params = {}) => {
-      const currentParams = {
-        category: filters.category,
-        minPrice: filters.minPrice,
-        maxPrice: filters.maxPrice,
-        sort: filters.sort,
-        search: filters.search,
-        page: req.query.page || "1",
-      };
+    /* ---------------- execute ---------------- */
+    const products = await Product.aggregate(pipelineBase);
 
-      const finalParams = { ...currentParams, ...params };
-      const queryParts = [];
+    /* ---------------- format for UI ---------------- */
+    const formattedProducts = products.map(p => ({
+      _id: p._id,
+      name: p.name,
+      brand: p.brand,
+      mainImage: p.mainImage,
+      regularPrice: p.price,
+      salePrice: Math.floor(p.salePrice),
+      offer: Math.max(p.offer || 0, p.categoryOffer || 0),
+      stock: p.stock,
+      category: p.category
+    }));
 
-      if (finalParams.category !== "all")
-        {queryParts.push(`category=${encodeURIComponent(finalParams.category)}`);}
-      if (parseInt(finalParams.minPrice) > priceRange.min)
-        {queryParts.push(`minPrice=${finalParams.minPrice}`);}
-      if (parseInt(finalParams.maxPrice) < priceRange.max)
-        {queryParts.push(`maxPrice=${finalParams.maxPrice}`);}
-      if (finalParams.sort !== "latest")
-        {queryParts.push(`sort=${finalParams.sort}`);}
-      if (finalParams.search)
-        {queryParts.push(`search=${encodeURIComponent(finalParams.search)}`);}
-      if (finalParams.page !== "1") {queryParts.push(`page=${finalParams.page}`);}
-
-      return queryParts.length > 0
-        ? `/products?${queryParts.join("&")}`
-        : "/products";
-    };
+    /* ---------------- wishlist ---------------- */
+    const wishlist = user
+      ? await Wishlist.findOne({ userId: user._id }).populate("items.productId")
+      : null;
 
     const wishlistItems = wishlist ? wishlist.items : [];
 
-    const initialFilters = {
-      minPrice: priceRange.min,
-      maxPrice: priceRange.max,
+    /* ---------------- price range (global) ---------------- */
+    const priceStats = await Product.aggregate([
+      { $match: { isListed: true } },
+      { $addFields: { salePrice: salePriceExpr } },
+      {
+        $group: {
+          _id: null,
+          min: { $min: "$salePrice" },
+          max: { $max: "$salePrice" }
+        }
+      }
+    ]);
+
+    const priceRange = {
+      min: priceStats[0]?.min ? Math.floor(priceStats[0].min) : 0,
+      max: priceStats[0]?.max ? Math.ceil(priceStats[0].max) : 5000
     };
 
+    /* ---------------- filters object ---------------- */
+    const filters = {
+      category: categoryParam,
+      minPrice: minPrice ?? priceRange.min,
+      maxPrice: maxPrice ?? priceRange.max,
+      sort: sortParam,
+      search: searchTerm
+    };
+
+    /* ---------------- buildUrl (used by EJS pagination) ---------------- */
+    const buildUrl = (params = {}) => {
+      const final = { ...filters, page, ...params };
+      const q = [];
+
+      if (final.category !== "all") q.push(`category=${encodeURIComponent(final.category)}`);
+      if (final.minPrice > priceRange.min) q.push(`minPrice=${final.minPrice}`);
+      if (final.maxPrice < priceRange.max) q.push(`maxPrice=${final.maxPrice}`);
+      if (final.sort !== "latest") q.push(`sort=${final.sort}`);
+      if (final.search) q.push(`search=${encodeURIComponent(final.search)}`);
+      if (final.page !== 1) q.push(`page=${final.page}`);
+
+      return q.length ? `/products?${q.join("&")}` : "/products";
+    };
+
+    /* ---------------- initial filters for JS ---------------- */
+    const initialFilters = {
+      minPrice: priceRange.min,
+      maxPrice: priceRange.max
+    };
+
+    /* ---------------- render ---------------- */
     res.render("allProduct", {
       user: userData,
       products: formattedProducts,
@@ -288,23 +211,27 @@ const getAllProduct = async (req, res) => {
       filters,
       priceRange,
       userWishlistItems: wishlistItems,
-      categories,
+      categories: await Category.find().lean(),
       buildUrl,
       initialFilters,
       noProductsMessage:
-        formattedProducts.length === 0 && totalProducts > 0
-          ? `No products found on page ${page}. Try adjusting your filters or navigating to a different page.`
-          : formattedProducts.length === 0 && totalProducts === 0
-          ? `No products available. Please check back later.`
-          : null,
+      invalidCategory
+        ? "Selected category does not exist."
+        : formattedProducts.length === 0 && totalProducts === 0
+        ? "No products available."
+        : formattedProducts.length === 0
+        ? `No products found on page ${page}.`
+        : null
     });
-  } catch (error) {
-    console.error("Error loading all products page:", error);
+
+  } catch (err) {
+    console.error("getAllProduct error:", err);
     res.status(500).render("error", {
-      message: "Failed to load products. Please try again later.",
+      message: "Failed to load products. Please try again later."
     });
   }
 };
+
 
 const getProductDetails = async (req, res) => {
   try {

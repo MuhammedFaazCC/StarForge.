@@ -105,6 +105,7 @@ const otpVerificationPage = async (req, res) => {
       error,
       success: null,
       otpAction,
+      otpExpiresAt: otpSession.expires,
     });
   } catch (error) {
     console.log("Error rendering OTP page:", error);
