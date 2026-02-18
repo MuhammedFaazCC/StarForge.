@@ -45,9 +45,14 @@ const getAllProduct = async (req, res) => {
 
     /* ---------------- base pipeline ---------------- */
     const pipelineBase = [
-      { $match: { isListed: true } },
-      { $addFields: { salePrice: salePriceExpr } }
-    ];
+  {
+    $match: {
+      isListed: true,
+      isDeleted: false
+    }
+  },
+  { $addFields: { salePrice: salePriceExpr } }
+];
 
     /* ---------------- category filter ---------------- */
     let invalidCategory = false;
@@ -155,7 +160,12 @@ const getAllProduct = async (req, res) => {
 
     /* ---------------- price range (global) ---------------- */
     const priceStats = await Product.aggregate([
-      { $match: { isListed: true } },
+      {
+        $match: {
+          isListed: true,
+          isDeleted: false
+        }
+      },
       { $addFields: { salePrice: salePriceExpr } },
       {
         $group: {
@@ -165,6 +175,7 @@ const getAllProduct = async (req, res) => {
         }
       }
     ]);
+
 
     const priceRange = {
       min: priceStats[0]?.min ? Math.floor(priceStats[0].min) : 0,
@@ -242,10 +253,10 @@ const getProductDetails = async (req, res) => {
     const product = await Product.findById(productId)
       .populate("category")
       .lean();
-    if (!product || !product.isListed) {
-      return res
-        .status(404)
-        .render("page-404", { message: "Product not found" });
+    if (!product || !product.isListed || product.isDeleted) {
+      return res.status(404).render("page-404", {
+        message: "Product not found"
+      });
     }
 
     const effectiveOffer = Math.max(

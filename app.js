@@ -134,7 +134,7 @@ app.use((err, req, res, next) => {
     });
   }
 
-  res.status(500).render("error", {
+  res.status(500).render("error.", {
     message: "Something went wrong. Please try again later.",
   });
 });

@@ -23,7 +23,7 @@ const passport = require("passport");
 const { userAuth, softUserCheck } = require("../middlewares/auth");
 
 router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-router.get("/auth/google/callback", passport.authenticate("google", { failureRedirect: "/login" }), userController.googleCallback);
+router.get("/auth/google/callback", passport.authenticate("google", { failureRedirect: "/login",session: true }), userController.googleCallback);
 
 router.get("/login", noCache, userController.loginPage);
 router.post("/login", userController.login);
