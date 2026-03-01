@@ -14,26 +14,25 @@ const validateImages = (files, { requireMainImage = false } = {}) => {
   const main = files?.mainImage?.[0];
   const additional = files?.additionalImages || [];
 
-  if (requireMainImage && !main)
-    {return { ok: false, error: "Main image is required" };}
+  if (requireMainImage && !main) { return { ok: false, error: "Main image is required" }; }
 
   const checkFile = (f) => {
     const ext = getExt(f.originalname);
-    if (!allowedImageExt.has(ext)) {return "Invalid image format";}
-    if (f.size > MAX_IMAGE_SIZE) {return "Image exceeds 2MB limit";}
+    if (!allowedImageExt.has(ext)) { return "Invalid image format"; }
+    if (f.size > MAX_IMAGE_SIZE) { return "Image exceeds 2MB limit"; }
     return null;
   };
 
   if (main) {
     const err = checkFile(main);
-    if (err) {return { ok: false, error: err };}
+    if (err) { return { ok: false, error: err }; }
   }
 
-  if (additional.length > 5) {return { ok: false, error: "Max 5 additional images allowed" };}
+  if (additional.length > 5) { return { ok: false, error: "Max 5 additional images allowed" }; }
 
   for (const f of additional) {
     const err = checkFile(f);
-    if (err) {return { ok: false, error: err };}
+    if (err) { return { ok: false, error: err }; }
   }
 
   return {
@@ -58,109 +57,67 @@ const validateAndNormalizePayload = async (payload, { isEdit = false, productId 
   const brand = sanitize(payload.brand);
   const description = sanitize(payload.description || "");
   const rimMaterial = sanitize(payload.rimMaterial || "");
-  const color = sanitize(payload.color || "");
   const category = payload.category;
-  const stockRaw = payload.stock;
-  const priceRaw = payload.price;
   const offerRaw = payload.offer;
-  const sizesRaw = payload.sizes;
 
   // Validate Product Name
-  if (!name) {return { ok: false, error: "Product name is required" };}
-  if (name.length < 2 || name.length > 100)
-    {return { ok: false, error: "Product name must be 2–100 characters" };}
+  if (!name) { return { ok: false, error: "Product name is required" }; }
+  if (name.length < 2 || name.length > 100) { return { ok: false, error: "Product name must be 2–100 characters" }; }
 
-  if (!/^[A-Za-z0-9\s\-']+$/.test(name))
-    {return { ok: false, error: "Product name contains invalid characters" };}
+  if (!/^[A-Za-z0-9\s\-']+$/.test(name)) { return { ok: false, error: "Product name contains invalid characters" }; }
 
-  if (!/[A-Za-z0-9]/.test(name))
-    {return { ok: false, error: "Product name must contain at least one alphanumeric character" };}
+  if (!/[A-Za-z0-9]/.test(name)) { return { ok: false, error: "Product name must contain at least one alphanumeric character" }; }
 
-  if (/---+/.test(name))
-    {return { ok: false, error: "Product name cannot contain repeated hyphens" };}
+  if (/---+/.test(name)) { return { ok: false, error: "Product name cannot contain repeated hyphens" }; }
 
-  if (/^[-']|[-']$/.test(name))
-    {return { ok: false, error: "Product name cannot start or end with hyphens or apostrophes" };}
+  if (/^[-']|[-']$/.test(name)) { return { ok: false, error: "Product name cannot start or end with hyphens or apostrophes" }; }
   out.name = name;
 
   const nameRegex = new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
   const nameQuery = { name: nameRegex };
-  if (isEdit && productId) {nameQuery._id = { $ne: productId };}
+  if (isEdit && productId) { nameQuery._id = { $ne: productId }; }
   const dup = await Product.findOne(nameQuery).lean();
-  if (dup) {return { ok: false, error: "A product with this name already exists" };}
+  if (dup) { return { ok: false, error: "A product with this name already exists" }; }
 
   // Brand
   const brandName = brand;
 
-  if (!brandName) {return { ok: false, error: "Brand is required" };}
+  if (!brandName) { return { ok: false, error: "Brand is required" }; }
 
-  if (brandName.length < 2 || brandName.length > 50)
-    {return { ok: false, error: "Brand must be 2–50 characters" };}
+  if (brandName.length < 2 || brandName.length > 50) { return { ok: false, error: "Brand must be 2–50 characters" }; }
 
-  if (!/^[A-Za-z0-9\s\-']+$/.test(brandName))
-    {return { ok: false, error: "Brand contains invalid characters" };}
+  if (!/^[A-Za-z0-9\s\-']+$/.test(brandName)) { return { ok: false, error: "Brand contains invalid characters" }; }
 
-  if (!/[A-Za-z0-9]/.test(brandName))
-    {return { ok: false, error: "Brand must contain at least one alphanumeric character" };}
+  if (!/[A-Za-z0-9]/.test(brandName)) { return { ok: false, error: "Brand must contain at least one alphanumeric character" }; }
 
-  if (/^[^A-Za-z0-9]+$/.test(brandName))
-    {return { ok: false, error: "Brand cannot be only special characters" };}
+  if (/^[^A-Za-z0-9]+$/.test(brandName)) { return { ok: false, error: "Brand cannot be only special characters" }; }
 
-  if (/---+/.test(brandName))
-    {return { ok: false, error: "Brand cannot contain repeated hyphens" };}
+  if (/---+/.test(brandName)) { return { ok: false, error: "Brand cannot contain repeated hyphens" }; }
 
-  if (/^[-']|[-']$/.test(brandName))
-    {return { ok: false, error: "Brand cannot start or end with hyphens or apostrophes" };}
+  if (/^[-']|[-']$/.test(brandName)) { return { ok: false, error: "Brand cannot start or end with hyphens or apostrophes" }; }
 
-  if (/[<>]/.test(brandName))
-    {return { ok: false, error: "Brand cannot contain < or > characters" };}
+  if (/[<>]/.test(brandName)) { return { ok: false, error: "Brand cannot contain < or > characters" }; }
 
   out.brand = brandName;
 
 
-  // Price
-  const priceStr = String(priceRaw).trim();
-
-  if (!priceStr) {return { ok: false, error: "Price is required" };}
-
-  if (!/^\d+(\.\d{1,2})?$/.test(priceStr))
-    {return { ok: false, error: "Price must be a valid number with up to 2 decimals" };}
-
-  if (priceStr.startsWith("."))
-    {return { ok: false, error: "Price cannot start with a dot" };}
-
-  if (/^0\d+/.test(priceStr))
-    {return { ok: false, error: "Invalid leading zeros in price" };}
-
-  const priceNum = parseFloat(priceStr);
-
-  if (!(priceNum > 0))
-    {return { ok: false, error: "Price must be greater than 0" };}
-
-  if (priceStr.length > 15)
-    {return { ok: false, error: "Price value is too large" };}
-
-  out.price = priceNum;
+  // Global price validation is removed as price is derived from variants.
 
 
   // Offer
   let offerStr = String(offerRaw ?? "").trim();
 
-  if (offerStr === "") {offerStr = "0";}
+  if (offerStr === "") { offerStr = "0"; }
 
-  if (!/^\d+$/.test(offerStr))
-    {return { ok: false, error: "Offer must be a whole number" };}
+  if (!/^\d+$/.test(offerStr)) { return { ok: false, error: "Offer must be a whole number" }; }
 
-  if (offerStr.length > 1 && offerStr.startsWith("0"))
-    {return { ok: false, error: "Offer cannot contain leading zeros" };}
+  if (offerStr.length > 1 && offerStr.startsWith("0")) { return { ok: false, error: "Offer cannot contain leading zeros" }; }
 
   const offerNum = parseInt(offerStr, 10);
 
-  if (offerNum < 0 || offerNum > 90)
-    {return { ok: false, error: "Offer must be between 0 and 90%" };}
+  if (offerNum < 0 || offerNum > 90) { return { ok: false, error: "Offer must be between 0 and 90%" }; }
 
-  if (offerStr.length > 2)
-    {return { ok: false, error: "Invalid offer value" };}
+  if (offerStr.length > 2) { return { ok: false, error: "Invalid offer value" }; }
 
   out.offer = offerNum;
 
@@ -168,116 +125,114 @@ const validateAndNormalizePayload = async (payload, { isEdit = false, productId 
   // Description
   const desc = description;
 
-  if (desc.length > 2000)
-    {return { ok: false, error: "Description must be ≤ 2000 characters" };}
+  if (desc.length > 2000) { return { ok: false, error: "Description must be ≤ 2000 characters" }; }
 
-  if (desc && !/[A-Za-z0-9]/.test(desc))
-    {return { ok: false, error: "Description must contain at least one alphanumeric character" };}
+  if (desc && !/[A-Za-z0-9]/.test(desc)) { return { ok: false, error: "Description must contain at least one alphanumeric character" }; }
 
-  if (/^[^A-Za-z0-9]+$/.test(desc))
-    {return { ok: false, error: "Description cannot be only special characters" };}
+  if (/^[^A-Za-z0-9]+$/.test(desc)) { return { ok: false, error: "Description cannot be only special characters" }; }
 
-  if (/([^\w\s])\1\1+/.test(desc))
-    {return { ok: false, error: "Description contains invalid repeated symbols" };}
+  if (/([^\w\s])\1\1+/.test(desc)) { return { ok: false, error: "Description contains invalid repeated symbols" }; }
 
-  if (/[<>]/.test(desc))
-    {return { ok: false, error: "Description cannot contain < or > characters" };}
+  if (/[<>]/.test(desc)) { return { ok: false, error: "Description cannot contain < or > characters" }; }
 
-  if (/\n{4,}/.test(desc))
-    {return { ok: false, error: "Description contains excessive blank lines" };}
+  if (/\n{4,}/.test(desc)) { return { ok: false, error: "Description contains excessive blank lines" }; }
 
   out.description = desc;
 
 
   // Category
-  if (!category || !isValidObjectId(category))
-    {return { ok: false, error: "Invalid category" };}
+  if (!category || !isValidObjectId(category)) { return { ok: false, error: "Invalid category" }; }
   const categoryDoc = await Category.findById(category).lean();
-  if (!categoryDoc) {return { ok: false, error: "Category does not exist" };}
+  if (!categoryDoc) { return { ok: false, error: "Category does not exist" }; }
   out.category = category;
   out.categoryOffer = Number.isFinite(categoryDoc.offer) ? categoryDoc.offer : 0;
 
-  // Stock
-  const stock = parseInt(stockRaw, 10);
-  if (!Number.isFinite(stock) || stock < 0) {return { ok: false, error: "Stock must be an integer ≥ 0" };}
-  out.stock = stock;
-
-  // Size (must match allowed values)
-  let sizes = [];
-  if (!sizesRaw) {return { ok: false, error: "Size is required" };}
-  sizes = String(sizesRaw)
-    .split(",")
-    .map(s => s.trim())
-    .filter(Boolean);
-  for (const s of sizes) {
-    if (!ALLOWED_SIZES.includes(s)) {
-      return { ok: false, error: `Invalid size: ${s}` };
-    }
-  }
-  out.sizes = sizes;
+  // No longer validating global stock here, it will be calculated from variants.
+  // No longer validating global sizes here, it is managed per-variant.
 
   // Rim Material
   const rm = rimMaterial;
 
-  if (rm.length > 100)
-    {return { ok: false, error: "Rim material must be ≤ 100 characters" };}
+  if (rm.length > 100) { return { ok: false, error: "Rim material must be ≤ 100 characters" }; }
 
   if (rm) {
-    if (!/^[A-Za-z0-9\s\-']+$/.test(rm))
-      {return { ok: false, error: "Rim material contains invalid characters" };}
+    if (!/^[A-Za-z0-9\s\-']+$/.test(rm)) { return { ok: false, error: "Rim material contains invalid characters" }; }
 
-    if (!/[A-Za-z0-9]/.test(rm))
-      {return { ok: false, error: "Rim material must contain at least one alphanumeric character" };}
+    if (!/[A-Za-z0-9]/.test(rm)) { return { ok: false, error: "Rim material must contain at least one alphanumeric character" }; }
 
-    if (/^[^A-Za-z0-9]+$/.test(rm))
-      {return { ok: false, error: "Rim material cannot be only special characters" };}
+    if (/^[^A-Za-z0-9]+$/.test(rm)) { return { ok: false, error: "Rim material cannot be only special characters" }; }
 
-    if (/---+/.test(rm))
-      {return { ok: false, error: "Rim material cannot contain repeated hyphens" };}
+    if (/---+/.test(rm)) { return { ok: false, error: "Rim material cannot contain repeated hyphens" }; }
 
-    if (/^[-']|[-']$/.test(rm))
-      {return { ok: false, error: "Rim material cannot start or end with hyphens or apostrophes" };}
+    if (/^[-']|[-']$/.test(rm)) { return { ok: false, error: "Rim material cannot start or end with hyphens or apostrophes" }; }
 
-    if (/[<>]/.test(rm))
-      {return { ok: false, error: "Rim material cannot contain < or >" };}
+    if (/[<>]/.test(rm)) { return { ok: false, error: "Rim material cannot contain < or >" }; }
 
-    if (/([^\w\s])\1\1+/.test(rm))
-      {return { ok: false, error: "Rim material contains repeated symbols" };}
+    if (/([^\w\s])\1\1+/.test(rm)) { return { ok: false, error: "Rim material contains repeated symbols" }; }
   }
 
   out.rimMaterial = rm;
 
-  // Color
-  const col = color;
+  // Global Color has been deprecated. Variants manage specific colors.
+  out.color = "";
 
-  if (col.length > 50)
-    {return { ok: false, error: "Color must be ≤ 50 characters" };}
 
-  if (col) {
-    if (!/^[A-Za-z0-9\s\-']+$/.test(col))
-      {return { ok: false, error: "Color contains invalid characters" };}
+  // Variants
+  const parsedVariants = [];
+  const variantsPayload = payload.variantsPayload;
+  let totalStock = 0;
 
-    if (!/[A-Za-z0-9]/.test(col))
-      {return { ok: false, error: "Color must contain at least one alphanumeric character" };}
+  if (variantsPayload) {
+    try {
+      const vars = JSON.parse(variantsPayload);
+      if (Array.isArray(vars) && vars.length > 0) {
+        vars.forEach(v => {
+          const attributes = {};
+          if (v.Size) {attributes.Size = String(v.Size).trim();}
+          if (v.Color) {attributes.Color = String(v.Color).trim();}
 
-    if (/^[^A-Za-z0-9]+$/.test(col))
-      {return { ok: false, error: "Color cannot be only special characters" };}
+          const varPrice = Number(v.price);
 
-    if (/---+/.test(col))
-      {return { ok: false, error: "Color cannot contain repeated hyphens" };}
+          if (isNaN(varPrice) || varPrice <= 0) {
+            throw new Error("Variant price is invalid or missing.");
+          }
 
-    if (/^[-']|[-']$/.test(col))
-      {return { ok: false, error: "Color cannot start or end with hyphens or apostrophes" };}
+          const { effectiveOffer, salesPrice: varSalesPrice } = computeSalesPrice(varPrice, offerNum, categoryDoc ? out.categoryOffer : 0);
 
-    if (/[<>]/.test(col))
-      {return { ok: false, error: "Color cannot contain < or >" };}
+          const vStock = Number(v.stock) || 0;
+          totalStock += vStock;
 
-    if (/([^\w\s])\1\1+/.test(col))
-      {return { ok: false, error: "Color contains repeated symbols" };}
+          parsedVariants.push({
+            attributes,
+            price: varPrice,
+            stock: vStock,
+            sku: String(v.sku || "").trim(),
+            salesPrice: varSalesPrice
+          });
+        });
+      }
+    } catch (e) {
+      console.error("Variants parse error", e);
+    }
   }
 
-  out.color = col;
+  if (parsedVariants.length === 0) {
+    return { ok: false, error: "At least one product variant (Size/Color) must be added." };
+  }
 
+  out.variants = parsedVariants;
+  out.hasVariants = true;
+  out.stock = totalStock;
+  // Determine baseline price (lowest variant price)
+  const lowestPri = Math.min(...parsedVariants.map(v => v.price));
+  const lowestSales = Math.min(...parsedVariants.map(v => v.salesPrice));
+  out.price = lowestPri;
+
+  // This helps Category listing where product.salesPrice or product.price is displayed randomly
+  // It handles it natively.
+  out.salesPrice = lowestSales;
+
+  out.sizes = [];
 
   return { ok: true, data: out };
 };
@@ -390,14 +345,8 @@ const productAdd = async (req, res) => {
       });
     }
 
-    const core = v.data;
-
-    // 3. Compute sales price
-    const { salesPrice, effectiveOffer } = computeSalesPrice(
-      core.price,
-      core.offer,
-      core.categoryOffer
-    );
+    // 3. Compute baseline sales price (Already calculated sequentially in variants parser)
+    // Removed duplicate execution here.
 
     // 4. Create product (ONLY validated data)
     const newProduct = new Product({
@@ -413,14 +362,16 @@ const productAdd = async (req, res) => {
       rimMaterial: core.rimMaterial,
       color: core.color,
 
-      salesPrice,
-      effectiveOffer,
+      salesPrice: core.salesPrice,
+      effectiveOffer: core.offer || 0, // ensure offer carries forward if none was there
 
       mainImage: img.mainImage,
       additionalImages: img.additionalImages,
 
       isDeleted: false,
-      isListed: true
+      isListed: true,
+      variants: core.variants,
+      hasVariants: core.hasVariants
     });
 
     await newProduct.save();
@@ -571,8 +522,8 @@ const productEdit = async (req, res) => {
         });
       }
 
-      if (img.mainImage) {baseMain = img.mainImage};
-      if (img.additionalImages.length){baseAdditional = baseAdditional.concat(img.additionalImages)};
+      if (img.mainImage) { baseMain = img.mainImage };
+      if (img.additionalImages.length) { baseAdditional = baseAdditional.concat(img.additionalImages) };
     }
 
     if (removeMain && !req.files?.mainImage?.[0]) {
@@ -580,11 +531,7 @@ const productEdit = async (req, res) => {
     }
 
     // 3. Pricing
-    const { salesPrice } = computeSalesPrice(
-      core.price,
-      core.offer,
-      core.categoryOffer
-    );
+    // Sales prices natively determined during validateAndNormalizePayload via variants.
 
     // 4. Update
     product.name = core.name;
@@ -598,9 +545,11 @@ const productEdit = async (req, res) => {
     product.sizes = core.sizes;
     product.rimMaterial = core.rimMaterial;
     product.color = core.color;
-    product.salesPrice = salesPrice;
+    product.salesPrice = core.salesPrice;
     product.mainImage = baseMain;
     product.additionalImages = baseAdditional;
+    product.variants = core.variants;
+    product.hasVariants = core.hasVariants;
 
     await product.save();
 
@@ -646,9 +595,8 @@ const toggleListing = async (req, res) => {
     }
 
     res.json({
-      message: `Product is now ${
-        updatedProduct.isListed ? "listed" : "unlisted"
-      }`,
+      message: `Product is now ${updatedProduct.isListed ? "listed" : "unlisted"
+        }`,
       isListed: updatedProduct.isListed,
     });
   } catch (err) {

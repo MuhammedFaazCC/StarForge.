@@ -56,18 +56,10 @@
             </div>
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="price">Price (₹) <span class="required">*</span></label>
-              <input type="number" id="price" name="price" value="<%= product.price %>" placeholder="0.00" step="0.01" min="0" />
-              <span class="error-message">Price is required</span>
-            </div>
-
-            <div class="form-group">
-              <label for="offer">Offer (%)</label>
-              <input type="number" id="offer" name="offer" value="<%= product.offer %>" placeholder="0" min="0" max="100" />
-              <span class="error-message">Offer must be between 0 and 100</span>
-            </div>
+          <div class="form-group">
+            <label for="offer">Offer (%)</label>
+            <input type="number" id="offer" name="offer" value="<%= product.offer %>" placeholder="0" min="0" max="100" />
+            <span class="error-message">Offer must be between 0 and 100</span>
           </div>
 
           <div class="form-group">
@@ -90,24 +82,46 @@
             </div>
 
             <div class="form-group">
-              <label for="stock">Stock <span class="required">*</span></label>
-              <input type="number" id="stock" name="stock" value="<%= product.stock %>" placeholder="0" min="0" />
-              <span class="error-message">Stock is required</span>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="sizes">Size <span class="required">*</span></label>
-              <input type="text" id="sizes" name="sizes" value="<%= product.sizes.join(', ') %>" placeholder="Enter size in Inches" />
-              <span class="error-message">Size is required</span>
-            </div>
-
-            <div class="form-group">
               <label for="rimMaterial">Rim Material</label>
               <input type="text" id="rimMaterial" name="rimMaterial" value="<%= product.rimMaterial %>" placeholder="e.g., Metal, Plastic" />
             </div>
           </div>
+        </div>
+
+        <!-- Variants Section -->
+        <div class="form-section">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+             <h3>
+               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+               </svg>
+               Product Variants (Multi-Size / Color)
+             </h3>
+             <button type="button" id="addVariantBtn" class="btn btn-secondary btn-sm" style="margin-left:auto;">+ Add Variant</button>
+          </div>
+          <p class="help-text mb-3">Manage different sizes, colors, and specific stock pricing rules for this item.</p>
+
+          <!-- Passing existing variants securely -->
+          <input type="hidden" name="variantsPayload" id="variantsPayload" value="">
+          <script>
+            window.__EXISTING_VARIANTS__ = <%- JSON.stringify(product.variants || []) %>;
+          </script>
+
+          <table class="table variant-table" id="variantsTable" style="<%= (product.variants && product.variants.length > 0) ? '' : 'display: none;' %> width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <thead>
+              <tr style="border-bottom: 2px solid #ddd; text-align: left;">
+                <th style="padding: 10px;">Size</th>
+                <th style="padding: 10px;">Color</th>
+                <th style="padding: 10px;">Price (₹)</th>
+                <th style="padding: 10px;">Stock</th>
+                <th style="padding: 10px;">SKU</th>
+                <th style="padding: 10px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="variantsBody">
+              <!-- Dynamic Rows inserted here -->
+            </tbody>
+          </table>
         </div>
 
         <!-- Images Section -->

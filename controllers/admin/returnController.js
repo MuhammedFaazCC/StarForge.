@@ -7,8 +7,8 @@ const getReturnRequestsPage = async (req, res) => {
   try {
     const { page = 1, search = '', sort = 'desc' } = req.query;
     const limit = 10;
-    
-    const orderQuery = { 
+
+    const orderQuery = {
       $or: [
         { status: 'Return Requested' },
         { 'items.status': 'Return Requested' }
@@ -16,7 +16,7 @@ const getReturnRequestsPage = async (req, res) => {
     };
 
     if (search) {
-      const users = await User.find({ 
+      const users = await User.find({
         $or: [
           { fullName: new RegExp(search, 'i') },
           { email: new RegExp(search, 'i') }
@@ -35,9 +35,9 @@ const getReturnRequestsPage = async (req, res) => {
     const ordersWithReturns = await Promise.all(
       orders.map(async (order) => {
         const returnRequest = await Return.findOne({ orderId: order._id });
-        
+
         const itemReturns = order.items.filter(item => item.status === 'Return Requested');
-        
+
         return {
           ...order.toObject(),
           returnReason: returnRequest?.reason || 'No reason provided',
@@ -87,6 +87,7 @@ const acceptReturnRequest = async (req, res) => {
       .filter(i => (i.status !== 'Cancelled' && i.status !== 'Returned'))
       .map(i => ({
         productId: (i.productId && i.productId._id) ? i.productId._id : i.productId,
+        variantId: i.variantId || null,
         name: i.productId?.name || i.name,
         salesPrice: i.salesPrice,
         quantity: i.quantity
@@ -101,9 +102,9 @@ const acceptReturnRequest = async (req, res) => {
       { status: "Approved", updatedAt: new Date() }
     );
 
-    res.json({ 
-      success: true, 
-      message: "Return request accepted successfully" + 
+    res.json({
+      success: true,
+      message: "Return request accepted successfully" +
         (order.paymentMethod !== 'COD' ? ". Refund has been processed to customer's wallet." : "") +
         ". Product stock has been restored.",
       refundAmount: couponResult.totalRefundAmount,
@@ -137,9 +138,9 @@ const declineReturnRequest = async (req, res) => {
       { status: "Rejected", updatedAt: new Date() }
     );
 
-    res.json({ 
-      success: true, 
-      message: "Return request declined successfully" 
+    res.json({
+      success: true,
+      message: "Return request declined successfully"
     });
 
   } catch (error) {
@@ -172,6 +173,7 @@ const acceptItemReturnRequest = async (req, res) => {
 
     const itemsToReturn = [{
       productId: item.productId._id,
+      variantId: item.variantId || null,
       name: item.productId.name,
       salesPrice: item.salesPrice,
       quantity: item.quantity
@@ -181,9 +183,9 @@ const acceptItemReturnRequest = async (req, res) => {
       refundReason: `Refund for returned item ${item.productId.name} from order #${order._id}`
     });
 
-    res.json({ 
-      success: true, 
-      message: "Item return request accepted successfully" + 
+    res.json({
+      success: true,
+      message: "Item return request accepted successfully" +
         (order.paymentMethod !== 'COD' ? ". Refund has been processed to customer's wallet." : "") +
         ". Product stock has been restored.",
       refundAmount: couponResult.totalRefundAmount,
@@ -222,9 +224,9 @@ const declineItemReturnRequest = async (req, res) => {
     item.returnDeclinedAt = new Date();
     await order.save();
 
-    res.json({ 
-      success: true, 
-      message: "Item return request declined successfully" 
+    res.json({
+      success: true,
+      message: "Item return request declined successfully"
     });
 
   } catch (error) {
@@ -234,9 +236,9 @@ const declineItemReturnRequest = async (req, res) => {
 };
 
 module.exports = {
-    getReturnRequestsPage,
-    acceptReturnRequest,
-    declineReturnRequest,
-    acceptItemReturnRequest,
-    declineItemReturnRequest
+  getReturnRequestsPage,
+  acceptReturnRequest,
+  declineReturnRequest,
+  acceptItemReturnRequest,
+  declineItemReturnRequest
 }

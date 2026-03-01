@@ -27,9 +27,9 @@ const loginPage = async (req, res) => {
     if (req.session.admin && req.session.admin._id) {
       return res.redirect("/admin/dashboard");
     }
-    
+
     const error = req.session.error || null;
-    req.session.error = null; 
+    req.session.error = null;
     return res.render("adminLogin", { error });
   } catch (error) {
     console.log("Admin login page error:", error);
@@ -47,12 +47,12 @@ const login = async (req, res) => {
     }
 
     const user = await User.findOne({ email });
-    
+
     if (!user) {
       req.session.error = "Email not found";
       return res.redirect("/admin");
     }
-    
+
     if (user.role !== "admin") {
       req.session.error = "Access denied: Admins only";
       return res.redirect("/admin");
@@ -220,21 +220,21 @@ const getOrderDetails = async (req, res) => {
       .populate('userId')
       .populate('items.productId');
 
-      if (order.status === 'Cancelled') {
-        const hasBlockedItem = order.items.some(item =>
-          ['Delivered', 'Returned', 'Return Requested'].includes(item.status)
-        );
+    if (order.status === 'Cancelled') {
+      const hasBlockedItem = order.items.some(item =>
+        ['Delivered', 'Returned', 'Return Requested'].includes(item.status)
+      );
 
-        if (hasBlockedItem) {
-          return res.status(400).json({
-            success: false,
-            message:
-              'Cannot cancel order. One or more items are delivered, returned, or under return request.'
-          });
-        }
+      if (hasBlockedItem) {
+        return res.status(400).json({
+          success: false,
+          message:
+            'Cannot cancel order. One or more items are delivered, returned, or under return request.'
+        });
       }
+    }
 
-    if (!order) {return res.status(404).send('Order not found');}
+    if (!order) { return res.status(404).send('Order not found'); }
 
     res.render('adminOrderDetails', { order });
   } catch (error) {
@@ -254,7 +254,7 @@ const getInvoicePDF = async (req, res) => {
         select: 'name brand mainImage price salePrice offer',
         options: { strictPopulate: false }
       });
-    if (!order) {return res.status(404).send("Order not found");}
+    if (!order) { return res.status(404).send("Order not found"); }
 
     const filePath = path.join(__dirname, '../../views/admin/invoicePdf.ejs');
 
@@ -375,9 +375,9 @@ const updateOrderStatus = async (req, res) => {
 
     const finalStatuses = ['Delivered', 'Returned', 'Cancelled'];
     if (finalStatuses.includes(order.status)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: `Cannot change status. Order is already ${order.status}` 
+      return res.status(400).json({
+        success: false,
+        message: `Cannot change status. Order is already ${order.status}`
       });
     }
 
@@ -393,7 +393,7 @@ const updateOrderStatus = async (req, res) => {
       const itemFinalStatuses = ['Delivered', 'Returned', 'Cancelled'];
       if (!itemFinalStatuses.includes(item.status)) {
         let itemStatus = status;
-        
+
         if (status === 'Pending Payment' || status === 'Pending') {
           itemStatus = 'Placed';
         } else if (status === 'Processing') {
@@ -405,9 +405,9 @@ const updateOrderStatus = async (req, res) => {
         } else if (status === 'Cancelled') {
           itemStatus = 'Cancelled';
         }
-        
+
         item.status = itemStatus;
-        
+
         if (itemStatus === 'Delivered') {
           item.deliveredAt = new Date();
         } else if (itemStatus === 'Cancelled') {
@@ -436,10 +436,17 @@ const updateOrderStatus = async (req, res) => {
         const Product = require("../../models/productSchema");
         for (const item of order.items) {
           if (item.productId) {
-            await Product.updateOne(
-              { _id: item.productId },
-              { $inc: { stock: item.quantity } }
-            );
+            if (item.variantId) {
+              await Product.updateOne(
+                { _id: item.productId, "variants._id": item.variantId },
+                { $inc: { "variants.$.stock": item.quantity } }
+              );
+            } else {
+              await Product.updateOne(
+                { _id: item.productId },
+                { $inc: { stock: item.quantity } }
+              );
+            }
             console.log(`Stock restored for cancelled item ${item.productId}: +${item.quantity}`);
           }
         }
@@ -448,8 +455,8 @@ const updateOrderStatus = async (req, res) => {
       }
     }
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       message: `Order status updated to ${status} successfully`,
       newStatus: status
     });

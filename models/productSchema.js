@@ -1,5 +1,17 @@
 const mongoose = require('mongoose');
 
+const variantSchema = new mongoose.Schema({
+  attributes: {
+    type: Map,
+    of: String,
+  },
+  price: { type: Number, required: true, min: 0 },
+  salesPrice: { type: Number, min: 0 },
+  stock: { type: Number, required: true, min: 0 },
+  sku: { type: String, trim: true },
+  isListed: { type: Boolean, default: true }
+});
+
 const productSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -14,7 +26,7 @@ const productSchema = new mongoose.Schema({
   },
   price: {
     type: Number,
-    required: true,
+    required: false,
     min: 0,
   },
   offer: {
@@ -23,7 +35,7 @@ const productSchema = new mongoose.Schema({
     min: 0,
     max: 100,
   },
-    categoryOffer: {
+  categoryOffer: {
     type: Number,
     default: 0,
     min: 0,
@@ -56,10 +68,11 @@ const productSchema = new mongoose.Schema({
   },
   stock: {
     type: Number,
-    required: true,
+    required: false,
     min: 0,
+    default: 0
   },
-   color: {
+  color: {
     type: String,
     trim: true,
     default: ''
@@ -80,6 +93,14 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  variants: {
+    type: [variantSchema],
+    default: []
+  },
+  hasVariants: {
+    type: Boolean,
+    default: true
+  }
 }, {
   timestamps: true,
 });

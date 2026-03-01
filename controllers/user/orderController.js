@@ -8,9 +8,9 @@ const mongoose = require('mongoose');
 
 const getCartCount = async (userId) => {
   try {
-    if (!userId) {return 0;}
+    if (!userId) { return 0; }
     const cart = await Cart.findOne({ userId }).populate("items.productId");
-    if (!cart) {return 0;}
+    if (!cart) { return 0; }
     cart.items = cart.items.filter(item => item.productId);
     await cart.save();
     return cart.items.length;
@@ -73,7 +73,7 @@ const getUserOrders = async (req, res) => {
           console.warn(`Missing status for item in order ${order._id}`);
           item.status = 'Unknown';
         }
-        
+
         // Handle deleted products - keep the item but mark productId as null if deleted
         if (!item.productId) {
           console.warn(`Product deleted for item in order ${order._id}, using fallback name`);
@@ -120,7 +120,7 @@ const viewOrderDetails = async (req, res) => {
   try {
     const orderId = req.params.id;
     const userId = req.session.user._id;
-    
+
     const order = await Order.findOne({ _id: orderId, userId })
       .populate('items.productId')
       .lean();
@@ -139,32 +139,63 @@ const viewOrderDetails = async (req, res) => {
     });
 
     const discountAmount = order?.coupon?.discountAmount || 0;
-    
-    const totalSales = order.items.reduce((sum, item) => {
-      return sum + item.salesPrice * item.quantity;
-    }, 0);
 
-    const itemsWithAdjustedPrice = order.items.map(item => {
-      const itemTotal = item.salesPrice * item.quantity;
-      const shareOfDiscount = (itemTotal / totalSales) * discountAmount;
-      const adjustedTotal = itemTotal - shareOfDiscount;
-      const adjustedUnitPrice = adjustedTotal / item.quantity;
+    /* ---------- ITEM LEVEL BREAKDOWN ---------- */
+    const itemBreakdown = order.items.map(item => {
+      const baseUnitPrice = item.salesPrice;
+      const quantity = item.quantity;
+      const itemSubtotal = baseUnitPrice * quantity;
 
       return {
         ...item,
-        adjustedUnitPrice: adjustedUnitPrice
+        baseUnitPrice,
+        quantity,
+        itemSubtotal
       };
     });
 
-    const modifiedOrder = {
-      ...order,
-      items: itemsWithAdjustedPrice
-    };
+    /* ---------- ORDER SUBTOTAL ---------- */
+    const itemsSubtotal = itemBreakdown.reduce(
+      (sum, item) => sum + item.itemSubtotal,
+      0
+    );
 
+    /* ---------- COUPON DISTRIBUTION ---------- */
+    const itemsWithFinalPrices = itemBreakdown.map(item => {
+      const discountShare =
+        itemsSubtotal > 0
+          ? (item.itemSubtotal / itemsSubtotal) * discountAmount
+          : 0;
+
+      const finalItemTotal = item.itemSubtotal - discountShare;
+      const finalUnitPrice = finalItemTotal / item.quantity;
+
+      return {
+        ...item,
+        discountShare,
+        finalItemTotal,
+        finalUnitPrice
+      };
+    });
+
+    /* ---------- FINAL ORDER TOTAL ---------- */
+    const finalPayableAmount = itemsSubtotal - discountAmount;
+
+    /* ---------- RENDER ---------- */
     res.render("userOrderDetails", {
       user: req.session.user,
-      order: modifiedOrder
+      order: {
+        ...order,
+        items: itemsWithFinalPrices,
+        pricing: {
+          itemsSubtotal,
+          couponCode: order?.coupon?.code || null,
+          couponDiscount: discountAmount,
+          finalPayableAmount
+        }
+      }
     });
+
 
   } catch (err) {
     console.error("Error loading order details:", err);
@@ -183,32 +214,32 @@ const returnOrder = async (req, res) => {
     const { reason } = req.body;
 
     if (!reason || reason.trim().length < 10) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Please provide a detailed reason for return (minimum 10 characters)" 
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a detailed reason for return (minimum 10 characters)"
       });
     }
 
     const order = await Order.findOne({ _id: orderId, userId: userId });
     if (!order) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Order not found or you don't have permission to return this order" 
+      return res.status(404).json({
+        success: false,
+        message: "Order not found or you don't have permission to return this order"
       });
     }
 
     if (order.status !== 'Delivered') {
-      return res.status(400).json({ 
-        success: false, 
-        message: `Only delivered orders can be returned. Current status: ${order.status}` 
+      return res.status(400).json({
+        success: false,
+        message: `Only delivered orders can be returned. Current status: ${order.status}`
       });
     }
 
     const existingReturn = await Return.findOne({ orderId });
     if (existingReturn) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Return request has already been submitted for this order" 
+      return res.status(400).json({
+        success: false,
+        message: "Return request has already been submitted for this order"
       });
     }
 
@@ -223,16 +254,16 @@ const returnOrder = async (req, res) => {
     order.status = "Return Requested";
     await order.save();
 
-    res.json({ 
-      success: true, 
-      message: "Return request submitted successfully. We will review your request and get back to you soon." 
+    res.json({
+      success: true,
+      message: "Return request submitted successfully. We will review your request and get back to you soon."
     });
 
   } catch (error) {
     console.error("Error processing return request:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Internal server error. Please try again later." 
+    res.status(500).json({
+      success: false,
+      message: "Internal server error. Please try again later."
     });
   }
 };
@@ -257,14 +288,14 @@ const orderSuccess = async (req, res) => {
         .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
         .update(order_id + '|' + payment_id)
         .digest('hex');
-      
+
       if (expectedSignature !== signature) {
         console.error("Payment signature verification failed");
         return res.redirect(`/payment/failure?error=signature_verification_failed&orderId=${order_id}`);
       }
     }
 
-    const order = await Order.findOne({ 
+    const order = await Order.findOne({
       razorpayOrderId: order_id,
       userId: userId,
       $or: [
@@ -281,7 +312,14 @@ const orderSuccess = async (req, res) => {
     // Check stock availability before finalizing
     for (const item of order.items) {
       const product = await Product.findById(item.productId);
-      if (!product || product.stock < item.quantity) {
+
+      let stockToCheck = product ? product.stock : 0;
+      if (product && product.hasVariants && item.variantId) {
+        const v = product.variants.id(item.variantId);
+        if (v) {stockToCheck = v.stock;}
+      }
+
+      if (!product || stockToCheck < item.quantity) {
         console.error(`Insufficient stock for ${item.name}`);
         return res.redirect("/checkout?error=insufficient_stock");
       }
@@ -293,7 +331,14 @@ const orderSuccess = async (req, res) => {
     await order.save();
 
     for (const item of order.items) {
-      await Product.updateOne({ _id: item.productId }, { $inc: { stock: -item.quantity } });
+      if (item.variantId) {
+        await Product.updateOne(
+          { _id: item.productId, "variants._id": item.variantId },
+          { $inc: { "variants.$.stock": -item.quantity } }
+        );
+      } else {
+        await Product.updateOne({ _id: item.productId }, { $inc: { stock: -item.quantity } });
+      }
     }
 
     // Always remove purchased items from the user's cart as a safeguard
@@ -414,7 +459,7 @@ const orderFailure = async (req, res) => {
     const userId = req.session.user._id;
 
     if (order_id) {
-      const existingOrder = await Order.findOne({ 
+      const existingOrder = await Order.findOne({
         razorpayOrderId: order_id,
         userId: userId
       });
@@ -494,9 +539,9 @@ const viewFailedOrder = async (req, res) => {
     const orderId = req.params.id;
     const userId = req.session.user._id;
 
-    const order = await Order.findOne({ 
-      _id: orderId, 
-      userId 
+    const order = await Order.findOne({
+      _id: orderId,
+      userId
     }).populate('items.productId');
 
     if (!order) {
@@ -508,30 +553,61 @@ const viewFailedOrder = async (req, res) => {
     }
 
     const discountAmount = order?.coupon?.discountAmount || 0;
-    const totalSales = order.items.reduce((sum, item) => {
-      return sum + item.salesPrice * item.quantity;
-    }, 0);
 
-    const itemsWithAdjustedPrice = order.items.map(item => {
-      const itemTotal = item.salesPrice * item.quantity;
-      const shareOfDiscount = totalSales > 0 ? (itemTotal / totalSales) * discountAmount : 0;
-      const adjustedTotal = itemTotal - shareOfDiscount;
-      const adjustedUnitPrice = adjustedTotal / item.quantity;
+    /* ---------- ITEM LEVEL BREAKDOWN ---------- */
+    const itemBreakdown = order.items.map(item => {
+      const baseUnitPrice = item.salesPrice;
+      const quantity = item.quantity;
+      const itemSubtotal = baseUnitPrice * quantity;
 
       return {
-        ...item.toObject(),
-        adjustedUnitPrice: adjustedUnitPrice
+        ...item,
+        baseUnitPrice,
+        quantity,
+        itemSubtotal
       };
     });
 
-    const modifiedOrder = {
-      ...order.toObject(),
-      items: itemsWithAdjustedPrice
-    };
+    /* ---------- ORDER SUBTOTAL ---------- */
+    const itemsSubtotal = itemBreakdown.reduce(
+      (sum, item) => sum + item.itemSubtotal,
+      0
+    );
 
+    /* ---------- COUPON DISTRIBUTION ---------- */
+    const itemsWithFinalPrices = itemBreakdown.map(item => {
+      const discountShare =
+        itemsSubtotal > 0
+          ? (item.itemSubtotal / itemsSubtotal) * discountAmount
+          : 0;
+
+      const finalItemTotal = item.itemSubtotal - discountShare;
+      const finalUnitPrice = finalItemTotal / item.quantity;
+
+      return {
+        ...item,
+        discountShare,
+        finalItemTotal,
+        finalUnitPrice
+      };
+    });
+
+    /* ---------- FINAL ORDER TOTAL ---------- */
+    const finalPayableAmount = itemsSubtotal - discountAmount;
+
+    /* ---------- RENDER ---------- */
     res.render("userOrderDetails", {
       user: req.session.user,
-      order: modifiedOrder
+      order: {
+        ...order,
+        items: itemsWithFinalPrices,
+        pricing: {
+          itemsSubtotal,
+          couponCode: order?.coupon?.code || null,
+          couponDiscount: discountAmount,
+          finalPayableAmount
+        }
+      }
     });
 
   } catch (error) {
@@ -545,10 +621,10 @@ const viewFailedOrder = async (req, res) => {
 };
 
 module.exports = {
-    getUserOrders,
-    viewOrderDetails,
-    returnOrder,
-    orderSuccess,
-    orderFailure,
-    viewFailedOrder
+  getUserOrders,
+  viewOrderDetails,
+  returnOrder,
+  orderSuccess,
+  orderFailure,
+  viewFailedOrder
 };

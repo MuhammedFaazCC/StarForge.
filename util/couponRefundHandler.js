@@ -4,8 +4,8 @@ const { updateWallet } = require("../controllers/user/walletController");
 
 // Normalize a productId that may be an ObjectId or a populated document
 const normalizeProductId = (pid) => {
-  if (!pid) {return null;}
-  if (pid._id) {return pid._id.toString();}
+  if (!pid) { return null; }
+  if (pid._id) { return pid._id.toString(); }
   try { return pid.toString(); } catch { return null; }
 };
 
@@ -44,7 +44,7 @@ const handleCouponInvalidationAndRefund = async (order, itemsToCancel) => {
       }
       console.log("Coupon present on order. code:", order.coupon.code, "storedDiscount:", order.coupon.discountAmount, "effectiveDiscount:", effectiveOriginalDiscount);
       const coupon = order.coupon.code ? await Coupon.findOne({ code: order.coupon.code }) : null;
-      
+
       if (coupon) {
         if (newOrderSubtotal < coupon.minimumAmount) {
           // Coupon becomes invalid after removing these items
@@ -103,7 +103,7 @@ const handleCouponInvalidationAndRefund = async (order, itemsToCancel) => {
 
         } else {
           result.couponRecalculated = true;
-          
+
           let eligibleAmount = newOrderSubtotal;
           if (coupon.orderMaxAmount && coupon.orderMaxAmount > 0) {
             eligibleAmount = Math.min(newOrderSubtotal, coupon.orderMaxAmount);
@@ -112,12 +112,12 @@ const handleCouponInvalidationAndRefund = async (order, itemsToCancel) => {
           const newCouponDiscount = (coupon.maxAmount && coupon.maxAmount > 0)
             ? Math.min(recalculated, coupon.maxAmount)
             : recalculated;
-          
+
           for (const item of itemsToCancel) {
             const itemTotal = item.salesPrice * item.quantity;
             const itemShareOfOriginalDiscount = (itemTotal / currentOrderSubtotal) * effectiveOriginalDiscount;
             const itemRefundAmount = itemTotal - itemShareOfOriginalDiscount;
-            
+
             result.itemRefunds.push({
               productId: item.productId,
               productName: item.name,
@@ -128,20 +128,20 @@ const handleCouponInvalidationAndRefund = async (order, itemsToCancel) => {
             });
             result.totalRefundAmount += itemRefundAmount;
           }
-          
+
           order.coupon.discountAmount = newCouponDiscount;
           result.newOrderTotal = newOrderSubtotal - newCouponDiscount;
-          
+
           console.log(`Coupon ${coupon.code} recalculated: New discount ${newCouponDiscount} for subtotal ${newOrderSubtotal}`);
         }
       } else if (order.coupon.code) {
         console.warn(`Coupon ${order.coupon.code} not found in database`);
-        
+
         for (const item of itemsToCancel) {
           const itemTotal = item.salesPrice * item.quantity;
           const itemShareOfDiscount = (itemTotal / currentOrderSubtotal) * effectiveOriginalDiscount;
           const itemRefundAmount = itemTotal - itemShareOfDiscount;
-          
+
           result.itemRefunds.push({
             productId: item.productId,
             productName: item.name,
@@ -152,8 +152,8 @@ const handleCouponInvalidationAndRefund = async (order, itemsToCancel) => {
           });
           result.totalRefundAmount += itemRefundAmount;
         }
-        
-        const remainingCouponDiscount = effectiveOriginalDiscount - 
+
+        const remainingCouponDiscount = effectiveOriginalDiscount -
           (cancelledItemsTotal / currentOrderSubtotal) * effectiveOriginalDiscount;
         order.coupon.discountAmount = remainingCouponDiscount;
         result.newOrderTotal = newOrderSubtotal - remainingCouponDiscount;
@@ -175,7 +175,7 @@ const handleCouponInvalidationAndRefund = async (order, itemsToCancel) => {
           });
           result.totalRefundAmount += itemRefundAmount;
         }
-        const remainingCouponDiscount = effectiveOriginalDiscount - 
+        const remainingCouponDiscount = effectiveOriginalDiscount -
           (cancelledItemsTotal / currentOrderSubtotal) * effectiveOriginalDiscount;
         order.coupon.discountAmount = remainingCouponDiscount;
         result.newOrderTotal = newOrderSubtotal - remainingCouponDiscount;
@@ -298,7 +298,7 @@ const handleItemReturnWithCoupon = async (order, itemsToReturn, userId, options 
 const processRefundToWallet = async (order, refundAmount, userId, reason) => {
   try {
     const eligiblePaymentMethods = ['Online', 'Wallet'];
-    
+
     if (!eligiblePaymentMethods.includes(order.paymentMethod)) {
       console.log(`No wallet refund needed for payment method: ${order.paymentMethod}`);
       return true;
@@ -321,13 +321,20 @@ const processRefundToWallet = async (order, refundAmount, userId, reason) => {
 
 const restoreProductStock = async (itemsToCancel) => {
   const errors = [];
-  
+
   for (const item of itemsToCancel) {
     try {
-      await Product.updateOne(
-        { _id: item.productId },
-        { $inc: { stock: item.quantity } }
-      );
+      if (item.variantId) {
+        await Product.updateOne(
+          { _id: item.productId, "variants._id": item.variantId },
+          { $inc: { "variants.$.stock": item.quantity } }
+        );
+      } else {
+        await Product.updateOne(
+          { _id: item.productId },
+          { $inc: { stock: item.quantity } }
+        );
+      }
       console.log(`Stock restored for product ${item.productId}: +${item.quantity}`);
     } catch (error) {
       console.error(`Error restoring stock for product ${item.productId}:`, error);
@@ -337,7 +344,7 @@ const restoreProductStock = async (itemsToCancel) => {
       });
     }
   }
-  
+
   return errors;
 };
 
@@ -356,9 +363,9 @@ const areAllItemsReturned = (order) => {
 const handleItemCancellationWithCoupon = async (order, itemsToCancel, userId, options = {}) => {
   try {
     console.log(`Starting cancellation process for order ${order._id}, items:`, itemsToCancel.map(i => i.productId));
-    
+
     const couponResult = await handleCouponInvalidationAndRefund(order, itemsToCancel, userId);
-    
+
     // Update item statuses
     let itemsUpdated = 0;
     for (const itemToCancel of itemsToCancel) {
@@ -380,24 +387,24 @@ const handleItemCancellationWithCoupon = async (order, itemsToCancel, userId, op
         });
       }
     }
-    
+
     console.log(`Updated ${itemsUpdated} items to Cancelled status`);
-    
+
     // Restore product stock
     const stockErrors = await restoreProductStock(itemsToCancel);
     if (stockErrors.length > 0) {
       console.error("Stock restoration errors:", stockErrors);
       couponResult.errors.push(...stockErrors);
     }
-    
+
     // Process wallet refund if needed
     if (couponResult.totalRefundAmount > 0) {
       try {
         console.log(`Processing wallet refund of ₹${couponResult.totalRefundAmount} for user ${userId}`);
         await processRefundToWallet(
-          order, 
-          couponResult.totalRefundAmount, 
-          userId, 
+          order,
+          couponResult.totalRefundAmount,
+          userId,
           options.refundReason || `Refund for cancelled items from order #${order._id}`
         );
         couponResult.refundProcessed = true;
@@ -412,7 +419,7 @@ const handleItemCancellationWithCoupon = async (order, itemsToCancel, userId, op
         // Continue with status update even if refund fails
       }
     }
-    
+
     // Check if all items are cancelled and update order status
     const allItemsCancelled = areAllItemsCancelled(order);
     if (allItemsCancelled) {
@@ -420,29 +427,29 @@ const handleItemCancellationWithCoupon = async (order, itemsToCancel, userId, op
       order.status = 'Cancelled';
       couponResult.orderFullyCancelled = true;
     }
-    
+
     // Save the order with updated statuses
     console.log(`Saving order ${order._id} with updated statuses`);
     // Ensure Mongoose recognizes nested array modifications
     order.markModified('items');
     await order.save();
-    
+
     console.log(`Order saved successfully for order ${order._id}`);
     const postSaveCancelled = order.items.filter(i => i.status === 'Cancelled').map(i => normalizeProductId(i.productId));
     console.log(`Post-save cancelled items for order ${order._id}:`, postSaveCancelled);
-    
+
     return couponResult;
-    
+
   } catch (error) {
     console.error("Error in handleItemCancellationWithCoupon:", error);
     console.error("Stack trace:", error.stack);
-    
+
     // Add detailed error logging
     console.error("Order ID:", order._id);
     console.error("Items to cancel:", itemsToCancel);
     console.error("User ID:", userId);
     console.error("Options:", options);
-    
+
     throw error;
   }
 };

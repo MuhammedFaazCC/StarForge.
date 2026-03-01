@@ -35,9 +35,16 @@
                     <h3>
                       <%= product.name %>
                     </h3>
-                    <p>Price: ₹ <span class="item-price"><%= product.salesPrice ? product.salesPrice.toFixed(2) : product.price.toFixed(2) %></span>
+                    <% 
+                      let displayPrice = product.salesPrice || product.price || 0;
+                      if (product.hasVariants && item.variantId) {
+                        const v = product.variants.id(item.variantId);
+                        if (v) displayPrice = v.salesPrice || v.price || displayPrice;
+                      }
+                    %>
+                    <p>Price: ₹ <span class="item-price"><%= displayPrice.toFixed(2) %></span>
                     </p>
-                    <p>Subtotal: ₹ <span class="item-subtotal"><%= (item.quantity * (product.salesPrice || product.price)).toFixed(2) %></span></p>
+                    <p>Subtotal: ₹ <span class="item-subtotal"><%= (item.quantity * displayPrice).toFixed(2) %></span></p>
                     <p>Status: <%= product.stock> 0 ? 'In Stock' : 'Out of Stock' %></p>
                     <div class="quantity-control">
                       <% if (product.stock> 0) { %>
@@ -76,9 +83,12 @@
   <p>Total Items: <span id="total-items"><%= cart.items.reduce((sum, item) => sum + item.quantity, 0) %></span></p>
   <p>
     Total Price: ₹<span id="cart-total"><%= cart.items.reduce((sum, item) => {
-      const price = Number(item.productId?.salesPrice) || 0;
-      const qty = Number(item.quantity) || 0;
-      return sum + price * qty;
+      let price = item.productId?.salesPrice || item.productId?.price || 0;
+      if (item.productId?.hasVariants && item.variantId) {
+        const v = item.productId.variants.id(item.variantId);
+        if (v) price = v.salesPrice || v.price;
+      }
+      return sum + (price * item.quantity);
     }, 0).toFixed(2) %></span>
   </p>
   <a href="/checkout" class="checkout-btn">Proceed to Checkout</a>

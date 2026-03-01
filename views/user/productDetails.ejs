@@ -107,19 +107,63 @@
           <p class="text-muted">Brand: <%= product.brand %>
           </p>
           <% if (product.offer> 0) { %>
-            <h4 class="text-danger">&#8377;<%= product.salePrice %> <small class="text-muted"><del>&#8377;<%=
+            <h4 class="text-danger" id="productPriceDisplay">&#8377;<%= product.salesPrice || product.salePrice %> <small class="text-muted"><del>&#8377;<%=
                       product.price %></del></small></h4>
             <% } else { %>
-              <h4 class="text-primary">&#8377;<%= product.price %>
+              <h4 class="text-primary" id="productPriceDisplay">&#8377;<%= product.salesPrice || product.price %>
               </h4>
               <% } %>
+              
+              <!-- Variant Selectors -->
+              <% if (product.hasVariants && product.variants && product.variants.length > 0) { 
+                   // Extract unique attributes
+                   const sizes = [...new Set(product.variants.map(v => v.attributes?.Size).filter(Boolean))];
+                   const colors = [...new Set(product.variants.map(v => v.attributes?.Color).filter(Boolean))];
+              %>
+                <div class="variants-container my-3" id="variantsContainer">
+                   <% if (sizes.length > 0) { %>
+                     <div class="mb-2"><strong>Size:</strong></div>
+                     <div class="d-flex gap-2 flex-wrap mb-3">
+                       <% sizes.forEach((s, idx) => { %>
+                         <input type="radio" class="btn-check variant-radio" name="variantSize" id="size_<%= idx %>" value="<%= s %>" autocomplete="off">
+                         <label class="btn btn-outline-dark btn-sm" for="size_<%= idx %>"><%= s %></label>
+                       <% }) %>
+                     </div>
+                   <% } %>
 
-                <form action="/cart/add/<%= product._id %>" method="POST" class="my-3">
+                   <% if (colors.length > 0) { %>
+                     <div class="mb-2"><strong>Color:</strong></div>
+                     <div class="d-flex gap-2 flex-wrap mb-3">
+                       <% colors.forEach((c, idx) => { %>
+                         <input type="radio" class="btn-check variant-radio" name="variantColor" id="color_<%= idx %>" value="<%= c %>" autocomplete="off">
+                         <label class="btn btn-outline-dark btn-sm" for="color_<%= idx %>"><%= c %></label>
+                       <% }) %>
+                     </div>
+                   <% } %>
+                   
+                   <div id="productStockStatus" class="fw-bold fs-6"></div>
+                </div>
+                
+                <script>
+                  window.__PRODUCT_HAS_VARIANTS__ = true;
+                  window.__PRODUCT_VARIANTS__ = <%- JSON.stringify(product.variants) %>;
+                </script>
+              <% } else { %>
+                <script>
+                  window.__PRODUCT_HAS_VARIANTS__ = false;
+                  window.__PRODUCT_VARIANTS__ = [];
+                </script>
+                <div id="productStockStatus" class="fw-bold fs-6 my-2 <%= product.stock > 0 ? 'text-success' : 'text-danger' %>">
+                   <%= product.stock > 0 ? `In Stock (${product.stock} left)` : 'Out of Stock' %>
+                </div>
+              <% } %>
+
+                <form action="/cart/add/<%= product._id %>" method="POST" class="my-3 mx-cart-form">
                   <label for="quantity" class="form-label">Quantity</label>
                   <div class="d-flex align-items-center mb-3">
                     <input type="number" name="quantity" id="quantity" value="1" min="1" class="form-control w-25 me-3">
-                    <button type="submit" class="btn btn-warning me-2" <%=product.stock <=0 ? 'disabled' : '' %>>
-                      <%= product.stock <=0 ? 'Out of Stock' : 'Add to Cart' %>
+                    <button type="submit" id="addToCartSubmitBtn" class="btn btn-warning me-2" <%= (!product.hasVariants && product.stock <=0) ? 'disabled' : '' %>>
+                      <%= (!product.hasVariants && product.stock <=0) ? 'Out of Stock' : 'Add to Cart' %>
                     </button>
                     <button type="button" id="wishlistBtn" class="wishlist-btn <%= isInWishlist ? 'active' : '' %>"
                       data-product="<%= product._id %>">

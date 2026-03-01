@@ -12,7 +12,7 @@ const returnController = require('../controllers/admin/returnController');
 const salesController = require('../controllers/admin/salesController');
 const { adminAuth } = require("../middlewares/auth");
 
-router.get("/", function(req, res, next) {
+router.get("/", function (req, res, next) {
     if (req.session.admin && req.session.admin._id) {
         console.log("Router-level redirect: Admin already logged in");
         return res.redirect("/admin/dashboard");
@@ -20,7 +20,7 @@ router.get("/", function(req, res, next) {
     next();
 }, adminController.loginPage);
 
-router.post("/", function(req, res, next) {
+router.post("/", function (req, res, next) {
     if (req.session.admin && req.session.admin._id) {
         console.log("Router-level redirect: Admin already logged in");
         return res.redirect("/admin/dashboard");
@@ -33,10 +33,10 @@ router.get("/logout", adminController.logout);
 
 router.get("/products", adminAuth, productController.productsPage);
 router.get("/products/add", adminAuth, productController.addProduct);
-router.post("/products/add", adminAuth, upload.fields([{ name: 'mainImage', maxCount: 1 },{ name: 'additionalImages', maxCount: 5 }]), productController.productAdd);
+router.post("/products/add", adminAuth, upload.fields([{ name: 'mainImage', maxCount: 1 }, { name: 'additionalImages', maxCount: 5 }]), productController.productAdd);
 router.get("/products/view/:id", adminAuth, productController.viewProduct);
 router.get("/products/edit/:id", adminAuth, productController.editProduct);
-router.post('/products/edit/:id', adminAuth, upload.fields([ { name: 'mainImage', maxCount: 1 }, { name: 'additionalImages', maxCount: 5 } ]), productController.productEdit);
+router.post('/products/edit/:id', adminAuth, upload.fields([{ name: 'mainImage', maxCount: 1 }, { name: 'additionalImages', maxCount: 5 }]), productController.productEdit);
 router.delete("/products/delete/:id", adminAuth, productController.deleteProduct);
 router.patch('/products/toggle-listing/:id', adminAuth, productController.toggleListing);
 

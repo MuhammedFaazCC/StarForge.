@@ -118,8 +118,9 @@ app.use((req, res) => {
 
 /* ---------------- Error handler ---------------- */
 app.use((err, req, res, next) => {
-  console.error(err);
+  console.error("GLOBAL ERROR:", err);
 
+  // Multer errors (API-safe)
   if (err instanceof multer.MulterError) {
     return res.status(400).json({
       success: false,
@@ -127,6 +128,7 @@ app.use((err, req, res, next) => {
     });
   }
 
+  // File-related errors
   if (err?.message?.toLowerCase().includes("file")) {
     return res.status(400).json({
       success: false,
@@ -134,8 +136,11 @@ app.use((err, req, res, next) => {
     });
   }
 
-  res.status(500).render("error.", {
-    message: "Something went wrong. Please try again later.",
+  // Page render fallback
+  return res.status(500).render("error", {
+    statusCode: 500,
+    error: err.message || "Something went wrong. Please try again later.",
+    user: req.session?.user || null
   });
 });
 

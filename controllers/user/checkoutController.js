@@ -9,7 +9,7 @@ const Razorpay = require('razorpay');
 
 async function cleanInvalidCartItems(userId) {
   const cart = await Cart.findOne({ userId }).populate('items.productId');
-  if (!cart) {return null;}
+  if (!cart) { return null; }
 
   const invalidIds = cart.items
     .filter(i => !i.productId || !i.productId.isListed)
@@ -26,12 +26,12 @@ async function cleanInvalidCartItems(userId) {
 }
 
 function calculateDiscount(subtotal, coupon) {
-  if (!coupon) {return 0;}
+  if (!coupon) { return 0; }
 
-  if (coupon.minimumAmount && subtotal < coupon.minimumAmount) {return 0;}
+  if (coupon.minimumAmount && subtotal < coupon.minimumAmount) { return 0; }
 
   let eligible = subtotal;
-  if (coupon.orderMaxAmount > 0) {eligible = Math.min(subtotal, coupon.orderMaxAmount);}
+  if (coupon.orderMaxAmount > 0) { eligible = Math.min(subtotal, coupon.orderMaxAmount); }
 
   const raw = (eligible * coupon.discount) / 100;
   return coupon.maxAmount > 0 ? Math.min(raw, coupon.maxAmount) : raw;
@@ -39,22 +39,29 @@ function calculateDiscount(subtotal, coupon) {
 
 const getCheckoutPage = async (req, res) => {
   try {
-    if (!req.session.user) {return res.redirect('/login?redirect=/checkout');}
+    if (!req.session.user) { return res.redirect('/login?redirect=/checkout'); }
 
     const cart = await cleanInvalidCartItems(req.session.user._id);
-    if (!cart || cart.items.length === 0) {return res.redirect('/cart');}
+    if (!cart || cart.items.length === 0) { return res.redirect('/cart'); }
 
     const userId = req.session.user._id;
     const addresses = await Address.find({ userId }).sort({ isDefault: -1 });
     const userWallet = await User.findById(userId);
     const walletBalance = userWallet?.wallet?.balance || 0;
 
-    const cartItems = cart.items.map(i => ({
-      name: i.productId.name,
-      quantity: i.quantity,
-      salesPrice: i.productId.salesPrice,
-      subtotal: i.quantity * i.productId.salesPrice
-    }));
+    const cartItems = cart.items.map(i => {
+      let price = i.productId.salesPrice || i.productId.price || 0;
+      if (i.productId.hasVariants && i.variantId) {
+        const v = i.productId.variants.id(i.variantId);
+        if (v) {price = v.salesPrice || v.price;}
+      }
+      return {
+        name: i.productId.name,
+        quantity: i.quantity,
+        salesPrice: price,
+        subtotal: i.quantity * price
+      };
+    });
 
     const subtotal = cartItems.reduce((s, i) => s + i.subtotal, 0);
 
@@ -65,8 +72,18 @@ const getCheckoutPage = async (req, res) => {
     if (req.session.coupon) {
       const c = await Coupon.findOne({ code: req.session.coupon.code });
       if (c) {
-        discount = calculateDiscount(subtotal, c);
-        appliedCoupon = { code: c.code, discountAmount: discount };
+        if (c.status !== 'Active' || new Date(c.expiryDate) < new Date()) {
+          req.session.coupon = null;
+        } else {
+          discount = calculateDiscount(subtotal, c);
+          if (discount > 0) {
+            appliedCoupon = { code: c.code, discountAmount: discount };
+          } else {
+            req.session.coupon = null; // Cart no longer qualifies
+          }
+        }
+      } else {
+        req.session.coupon = null;
       }
       grandTotal = subtotal - discount;
     }
@@ -112,14 +129,14 @@ const getCheckoutPage = async (req, res) => {
 
 const postCheckoutPage = async (req, res) => {
   try {
-    if (!req.session.user) {return res.status(401).json({ error: "Login required" });}
+    if (!req.session.user) { return res.status(401).json({ error: "Login required" }); }
 
     const userId = req.session.user._id;
     const cart = await cleanInvalidCartItems(userId);
-    if (!cart || cart.items.length === 0) {return res.status(400).json({ error: "Cart empty" });}
+    if (!cart || cart.items.length === 0) { return res.status(400).json({ error: "Cart empty" }); }
 
     const { addressId, paymentMethod } = req.body;
-    if (!addressId) {return res.status(400).json({ error: "Select address" });}
+    if (!addressId) { return res.status(400).json({ error: "Select address" }); }
     if (!['COD', 'Online', 'Wallet'].includes(paymentMethod)) {
       return res.status(400).json({ error: "Invalid payment" });
     }
@@ -130,21 +147,30 @@ const postCheckoutPage = async (req, res) => {
     }
 
     for (const item of cart.items) {
-      if (item.productId.stock < item.quantity) {
+      let stockToCheck = item.productId.stock;
+      if (item.productId.hasVariants && item.variantId) {
+        const v = item.productId.variants.id(item.variantId);
+        if (v) {stockToCheck = v.stock;}
+      }
+      if (stockToCheck < item.quantity) {
         return res.status(400).json({ error: `Insufficient stock for ${item.productId.name}` });
       }
     }
 
-    let totalAmount = cart.items.reduce((s, i) => s + i.quantity * i.productId.salesPrice, 0);
+    let totalAmount = cart.items.reduce((s, i) => {
+      let price = i.productId.salesPrice || i.productId.price || 0;
+      if (i.productId.hasVariants && i.variantId) {
+        const v = i.productId.variants.id(i.variantId);
+        if (v) {price = v.salesPrice || v.price;}
+      }
+      return s + i.quantity * price;
+    }, 0);
     let couponData = null;
 
     if (req.session.coupon) {
       const c = await Coupon.findOne({ code: req.session.coupon.code });
       if (c) {
-        const discountAmount = calculateDiscount(
-          cart.items.reduce((s, i) => s + i.quantity * i.productId.salesPrice, 0),
-          c
-        );
+        const discountAmount = calculateDiscount(totalAmount, c);
         totalAmount -= discountAmount;
         couponData = { code: c.code, discountAmount };
       }
@@ -172,12 +198,25 @@ const postCheckoutPage = async (req, res) => {
     const order = new Order({
       orderId,
       userId,
-      items: cart.items.map(i => ({
-        productId: i.productId._id,
-        name: i.productId.name,
-        quantity: i.quantity,
-        salesPrice: i.productId.salesPrice
-      })),
+      items: cart.items.map(i => {
+        let price = i.productId.salesPrice || i.productId.price || 0;
+        let vAttrs = {};
+        if (i.productId.hasVariants && i.variantId) {
+          const v = i.productId.variants.id(i.variantId);
+          if (v) {
+            price = v.salesPrice || v.price;
+            vAttrs = v.attributes || {};
+          }
+        }
+        return {
+          productId: i.productId._id,
+          variantId: i.variantId || null,
+          variantAttributes: vAttrs,
+          name: i.productId.name,
+          quantity: i.quantity,
+          salesPrice: price
+        };
+      }),
       address: `${address.name}, ${address.address}, ${address.city}, ${address.district}, ${address.state} - ${address.pinCode}`,
       paymentMethod,
       totalAmount,
@@ -195,15 +234,22 @@ const postCheckoutPage = async (req, res) => {
     }
 
     for (const i of cart.items) {
-      await Product.updateOne({ _id: i.productId._id }, { $inc: { stock: -i.quantity } });
+      if (i.productId.hasVariants && i.variantId) {
+        await Product.updateOne(
+          { _id: i.productId._id, "variants._id": i.variantId },
+          { $inc: { "variants.$.stock": -i.quantity } }
+        );
+      } else {
+        await Product.updateOne({ _id: i.productId._id }, { $inc: { stock: -i.quantity } });
+      }
     }
 
     if (couponData) {
       const dbCoupon = await Coupon.findOne({ code: couponData.code });
       if (dbCoupon) {
         const entry = dbCoupon.usedBy.find(u => u.userId.toString() === userId.toString());
-        if (entry) {entry.usedCount += 1;}
-        else {dbCoupon.usedBy.push({ userId, usedCount: 1 });}
+        if (entry) { entry.usedCount += 1; }
+        else { dbCoupon.usedBy.push({ userId, usedCount: 1 }); }
         await dbCoupon.save();
       }
     }
@@ -231,7 +277,7 @@ const codSuccess = (req, res) => {
       return res.redirect('/login?redirect=/order/placed');
     }
     const lastOrder = req.session.lastOrder;
-    
+
     if (!lastOrder) {
       return res.redirect('/cart');
     }
@@ -272,24 +318,33 @@ async function postRazorpay(req, res) {
     }
 
     for (const item of cart.items) {
-      if (item.productId.stock < item.quantity) {
+      let stockToCheck = item.productId.stock;
+      if (item.productId.hasVariants && item.variantId) {
+        const v = item.productId.variants.id(item.variantId);
+        if (v) {stockToCheck = v.stock;}
+      }
+      if (stockToCheck < item.quantity) {
         return res.status(400).json({
           success: false,
-          error: `Insufficient stock for ${item.productId.name}. Available: ${item.productId.stock}, Requested: ${item.quantity}`,
+          error: `Insufficient stock for ${item.productId.name}. Available: ${stockToCheck}, Requested: ${item.quantity}`,
         });
       }
     }
 
     // Calculate total amount with coupon discount
-    let totalAmount = cart.items.reduce((total, item) => total + (item.quantity * item.productId.salesPrice), 0);
+    let totalAmount = cart.items.reduce((total, item) => {
+      let price = item.productId.salesPrice || item.productId.price || 0;
+      if (item.productId.hasVariants && item.variantId) {
+        const v = item.productId.variants.id(item.variantId);
+        if (v) {price = v.salesPrice || v.price;}
+      }
+      return total + (item.quantity * price);
+    }, 0);
     let couponData = null;
     if (req.session.coupon) {
       const dbCoupon = await Coupon.findOne({ code: req.session.coupon.code });
       if (dbCoupon) {
-        const discountAmount = calculateDiscount(
-          cart.items.reduce((t, i) => t + (i.quantity * i.productId.salesPrice), 0),
-          dbCoupon
-        );
+        const discountAmount = calculateDiscount(totalAmount, dbCoupon);
 
         totalAmount -= discountAmount;
 
@@ -311,12 +366,25 @@ async function postRazorpay(req, res) {
     const pendingOrder = new Order({
       orderId,
       userId,
-      items: cart.items.map(item => ({
-        productId: item.productId._id,
-        name: item.productId.name,
-        quantity: item.quantity,
-        salesPrice: item.productId.salesPrice,
-      })),
+      items: cart.items.map(item => {
+        let price = item.productId.salesPrice || item.productId.price || 0;
+        let vAttrs = {};
+        if (item.productId.hasVariants && item.variantId) {
+          const v = item.productId.variants.id(item.variantId);
+          if (v) {
+            price = v.salesPrice || v.price;
+            vAttrs = v.attributes || {};
+          }
+        }
+        return {
+          productId: item.productId._id,
+          variantId: item.variantId || null,
+          variantAttributes: vAttrs,
+          name: item.productId.name,
+          quantity: item.quantity,
+          salesPrice: price,
+        };
+      }),
       address: `${selectedAddress.name}, ${selectedAddress.address}, ${selectedAddress.city}, ${selectedAddress.district}, ${selectedAddress.state} - ${selectedAddress.pinCode}`,
       paymentMethod: 'Online',
       totalAmount,
@@ -353,6 +421,7 @@ async function postRazorpay(req, res) {
       dbOrderId: pendingOrder._id,
     };
     req.session.selectedAddressId = addressId.toString();
+    req.session.coupon = null;
 
     res.json({ success: true, order: razorpayOrder });
   } catch (error) {
@@ -406,9 +475,9 @@ const paymentFailure = async (req, res) => {
     if (!failedOrderId) {
       if (req.session.pendingOrder) {
         const pending = req.session.pendingOrder;
-        
+
         // Try to find existing order by Razorpay order ID
-        const existingOrder = await Order.findOne({ 
+        const existingOrder = await Order.findOne({
           razorpayOrderId: pending.razorpayOrderId,
           userId: userId
         });
@@ -425,7 +494,14 @@ const paymentFailure = async (req, res) => {
           const selectedAddress = await Address.findById(pending.addressId);
 
           if (cart && selectedAddress) {
-            let totalAmount = cart.items.reduce((total, item) => total + item.quantity * item.productId.salesPrice, 0);
+            let totalAmount = cart.items.reduce((total, item) => {
+              let price = item.productId.salesPrice || item.productId.price || 0;
+              if (item.productId.hasVariants && item.variantId) {
+                const v = item.productId.variants.id(item.variantId);
+                if (v) {price = v.salesPrice || v.price;}
+              }
+              return total + item.quantity * price;
+            }, 0);
             let couponData = null;
             if (req.session.coupon) {
               const discountAmount = req.session.coupon.discountAmount || 0;
@@ -439,12 +515,25 @@ const paymentFailure = async (req, res) => {
             const failedOrder = new Order({
               orderId,
               userId,
-              items: cart.items.map(item => ({
-                productId: item.productId._id,
-                name: item.productId.name,
-                quantity: item.quantity,
-                salesPrice: item.productId.salesPrice,
-              })),
+              items: cart.items.map(item => {
+                let price = item.productId.salesPrice || item.productId.price || 0;
+                let vAttrs = {};
+                if (item.productId.hasVariants && item.variantId) {
+                  const v = item.productId.variants.id(item.variantId);
+                  if (v) {
+                    price = v.salesPrice || v.price;
+                    vAttrs = v.attributes || {};
+                  }
+                }
+                return {
+                  productId: item.productId._id,
+                  variantId: item.variantId || null,
+                  variantAttributes: vAttrs,
+                  name: item.productId.name,
+                  quantity: item.quantity,
+                  salesPrice: price,
+                };
+              }),
               address: `${selectedAddress.name}, ${selectedAddress.address}, ${selectedAddress.city}, ${selectedAddress.district}, ${selectedAddress.state} - ${selectedAddress.pinCode}`,
               paymentMethod: 'Online',
               totalAmount,
@@ -477,12 +566,12 @@ const paymentFailure = async (req, res) => {
 
     // Check if retry is possible for the order
     if (failedOrderId) {
-      const order = await Order.findOne({ 
-        _id: failedOrderId, 
+      const order = await Order.findOne({
+        _id: failedOrderId,
         userId: userId,
         status: 'Payment Failed'
       });
-      
+
       if (order) {
         const orderAge = Date.now() - order.createdAt.getTime();
         canRetry = orderAge <= 24 * 60 * 60 * 1000;
@@ -521,10 +610,10 @@ const retryPayment = async (req, res) => {
     const userId = req.session.user._id;
 
     // Find the failed order in the database
-    const order = await Order.findOne({ 
-      _id: orderId, 
-      userId, 
-      status: 'Payment Failed' 
+    const order = await Order.findOne({
+      _id: orderId,
+      userId,
+      status: 'Payment Failed'
     });
 
     if (!order) {
@@ -540,10 +629,17 @@ const retryPayment = async (req, res) => {
     // Check stock availability for all items
     for (const item of order.items) {
       const product = await Product.findById(item.productId);
-      if (!product || product.stock < item.quantity) {
+
+      let stockToCheck = product ? product.stock : 0;
+      if (product && product.hasVariants && item.variantId) {
+        const v = product.variants.id(item.variantId);
+        if (v) {stockToCheck = v.stock;}
+      }
+
+      if (!product || stockToCheck < item.quantity) {
         return res.status(400).json({
           success: false,
-          error: `Insufficient stock for ${item.name}. Available: ${product ? product.stock : 0}, Required: ${item.quantity}`,
+          error: `Insufficient stock for ${item.name}. Available: ${stockToCheck}, Required: ${item.quantity}`,
         });
       }
     }
@@ -572,8 +668,8 @@ const retryPayment = async (req, res) => {
       amount: order.totalAmount
     };
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       order: razorpayOrder,
       key: process.env.RAZORPAY_KEY_ID
     });
@@ -583,7 +679,7 @@ const retryPayment = async (req, res) => {
   }
 };
 
- 
+
 module.exports = {
   getCheckoutPage,
   postCheckoutPage,

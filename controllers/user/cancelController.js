@@ -38,21 +38,22 @@ const cancelSingleItem = async (req, res) => {
 
     const item = order.items[itemIndex];
     console.log(`Item found: ${item.productId.name}, Current Status: ${item.status || 'Ordered'}`);
-    
+
     const cancellableStatuses = ['Placed', 'Ordered', 'Processing', 'Shipped'];
     const currentStatus = item.status || 'Placed';
-    
+
     if (!cancellableStatuses.includes(currentStatus)) {
       console.error(`Item cannot be cancelled, current status: ${currentStatus}`);
-      return res.status(400).json({ 
-        success: false, 
-        error: `Item cannot be cancelled. Current status: ${currentStatus}` 
+      return res.status(400).json({
+        success: false,
+        error: `Item cannot be cancelled. Current status: ${currentStatus}`
       });
     }
 
     // Coupon-aware cancellation and refund
     const itemsToCancel = [{
       productId: item.productId._id,
+      variantId: item.variantId || null,
       name: item.productId.name,
       salesPrice: item.salesPrice,
       quantity: item.quantity
@@ -73,8 +74,8 @@ const cancelSingleItem = async (req, res) => {
       message += ". Refund has been processed to your wallet";
     }
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       message,
       refundAmount: (order.paymentMethod !== 'COD') ? couponResult.totalRefundAmount : 0,
       newOrderTotal: couponResult.newOrderTotal,
@@ -91,9 +92,9 @@ const cancelSingleItem = async (req, res) => {
     console.error("Error message:", error.message);
     console.error("Stack trace:", error.stack);
     console.error("=== END ERROR LOG ===");
-    
-    res.status(500).json({ 
-      success: false, 
+
+    res.status(500).json({
+      success: false,
       error: "Internal server error. Please try again later.",
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
@@ -111,9 +112,9 @@ const cancelOrderNew = async (req, res) => {
     const order = await Order.findOne({ _id: orderId, userId: userId }).populate('items.productId');
     if (!order) {
       console.error(`Order not found: ${orderId} for user: ${userId}`);
-      return res.status(404).json({ 
-        success: false, 
-        message: "Order not found or you don't have permission to cancel this order" 
+      return res.status(404).json({
+        success: false,
+        message: "Order not found or you don't have permission to cancel this order"
       });
     }
 
@@ -134,9 +135,9 @@ const cancelOrderNew = async (req, res) => {
     const validCancelStatuses = ['Pending', 'Placed', 'Processing'];
     if (!validCancelStatuses.includes(order.status)) {
       console.error(`Order cannot be cancelled, current status: ${order.status}`);
-      return res.status(400).json({ 
-        success: false, 
-        message: `Order cannot be cancelled. Current status: ${order.status}` 
+      return res.status(400).json({
+        success: false,
+        message: `Order cannot be cancelled. Current status: ${order.status}`
       });
     }
 
@@ -145,6 +146,7 @@ const cancelOrderNew = async (req, res) => {
     // Get items that can be cancelled
     const itemsToCancel = order.items.filter(item => (item.status || 'Ordered') !== 'Cancelled').map(i => ({
       productId: i.productId._id,
+      variantId: i.variantId || null,
       name: i.productId.name,
       salesPrice: i.salesPrice,
       quantity: i.quantity
@@ -152,9 +154,9 @@ const cancelOrderNew = async (req, res) => {
 
     if (itemsToCancel.length === 0) {
       console.error(`No items available for cancellation in order: ${orderId}`);
-      return res.status(400).json({ 
-        success: false, 
-        message: "No items available for cancellation" 
+      return res.status(400).json({
+        success: false,
+        message: "No items available for cancellation"
       });
     }
 
@@ -175,8 +177,8 @@ const cancelOrderNew = async (req, res) => {
       message += ". Refund has been processed to your wallet";
     }
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       message,
       refundAmount: (order.paymentMethod !== 'COD') ? couponResult.totalRefundAmount : 0,
       orderFullyCancelled: !!couponResult.orderFullyCancelled,
@@ -193,15 +195,15 @@ const cancelOrderNew = async (req, res) => {
     console.error("Error message:", error.message);
     console.error("Stack trace:", error.stack);
     console.error("=== END ERROR LOG ===");
-    
-    res.status(500).json({ 
-      success: false, 
-      message: "Internal server error. Please try again later." 
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error. Please try again later."
     });
   }
 };
 
 module.exports = {
-    cancelSingleItem,
-    cancelOrderNew
+  cancelSingleItem,
+  cancelOrderNew
 }

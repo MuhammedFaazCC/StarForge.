@@ -24,27 +24,27 @@ const orderSchema = new mongoose.Schema({
     },
     coupon: {
         code: {
-        type: String,
-        default: null
+            type: String,
+            default: null
         },
         discountAmount: {
-        type: Number,
-        default: 0
+            type: Number,
+            default: 0
         }
     },
     offeredPrice: {
-  type: Number,
-  required: true,
-},
+        type: Number,
+        required: true,
+    },
 
     status: {
         type: String,
-        enum: ['Pending Payment', 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled','Placed', 'Return Requested', 'Returned', 'Return Declined', 'Payment Failed'],
+        enum: ['Pending Payment', 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Placed', 'Return Requested', 'Returned', 'Return Declined', 'Payment Failed'],
         default: 'Processing'
     },
     paymentMethod: {
         type: String,
-        enum: ['Online','COD','Wallet'],
+        enum: ['Online', 'COD', 'Wallet'],
         required: true
     },
     address: {
@@ -52,40 +52,49 @@ const orderSchema = new mongoose.Schema({
         required: true
     },
     items: [
-    {
-        productId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Product',
-        },
-        name: String,
-        quantity: Number,
-        salesPrice: Number,
-        status: {
-            type: String,
-            enum: ['Placed', 'Ordered', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Return Requested', 'Returned', 'Return Declined'],
-            default: 'Placed'
-        },
-        deliveredAt: {
-            type: Date,
-            default: null
-        },
-        cancelledAt: {
-            type: Date,
-            default: null
-        },
-        cancellationReason: {
-            type: String,
-            default: null
-        },
-        returnReason: {
-            type: String,
-            default: null
-        },
-        returnRequestedAt: {
-            type: Date,
-            default: null
+        {
+            productId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Product',
+            },
+            variantId: {
+                type: mongoose.Schema.Types.ObjectId,
+                default: null
+            },
+            variantAttributes: {
+                type: Map,
+                of: String,
+                default: {}
+            },
+            name: String,
+            quantity: Number,
+            salesPrice: Number,
+            status: {
+                type: String,
+                enum: ['Placed', 'Ordered', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Return Requested', 'Returned', 'Return Declined'],
+                default: 'Placed'
+            },
+            deliveredAt: {
+                type: Date,
+                default: null
+            },
+            cancelledAt: {
+                type: Date,
+                default: null
+            },
+            cancellationReason: {
+                type: String,
+                default: null
+            },
+            returnReason: {
+                type: String,
+                default: null
+            },
+            returnRequestedAt: {
+                type: Date,
+                default: null
+            }
         }
-    }
     ],
 
     deliveredAt: Date,

@@ -196,12 +196,12 @@ const getAllProduct = async (req, res) => {
       const final = { ...filters, page, ...params };
       const q = [];
 
-      if (final.category !== "all") q.push(`category=${encodeURIComponent(final.category)}`);
-      if (final.minPrice > priceRange.min) q.push(`minPrice=${final.minPrice}`);
-      if (final.maxPrice < priceRange.max) q.push(`maxPrice=${final.maxPrice}`);
-      if (final.sort !== "latest") q.push(`sort=${final.sort}`);
-      if (final.search) q.push(`search=${encodeURIComponent(final.search)}`);
-      if (final.page !== 1) q.push(`page=${final.page}`);
+      if (final.category !== "all") {q.push(`category=${encodeURIComponent(final.category)}`);}
+      if (final.minPrice > priceRange.min) {q.push(`minPrice=${final.minPrice}`);}
+      if (final.maxPrice < priceRange.max) {q.push(`maxPrice=${final.maxPrice}`);}
+      if (final.sort !== "latest") {q.push(`sort=${final.sort}`);}
+      if (final.search) {q.push(`search=${encodeURIComponent(final.search)}`);}
+      if (final.page !== 1) {q.push(`page=${final.page}`);}
 
       return q.length ? `/products?${q.join("&")}` : "/products";
     };

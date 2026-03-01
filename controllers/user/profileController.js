@@ -106,7 +106,7 @@ const postEditProfile = async (req, res) => {
       user.mobile = trimmedMobile || user.mobile;
 
       if (req.file) {
-        if (user.profileImage) await deleteImage(user.profileImage);
+        if (user.profileImage) {await deleteImage(user.profileImage);}
         user.profileImage = req.file.filename;
       }
 

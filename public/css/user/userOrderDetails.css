@@ -104,6 +104,24 @@ h1 {
   font-size: 0.9rem;
 }
 
+.price-line {
+  font-size: 0.9rem;
+  margin-bottom: 2px;
+}
+
+.price-line.discount {
+  color: #dc3545;
+}
+
+.price-line.final {
+  font-weight: 600;
+}
+
+.price-line.unit {
+  font-size: 0.85rem;
+  color: #666;
+}
+
 .btn-cancel { background: #dc3545; color: #fff; }
 .btn-return { background: #ffc107; color: #000; }
 .btn-back { background: #6c757d; color: #fff; }

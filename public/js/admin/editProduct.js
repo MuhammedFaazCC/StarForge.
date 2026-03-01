@@ -168,6 +168,74 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* =========================
+     VARIANTS HANDLING
+  ========================= */
+
+  const variantsTable = document.getElementById("variantsTable");
+  const variantsBody = document.getElementById("variantsBody");
+  const addVariantBtn = document.getElementById("addVariantBtn");
+  const variantsPayload = document.getElementById("variantsPayload");
+
+  let variantsList = [];
+
+  if (window.__EXISTING_VARIANTS__) {
+    variantsList = window.__EXISTING_VARIANTS__.map(v => ({
+      Size: v.attributes?.Size || '',
+      Color: v.attributes?.Color || '',
+      price: v.price || '',
+      stock: v.stock || 0,
+      sku: v.sku || ''
+    }));
+    renderVariants();
+  }
+
+  function renderVariants() {
+    variantsBody.innerHTML = "";
+    if (variantsList.length === 0) {
+      variantsTable.style.display = "none";
+      variantsPayload.value = "[]";
+      return;
+    }
+    variantsTable.style.display = "table";
+    variantsList.forEach((v, index) => {
+      const tr = document.createElement("tr");
+      tr.style.borderBottom = "1px solid #eee";
+      tr.innerHTML = `
+        <td style="padding: 10px;"><input type="text" class="form-control" style="width:100%" value="${v.Size || ''}" placeholder="e.g. 18"></td>
+        <td style="padding: 10px;"><input type="text" class="form-control" style="width:100%" value="${v.Color || ''}" placeholder="e.g. Red"></td>
+        <td style="padding: 10px;"><input type="number" class="form-control" style="width:100%" value="${v.price || ''}" step="0.01" min="0"></td>
+        <td style="padding: 10px;"><input type="number" class="form-control" style="width:100%" value="${v.stock || ''}" min="0"></td>
+        <td style="padding: 10px;"><input type="text" class="form-control" style="width:100%" value="${v.sku || ''}"></td>
+        <td style="padding: 10px;"><button type="button" class="btn btn-sm btn-danger remove-var-btn" data-index="${index}">X</button></td>
+      `;
+
+      const inputs = tr.querySelectorAll('input');
+      inputs[0].addEventListener('input', (e) => { variantsList[index].Size = e.target.value; updatePayload(); });
+      inputs[1].addEventListener('input', (e) => { variantsList[index].Color = e.target.value; updatePayload(); });
+      inputs[2].addEventListener('input', (e) => { variantsList[index].price = e.target.value; updatePayload(); });
+      inputs[3].addEventListener('input', (e) => { variantsList[index].stock = e.target.value; updatePayload(); });
+      inputs[4].addEventListener('input', (e) => { variantsList[index].sku = e.target.value; updatePayload(); });
+
+      tr.querySelector('.remove-var-btn').addEventListener('click', () => {
+        variantsList.splice(index, 1);
+        renderVariants();
+      });
+
+      variantsBody.appendChild(tr);
+    });
+    updatePayload();
+  }
+
+  function updatePayload() {
+    variantsPayload.value = JSON.stringify(variantsList);
+  }
+
+  addVariantBtn.addEventListener("click", () => {
+    variantsList.push({ Size: '', Color: '', price: '', stock: '0', sku: '' });
+    renderVariants();
+  });
+
+  /* =========================
      FORM SUBMIT (AJAX)
   ========================= */
 
@@ -180,13 +248,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const name = document.getElementById("name");
     const brand = document.getElementById("brand");
-    const price = document.getElementById("price");
     const offer = document.getElementById("offer");
     const description = document.getElementById("description");
     const category = document.getElementById("category");
-    const sizes = document.getElementById("sizes");
     const rimMaterial = document.getElementById("rimMaterial");
-    const stock = document.getElementById("stock");
 
     if (name.value.trim().length < 3) {
       name.parentElement.classList.add("error");
@@ -197,12 +262,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (brand.value.trim().length < 2) {
       brand.parentElement.classList.add("error");
       errors.push("Brand must be at least 2 characters.");
-      valid = false;
-    }
-
-    if (Number(price.value) <= 0) {
-      price.parentElement.classList.add("error");
-      errors.push("Price must be positive.");
       valid = false;
     }
 
@@ -224,9 +283,8 @@ document.addEventListener("DOMContentLoaded", () => {
       valid = false;
     }
 
-    if (!sizes.value.trim()) {
-      sizes.parentElement.classList.add("error");
-      errors.push("Sizes are required.");
+    if (variantsList.length === 0) {
+      errors.push("At least one variant config must be added.");
       valid = false;
     }
 
@@ -236,11 +294,7 @@ document.addEventListener("DOMContentLoaded", () => {
       valid = false;
     }
 
-    if (Number(stock.value) < 0) {
-      stock.parentElement.classList.add("error");
-      errors.push("Stock cannot be negative.");
-      valid = false;
-    }
+    // Removed stock validation
 
     if (!valid) {
       Swal.fire({

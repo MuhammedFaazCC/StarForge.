@@ -33,12 +33,19 @@ const applyCoupon = async (req, res) => {
       return res.json({ success: false, message: "Coupon already applied" });
     }
 
-    const subtotal = cart.items.reduce((total, item) => total + (item.quantity * item.productId.salesPrice), 0);
-    
+    const subtotal = cart.items.reduce((total, item) => {
+      let price = item.productId.salesPrice || item.productId.price || 0;
+      if (item.productId.hasVariants && item.variantId) {
+        const v = item.productId.variants.id(item.variantId);
+        if (v) {price = v.salesPrice || v.price;}
+      }
+      return total + (item.quantity * price);
+    }, 0);
+
     if (coupon.minimumAmount && subtotal < coupon.minimumAmount) {
-      return res.json({ 
-        success: false, 
-        message: `Minimum order amount of ₹${coupon.minimumAmount.toLocaleString('en-IN')} required for this coupon. Current cart total: ₹${subtotal.toLocaleString('en-IN')}` 
+      return res.json({
+        success: false,
+        message: `Minimum order amount of ₹${coupon.minimumAmount.toLocaleString('en-IN')} required for this coupon. Current cart total: ₹${subtotal.toLocaleString('en-IN')}`
       });
     }
 
@@ -83,13 +90,20 @@ const removeCoupon = async (req, res) => {
 
     const userId = req.session.user._id;
     const cart = await Cart.findOne({ userId }).populate('items.productId');
-    
+
     if (!cart || cart.items.length === 0) {
       return res.json({ success: false, message: "Cart is empty" });
     }
 
     req.session.coupon = null;
-    const subtotal = cart.items.reduce((total, item) => total + (item.quantity * item.productId.salesPrice), 0);
+    const subtotal = cart.items.reduce((total, item) => {
+      let price = item.productId.salesPrice || item.productId.price || 0;
+      if (item.productId.hasVariants && item.variantId) {
+        const v = item.productId.variants.id(item.variantId);
+        if (v) {price = v.salesPrice || v.price;}
+      }
+      return total + (item.quantity * price);
+    }, 0);
 
     res.json({
       success: true,
@@ -104,6 +118,6 @@ const removeCoupon = async (req, res) => {
 };
 
 module.exports = {
-    applyCoupon,
-    removeCoupon
+  applyCoupon,
+  removeCoupon
 }

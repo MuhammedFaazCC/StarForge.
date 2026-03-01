@@ -24,9 +24,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const additionalImagesInput = document.getElementById("additionalImages");
   const additionalImagesPreview = document.getElementById("additionalImagesPreview");
 
-  const sizesInput = document.getElementById("sizes");
-  const sizesPreview = document.getElementById("sizesPreview");
-
   const cropModal = document.getElementById("cropModal");
   const cropImage = document.getElementById("cropImage");
   const cropButton = document.getElementById("cropButton");
@@ -44,13 +41,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function validateAddProductForm() {
     const name = document.getElementById("name").value.trim();
     const brand = document.getElementById("brand").value.trim();
-    const price = document.getElementById("price").value.trim();
     const offer = document.getElementById("offer").value.trim();
     const category = document.getElementById("category").value;
-    const stock = document.getElementById("stock").value.trim();
-    const sizes = document.getElementById("sizes").value.trim();
-
-    const allowedSizes = ["16","17","18","19","20","21","22"];
 
     if (!name) return "Product name is required";
     if (name.length < 2 || name.length > 100) return "Name must be 2–100 characters";
@@ -59,22 +51,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!brand) return "Brand is required";
     if (brand.length < 2 || brand.length > 50) return "Brand must be 2–50 characters";
 
-    if (!price || !/^\d+(\.\d{1,2})?$/.test(price) || Number(price) <= 0)
-      return "Invalid price";
-
     if (offer && (!/^\d+$/.test(offer) || Number(offer) > 90))
       return "Offer must be between 0 and 90";
 
     if (!category) return "Category is required";
 
-    if (!stock || !/^\d+$/.test(stock) || Number(stock) < 0)
-      return "Invalid stock";
-
-    if (!sizes) return "Size is required";
-    const splitSizes = sizes.split(",").map(s => s.trim());
-    for (const s of splitSizes) {
-      if (!allowedSizes.includes(s)) return `Invalid size: ${s}`;
-    }
+    if (variantsList.length === 0) return "At least one variant config must be added";
 
     if (!croppedFiles.mainImage) return "Main image is required";
     if (croppedFiles.mainImage.size > 2 * 1024 * 1024) return "Main image exceeds 2MB";
@@ -174,21 +156,60 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ===========================
-     SIZE PREVIEW
+     VARIANTS HANDLING
   =========================== */
 
-  sizesInput.addEventListener("input", () => {
-    sizesPreview.innerHTML = "";
-    sizesInput.value
-      .split(",")
-      .map(s => s.trim())
-      .filter(Boolean)
-      .forEach(size => {
-        const span = document.createElement("span");
-        span.textContent = size;
-        span.className = "size-tag";
-        sizesPreview.appendChild(span);
+  const variantsTable = document.getElementById("variantsTable");
+  const variantsBody = document.getElementById("variantsBody");
+  const addVariantBtn = document.getElementById("addVariantBtn");
+  const variantsPayload = document.getElementById("variantsPayload");
+
+  let variantsList = [];
+
+  function renderVariants() {
+    variantsBody.innerHTML = "";
+    if (variantsList.length === 0) {
+      variantsTable.style.display = "none";
+      variantsPayload.value = "[]";
+      return;
+    }
+    variantsTable.style.display = "table";
+    variantsList.forEach((v, index) => {
+      const tr = document.createElement("tr");
+      tr.style.borderBottom = "1px solid #eee";
+      tr.innerHTML = `
+        <td style="padding: 10px;"><input type="text" class="form-control" style="width:100%" value="${v.Size || ''}" placeholder="e.g. 18"></td>
+        <td style="padding: 10px;"><input type="text" class="form-control" style="width:100%" value="${v.Color || ''}" placeholder="e.g. Red"></td>
+        <td style="padding: 10px;"><input type="number" class="form-control" style="width:100%" value="${v.price || ''}" step="0.01" min="0"></td>
+        <td style="padding: 10px;"><input type="number" class="form-control" style="width:100%" value="${v.stock || ''}" min="0"></td>
+        <td style="padding: 10px;"><input type="text" class="form-control" style="width:100%" value="${v.sku || ''}"></td>
+        <td style="padding: 10px;"><button type="button" class="btn btn-sm btn-danger remove-var-btn" data-index="${index}">X</button></td>
+      `;
+
+      const inputs = tr.querySelectorAll('input');
+      inputs[0].addEventListener('input', (e) => { variantsList[index].Size = e.target.value; updatePayload(); });
+      inputs[1].addEventListener('input', (e) => { variantsList[index].Color = e.target.value; updatePayload(); });
+      inputs[2].addEventListener('input', (e) => { variantsList[index].price = e.target.value; updatePayload(); });
+      inputs[3].addEventListener('input', (e) => { variantsList[index].stock = e.target.value; updatePayload(); });
+      inputs[4].addEventListener('input', (e) => { variantsList[index].sku = e.target.value; updatePayload(); });
+
+      tr.querySelector('.remove-var-btn').addEventListener('click', () => {
+        variantsList.splice(index, 1);
+        renderVariants();
       });
+
+      variantsBody.appendChild(tr);
+    });
+    updatePayload();
+  }
+
+  function updatePayload() {
+    variantsPayload.value = JSON.stringify(variantsList);
+  }
+
+  addVariantBtn.addEventListener("click", () => {
+    variantsList.push({ Size: '', Color: '', price: '', stock: '0', sku: '' });
+    renderVariants();
   });
 
   /* ===========================
